@@ -92,7 +92,7 @@ print(f"非零网格点数量: {non_zero_cells}")
 
 # 仅保留数量超过100的网格
 threshold = 10
-hist_masked = np.where(hist > threshold, hist, np.nan)
+hist_masked = np.where(hist > threshold, 1, np.nan)
 
 # 创建图形
 plt.figure(figsize=(10, 8))
