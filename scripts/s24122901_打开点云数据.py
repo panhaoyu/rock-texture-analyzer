@@ -1,12 +1,19 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
 import open3d as o3d
 
+# 设置文件路径
 base_dir = Path(r'F:\data\laser-scanner')
 project_name = 'Group_4'
-ply_file: Path = more_itertools.only(base_dir.glob(f'{project_name}/*.ply'))
+ply_files = list(base_dir.glob(f'{project_name}/*.ply'))
+
+if not ply_files:
+    raise FileNotFoundError(f"No PLY files found in {base_dir / project_name}")
+
+ply_file: Path = more_itertools.only(ply_files)
 
 # 读取 PLY 点云文件
 point_cloud = o3d.io.read_point_cloud(ply_file.as_posix())
@@ -60,15 +67,45 @@ else:
 # 应用旋转
 rotated_points = centered_points.dot(R.T)
 
-# 创建旋转后的点云
-point_cloud_rotated = o3d.geometry.PointCloud()
-point_cloud_rotated.points = o3d.utility.Vector3dVector(rotated_points)
+# 定义网格大小
+grid_size = 0.1  # 根据需要调整网格大小
 
-# 可视化旋转后的点云
-o3d.visualization.draw_geometries([point_cloud_rotated],
-                                  window_name='旋转后的点云可视化',
-                                  width=800,
-                                  height=600,
-                                  left=50,
-                                  top=50,
-                                  point_show_normal=False)
+# 投影到平面 (z=0)
+projected_points = rotated_points[:, :2]
+
+# 计算2D直方图
+x_min, y_min = projected_points.min(axis=0)
+x_max, y_max = projected_points.max(axis=0)
+
+# 计算网格边界
+x_bins = np.arange(x_min, x_max + grid_size, grid_size)
+y_bins = np.arange(y_min, y_max + grid_size, grid_size)
+
+# 计算每个网格的点数
+hist, x_edges, y_edges = np.histogram2d(projected_points[:, 0],
+                                        projected_points[:, 1],
+                                        bins=[x_bins, y_bins])
+
+# 打印非零网格点数量
+non_zero_cells = np.count_nonzero(hist)
+print(f"非零网格点数量: {non_zero_cells}")
+
+# 仅保留数量超过100的网格
+threshold = 10
+hist_masked = np.where(hist > threshold, hist, np.nan)
+
+# 创建图形
+plt.figure(figsize=(10, 8))
+
+# 绘制密度图，只有数量超过阈值的网格会显示颜色
+mesh = plt.pcolormesh(x_edges, y_edges, hist_masked.T, cmap='viridis', shading='auto', vmin=threshold)
+
+# 添加颜色条，标签并设置颜色条范围
+cbar = plt.colorbar(mesh, label='点位数量 (>100)')
+
+plt.xlabel('X 坐标')
+plt.ylabel('Y 坐标')
+plt.title('平面网格密度图 (数量超过100)')
+plt.axis('equal')  # 保持比例
+plt.tight_layout()
+plt.show()
