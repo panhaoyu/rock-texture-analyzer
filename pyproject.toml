@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "rock-texture-analyzer"
+version = "0.1.0"
+description = ""
+authors = ["panhaoyu <panhaoyu.china@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+open3d = "^0.18.0"
+numpy = "^2.2.1"
+pandas = "^2.2.3"
+scipy = "^1.14.1"
+openpyxl = "^3.1.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
