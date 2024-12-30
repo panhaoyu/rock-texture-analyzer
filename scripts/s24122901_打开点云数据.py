@@ -470,7 +470,7 @@ class PointCloudProcessor:
         np.save(cache_path, interpolated_matrix)
         return interpolated_matrix
 
-    def plot_interpolated_surface(self, resolution: float):
+    def plot_interpolated_surface(self):
         """
         绘制插值后的高程图和色彩图。
 
@@ -481,7 +481,13 @@ class PointCloudProcessor:
 
         # 绘制高程图
         plt.figure(figsize=(10, 8))
-        plt.imshow(interpolated_matrix[:, :, 0], cmap='terrain', origin='lower')
+        elevation = interpolated_matrix[:, :, 0]
+        color = interpolated_matrix[:, :, 1:]
+
+        # elevation = elevation[100:140, 100:140]
+        # color = color[100:140, 100:140]
+
+        plt.imshow(elevation, cmap='rainbow', origin='lower')
         plt.colorbar(label='Elevation (z)')
         plt.title('Elevation Map')
         plt.xlabel('X')
@@ -491,7 +497,7 @@ class PointCloudProcessor:
 
         # 绘制色彩图
         plt.figure(figsize=(10, 8))
-        plt.imshow(interpolated_matrix[:, :, 1:], origin='lower')
+        plt.imshow(color, origin='lower')
         plt.colorbar(label='Color (r, g, b)')
         plt.title('Color Map')
         plt.xlabel('X')
@@ -523,18 +529,18 @@ class PointCloudProcessor:
         base_dir = Path(r'F:\data\laser-scanner')
         project_name = 'Group_4'
         processor = cls(base_dir, project_name)
-        processor.adjust_main_plane()
-        processor.align_density_square(grid_size=1, threshold=50)
-        processor.evaluate_and_flip_z()
-        # processor.plot_density('xOy', grid_size=0.1, threshold=10)
-        # processor.plot_density('xOz', grid_size=0.1, threshold=10)
-        processor.fine_align()
-        processor.only_top()
+        # processor.adjust_main_plane()
+        # processor.align_density_square(grid_size=1, threshold=50)
+        # processor.evaluate_and_flip_z()
+        # # processor.plot_density('xOy', grid_size=0.1, threshold=10)
+        # # processor.plot_density('xOz', grid_size=0.1, threshold=10)
+        # processor.fine_align()
+        # processor.only_top()
         # processor.plot_point_cloud()
         # print(processor.point_cloud.points)
-        # processor.plot_interpolated_surface(0.2)
+        processor.plot_interpolated_surface()
         # processor.plot_density('xOz', grid_size=0.1, threshold=10)
-        processor.save_results_as_png()
+        # processor.save_results_as_png()
 
 
 if __name__ == '__main__':
