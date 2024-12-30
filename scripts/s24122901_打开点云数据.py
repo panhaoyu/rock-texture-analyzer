@@ -357,12 +357,8 @@ class PointCloudProcessor:
         bottom_center += range_z * 0.1
         top_center -= range_z * 0.4
         z_selector = (point_z > bottom_center) & (point_z < top_center)
-        points = points[z_selector]
-        point_x, point_y = points[:, 0], points[:, 1]
-
-        plt.clf()
-        plt.hist(point_y, bins=100)
-        plt.show()
+        boundary_points = points[z_selector]
+        point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
 
         left_center, right_center = get_two_main_value_filtered(point_x)
         front_center, back_center = get_two_main_value_filtered(point_y)
@@ -382,27 +378,38 @@ class PointCloudProcessor:
         definite_left = left_center + extend_x
         definite_right = right_center - extend_x
 
-        left_points = points[np.abs(point_x - left_center) < extend_x]
-        right_points = points[np.abs(point_x - right_center) < extend_x]
-        front_points = points[np.abs(point_y - front_center) < extend_y]
-        back_points = points[np.abs(point_y - back_center) < extend_y]
+        left_points = boundary_points[np.abs(point_x - left_center) < extend_x]
+        right_points = boundary_points[np.abs(point_x - right_center) < extend_x]
+        front_points = boundary_points[np.abs(point_y - front_center) < extend_y]
+        back_points = boundary_points[np.abs(point_y - back_center) < extend_y]
 
         left_points = left_points[(left_points[:, 1] > definite_front) & (left_points[:, 1] < definite_back)]
         right_points = right_points[(right_points[:, 1] > definite_front) & (right_points[:, 1] < definite_back)]
         front_points = front_points[(front_points[:, 0] > definite_left) & (front_points[:, 0] < definite_right)]
-        # back_points = back_points[(back_points[:, 0] > definite_left) & (back_points[:, 0] < definite_right)]
+        back_points = back_points[(back_points[:, 0] > definite_left) & (back_points[:, 0] < definite_right)]
 
-        v = back_points
-        plt.clf()
-        plt.hist(v[:, 0], bins=100)
-        plt.show()
-        plt.clf()
-        plt.hist(v[:, 1], bins=100)
-        plt.show()
-        plt.clf()
-        plt.hist(v[:, 2], bins=100)
-        plt.show()
-        raise
+        left_mean = np.mean(left_points[:, 0])
+        left_std = np.std(left_points[:, 0])
+        right_mean = np.mean(right_points[:, 0])
+        right_std = np.std(right_points[:, 0])
+        front_mean = np.mean(front_points[:, 1])
+        front_std = np.std(front_points[:, 1])
+        back_mean = np.mean(back_points[:, 1])
+        back_std = np.std(back_points[:, 1])
+
+        left = left_mean + 3 * left_std
+        right = right_mean - 3 * right_std
+        front = front_mean + 3 * front_std
+        back = back_mean - 3 * back_std
+
+        print(f'{left=} {right=} {front=} {back=}')
+
+        point_x, point_y = points[:, 0], points[:, 1]
+        top_selector = (point_x > left) & (point_x < right) & (point_y > front) & (point_y < back)
+
+        colors = np.asarray(self.point_cloud.colors)
+        self.point_cloud.points = o3d.utility.Vector3dVector(points[top_selector])
+        self.point_cloud.colors = o3d.utility.Vector3dVector(colors[top_selector])
 
     @classmethod
     def main(cls):
@@ -412,11 +419,12 @@ class PointCloudProcessor:
         processor.adjust_main_plane()
         processor.align_density_square(grid_size=1, threshold=50)
         processor.evaluate_and_flip_z()
-        processor.plot_density('xOy', grid_size=0.1, threshold=10)
-        processor.plot_density('xOz', grid_size=0.1, threshold=10)
+        # processor.plot_density('xOy', grid_size=0.1, threshold=10)
+        # processor.plot_density('xOz', grid_size=0.1, threshold=10)
         processor.fine_align()
         processor.only_top()
-        processor.plot_density('xOz', grid_size=0.1, threshold=10)
+        processor.plot_point_cloud()
+        # processor.plot_density('xOz', grid_size=0.1, threshold=10)
 
 
 if __name__ == '__main__':
