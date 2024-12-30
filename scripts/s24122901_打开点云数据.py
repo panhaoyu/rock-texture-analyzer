@@ -549,7 +549,7 @@ class PointCloudProcessor(MethodDiskCache):
 
     @classmethod
     def main(cls):
-        obj = cls(Path(r'F:\data\laser-scanner'), 'Group_4')
+        obj = cls(Path(r'F:\data\laser-scanner'), 'Group_3')
         # obj.绘制点云(obj.p6_仅保留顶面)
         obj.绘制表面()
 if __name__ == '__main__':

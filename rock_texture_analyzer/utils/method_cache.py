@@ -19,6 +19,7 @@ class InnerCache(UserDict):
     def __init__(self, path: Path):
         super().__init__()
         self.path = path
+        self.path.mkdir(parents=True, exist_ok=True)
 
     def get_ascii_name(self, name: str) -> str:
         name = '_'.join(lazy_pinyin(name))
