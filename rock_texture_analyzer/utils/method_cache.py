@@ -20,7 +20,13 @@ class InnerCache(UserDict):
         super().__init__()
         self.path = path
 
+    def get_ascii_name(self, name: str) -> str:
+        name = '_'.join(lazy_pinyin(name))
+        name = re.sub(r'_+', '_', name)
+        return name
+
     def get_new_file_path(self, name: str, value: Any) -> Path:
+        name = self.get_ascii_name(name)
         suffix = '.pickle'
         if isinstance(value, np.ndarray):
             suffix = '.npy'
@@ -29,26 +35,18 @@ class InnerCache(UserDict):
         return self.path.joinpath(f'{name}{suffix}')
 
     def get_existing_file_path(self, name: str) -> Path:
+        name = self.get_ascii_name(name)
         files = list(self.path.glob(f'{name}.*'))
         assert len(files) < 2
         return files[0] if files else None
 
     def get_cache_file_path(self, name: str, value: Any = None):
         assert isinstance(name, str), type(name)
-        if value is None:
-            result = self.get_existing_file_path(name)
-        else:
-            result = self.get_new_file_path(name, value)
-        name = result.stem
-        name = '_'.join(lazy_pinyin(name))
-        name = re.sub(r'_+', '_', name)
-        result = result.with_stem(name)
+        result = self.get_existing_file_path(name) or self.get_new_file_path(name, value)
         return result
 
     def __contains__(self, item):
-        files = list(self.path.glob(f'{item}.*'))
-        assert len(files) < 2
-        return bool(files)
+        return bool(self.get_existing_file_path(item))
 
     def __getitem__(self, item):
         path = self.get_cache_file_path(item)
