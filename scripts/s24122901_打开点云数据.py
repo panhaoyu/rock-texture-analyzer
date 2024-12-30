@@ -427,6 +427,7 @@ class PointCloudProcessor:
         processor.fine_align()
         processor.only_top()
         processor.plot_point_cloud()
+        print(processor.point_cloud.points)
         # processor.plot_density('xOz', grid_size=0.1, threshold=10)
 
 
