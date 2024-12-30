@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
 import open3d as o3d
+from scipy.interpolate import griddata
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
@@ -414,6 +415,76 @@ class PointCloudProcessor:
         self.point_cloud.points = o3d.utility.Vector3dVector(points[top_selector])
         self.point_cloud.colors = o3d.utility.Vector3dVector(colors[top_selector])
 
+    def generate_interpolated_matrix(self, resolution: float) -> np.ndarray:
+        """
+        将上表面的点云通过散点插值转换为 x, y 平面内的 [z, r, g, b] 四层矩阵。
+
+        Args:
+            resolution: (x_res, y_res)，表示插值后矩阵的大小，即 x 和 y 方向的分辨率。
+
+        Returns:
+            np.ndarray: 生成的矩阵，包含 [z, r, g, b] 四个层。
+        """
+        points = np.asarray(self.point_cloud.points)
+        colors = np.asarray(self.point_cloud.colors)
+
+        # 提取 x, y, z, r, g, b 数据
+        x, y, z = points.T
+        r, g, b = colors.T
+
+        x_min = np.min(x)
+        x_max = np.max(x)
+        y_min = np.min(y)
+        y_max = np.max(y)
+        x_count = int((x_max - x_min) / resolution)
+        y_count = int((y_max - y_min) / resolution)
+
+        # 创建网格
+        x_edge = np.linspace(x_min, x_max, x_count)
+        y_edge = np.linspace(y_min, y_max, y_count)
+        x_grid, y_grid = np.meshgrid(x_edge, y_edge)
+
+        # 插值 z, r, g, b 数据
+        z_interp = griddata((x, y), z, (x_grid, y_grid), method='cubic')
+        r_interp = griddata((x, y), r, (x_grid, y_grid), method='cubic')
+        g_interp = griddata((x, y), g, (x_grid, y_grid), method='cubic')
+        b_interp = griddata((x, y), b, (x_grid, y_grid), method='cubic')
+
+        print(z_interp)
+
+        # 生成 [z, r, g, b] 四层矩阵
+        interpolated_matrix = np.stack([z_interp, r_interp, g_interp, b_interp], axis=-1)
+
+        return interpolated_matrix
+
+    def plot_interpolated_surface(self, resolution: float):
+        """
+        绘制插值后的高程图和色彩图。
+
+        Args:
+            resolution: (x_res, y_res)，表示插值后矩阵的大小，即 x 和 y 方向的分辨率。
+        """
+        interpolated_matrix = self.generate_interpolated_matrix(resolution)
+
+        # 绘制高程图
+        plt.figure(figsize=(10, 8))
+        plt.imshow(interpolated_matrix[:, :, 0], cmap='terrain', origin='lower')
+        plt.colorbar(label='Elevation (z)')
+        plt.title('Elevation Map')
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.tight_layout()
+        plt.show()
+
+        # 绘制色彩图
+        plt.figure(figsize=(10, 8))
+        plt.imshow(interpolated_matrix[:, :, 1:], origin='lower')
+        plt.colorbar(label='Color (r, g, b)')
+        plt.title('Color Map')
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.tight_layout()
+        plt.show()
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
@@ -426,8 +497,9 @@ class PointCloudProcessor:
         # processor.plot_density('xOz', grid_size=0.1, threshold=10)
         processor.fine_align()
         processor.only_top()
-        processor.plot_point_cloud()
-        print(processor.point_cloud.points)
+        # processor.plot_point_cloud()
+        # print(processor.point_cloud.points)
+        processor.plot_interpolated_surface(0.2)
         # processor.plot_density('xOz', grid_size=0.1, threshold=10)
 
 
