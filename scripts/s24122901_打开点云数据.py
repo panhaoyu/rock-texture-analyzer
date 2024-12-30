@@ -80,7 +80,6 @@ class PointCloudProcessor(MethodDiskCache):
         return cloud
 
     def plot_point_cloud(self, cloud: PointCloud):
-        print(cloud.points)
         open3d.visualization.draw_geometries([cloud])
 
     def plot_density(self, cloud: PointCloud, plane: str, grid_size: float, threshold: int):
