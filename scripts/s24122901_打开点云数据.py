@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import cv2
 import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
@@ -97,6 +98,62 @@ class PointCloudProcessor:
         plt.show()
         print("密度图已绘制。")
 
+    def align_density_square(self, grid_size: float, threshold: int):
+        points = np.asarray(self.point_cloud.points)
+        projected_points = points[:, :2]
+
+        x_min, y_min = projected_points.min(axis=0)
+        x_max, y_max = projected_points.max(axis=0)
+
+        x_bins = np.arange(x_min, x_max + grid_size, grid_size)
+        y_bins = np.arange(y_min, y_max + grid_size, grid_size)
+
+        hist, x_edges, y_edges = np.histogram2d(
+            projected_points[:, 0],
+            projected_points[:, 1],
+            bins=[x_bins, y_bins]
+        )
+
+        hist_filtered = np.where(hist > threshold, 255, 0).astype(np.uint8)
+
+        # Convert to binary image
+        density_image = hist_filtered
+        density_image = density_image[::-1]  # Flip vertically for correct orientation
+
+        contours, _ = cv2.findContours(density_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if not contours:
+            print("未检测到高密度区域。")
+            return
+
+        # 找到最大的轮廓
+        largest_contour = max(contours, key=cv2.contourArea)
+
+        rect = cv2.minAreaRect(largest_contour)
+        angle = rect[-1]
+
+        if angle < -45:
+            angle = 90 + angle
+        else:
+            angle = angle
+
+        print(f"检测到的旋转角度: {angle} degrees")
+
+        # 创建3D旋转矩阵绕z轴
+        theta = np.radians(-angle)
+        cos_theta = np.cos(theta)
+        sin_theta = np.sin(theta)
+        R_z = np.array([
+            [cos_theta, -sin_theta, 0],
+            [sin_theta, cos_theta, 0],
+            [0, 0, 1]
+        ])
+
+        # 应用旋转
+        rotated_points = points.dot(R_z.T)
+        self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
+        print("点云已根据密度图旋转以对齐方形边界。")
+
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
@@ -108,7 +165,7 @@ class PointCloudProcessor:
         print("点云加载完成。")
 
         processor.adjust_main_plane()
-        processor.plot_point_cloud()
+        processor.align_density_square(grid_size, threshold)
         processor.plot_density(grid_size, threshold)
 
 
