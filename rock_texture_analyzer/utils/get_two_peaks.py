@@ -28,8 +28,6 @@ def get_two_main_value_filtered(data: np.ndarray) -> tuple[float, float]:
     density = np.exp(log_density)
 
     # 通过查找密度的峰值来确定主要峰
-    plt.plot(x_range, density)
-    plt.show()
     peaks = find_peaks(density, prominence=0.05)[0]
 
     if len(peaks) < 2:
