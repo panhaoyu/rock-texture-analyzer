@@ -65,10 +65,19 @@ class PointCloudProcessor:
         o3d.visualization.draw_geometries([self.point_cloud], window_name="Point Cloud")
         print("3D点云图已显示。")
 
-    def plot_density(self, grid_size: float, threshold: int):
+    def plot_density(self, plane: str, grid_size: float, threshold: int):
         points = np.asarray(self.point_cloud.points)
-        projected_points = points[:, :2]
-        print("点云已投影到平面 (z=0)。")
+        match plane:
+            case 'xOy':
+                projected_points = points[:, :2]
+            case 'xOz':
+                projected_points = points[:, [0, 2]]
+            case 'yOz':
+                projected_points = points[:, 1:3]
+            case _:
+                raise ValueError(f"Invalid plane specified: {plane}")
+
+        print(f"点云已投影到平面 ({plane}).")
 
         x_min, y_min = projected_points.min(axis=0)
         x_max, y_max = projected_points.max(axis=0)
@@ -115,10 +124,8 @@ class PointCloudProcessor:
         )
 
         hist_filtered = np.where(hist > threshold, 255, 0).astype(np.uint8)
-
-        # Convert to binary image
         density_image = hist_filtered
-        density_image = density_image[::-1]  # Flip vertically for correct orientation
+        density_image = density_image[::-1]
 
         contours, _ = cv2.findContours(density_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -126,9 +133,7 @@ class PointCloudProcessor:
             print("未检测到高密度区域。")
             return
 
-        # 找到最大的轮廓
         largest_contour = max(contours, key=cv2.contourArea)
-
         rect = cv2.minAreaRect(largest_contour)
         angle = rect[-1]
 
@@ -139,7 +144,6 @@ class PointCloudProcessor:
 
         print(f"检测到的旋转角度: {angle} degrees")
 
-        # 创建3D旋转矩阵绕z轴
         theta = np.radians(-angle)
         cos_theta = np.cos(theta)
         sin_theta = np.sin(theta)
@@ -149,7 +153,6 @@ class PointCloudProcessor:
             [0, 0, 1]
         ])
 
-        # 应用旋转
         rotated_points = points.dot(R_z.T)
         self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
         print("点云已根据密度图旋转以对齐方形边界。")
@@ -166,7 +169,9 @@ class PointCloudProcessor:
 
         processor.adjust_main_plane()
         processor.align_density_square(grid_size, threshold)
-        processor.plot_density(grid_size, threshold)
+        processor.plot_density('xOy', grid_size, threshold)
+        processor.plot_density('xOz', grid_size, threshold)
+        processor.plot_density('yOz', grid_size, threshold)
 
 
 if __name__ == '__main__':
