@@ -452,9 +452,11 @@ class PointCloudProcessor(MethodDiskCache):
                 & (point_z > bottom_center + range_z * 0.5)
         )
 
-        colors = np.asarray(cloud.colors)
         cloud.points = open3d.utility.Vector3dVector(points[top_selector])
-        cloud.colors = open3d.utility.Vector3dVector(colors[top_selector])
+
+        colors = np.asarray(cloud.colors)  # 扫描的时候未必开启对颜色的扫描
+        if colors.size:
+            cloud.colors = open3d.utility.Vector3dVector(colors[top_selector])
         return cloud
 
     @cached_property
@@ -474,11 +476,10 @@ class PointCloudProcessor(MethodDiskCache):
         resolution: float = 0.2
 
         points = np.asarray(cloud.points)
-        colors = np.asarray(cloud.colors)
 
         # 提取 x, y, z, r, g, b 数据
         x, y, z = points.T
-        r, g, b = colors.T
+
 
         x_min = np.min(x)
         x_max = np.max(x)
@@ -493,13 +494,19 @@ class PointCloudProcessor(MethodDiskCache):
         x_grid, y_grid = np.meshgrid(x_edge, y_edge)
 
         # 插值 z, r, g, b 数据
+        arrays = []
         z_interp = griddata((x, y), z, (x_grid, y_grid), method='cubic')
-        r_interp = griddata((x, y), r, (x_grid, y_grid), method='cubic')
-        g_interp = griddata((x, y), g, (x_grid, y_grid), method='cubic')
-        b_interp = griddata((x, y), b, (x_grid, y_grid), method='cubic')
+        arrays.extend([z_interp])
+        colors = np.asarray(cloud.colors)
+        if colors.size:
+            r, g, b = colors.T
+            r_interp = griddata((x, y), r, (x_grid, y_grid), method='cubic')
+            g_interp = griddata((x, y), g, (x_grid, y_grid), method='cubic')
+            b_interp = griddata((x, y), b, (x_grid, y_grid), method='cubic')
+            arrays.extend([r_interp, g_interp, b_interp])
 
         # 生成 [z, r, g, b] 四层矩阵
-        interpolated_matrix = np.stack([z_interp, r_interp, g_interp, b_interp], axis=-1)
+        interpolated_matrix = np.stack(arrays, axis=-1)
 
         return interpolated_matrix
 
@@ -507,50 +514,35 @@ class PointCloudProcessor(MethodDiskCache):
         interpolated_matrix = self.p7_表面二维重构
 
         # 绘制高程图
-        plt.figure(figsize=(10, 8))
         elevation = interpolated_matrix[:, :, 0]
-        color = interpolated_matrix[:, :, 1:]
-        for i in range(3):
-            v = color[:, :, i]
-            vmin = np.nanmin(v)
-            vmax = np.nanmax(v)
-            v = (v - vmin) / (vmax - vmin) * 255
-            color[:, :, i] = v
-
-        color = np.uint8(np.round(color))
-
-        # elevation = elevation[100:140, 100:140]
-        # color = color[100:140, 100:140]
-
         norm = plt.Normalize(vmin=np.nanmin(elevation), vmax=np.nanmax(elevation))
         scalar_map = cm.ScalarMappable(cmap='jet', norm=norm)
         elevation = (scalar_map.to_rgba(elevation)[:, :, :3] * 255)
         elevation = np.uint8(elevation)
         Image.fromarray(elevation).save(self.ply_file.with_name('elevation.png'))
-        Image.fromarray(color).save(self.ply_file.with_name('surface.png'))
 
-        plt.imshow(elevation, cmap='jet', origin='lower')
-        plt.colorbar(label='Elevation (z)')
-        plt.title('Elevation Map')
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.tight_layout()
-        plt.show()
+        if interpolated_matrix.shape[2] > 1:
+            color = interpolated_matrix[:, :, 1:]
+            for i in range(3):
+                v = color[:, :, i]
+                v_min = np.nanmin(v)
+                v_max = np.nanmax(v)
+                v = (v - v_min) / (v_max - v_min) * 255
+                color[:, :, i] = v
 
-        # 绘制色彩图
-        plt.figure(figsize=(10, 8))
-        plt.imshow(color, origin='lower')
-        plt.colorbar(label='Color (r, g, b)')
-        plt.title('Color Map')
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.tight_layout()
-        plt.show()
+            color = np.uint8(np.round(color))
+            Image.fromarray(color).save(self.ply_file.with_name('surface.png'))
+
+
 
     @classmethod
     def main(cls):
-        obj = cls(Path(r'F:\data\laser-scanner'), 'Group_3')
+        obj = cls(Path(r'F:\data\laser-scanner'), 'fast-scan')
+        # obj.绘制点云(obj.p1_读取点云原始数据)
+        # obj.绘制点云(obj.p2_调整为主平面)
         # obj.绘制点云(obj.p6_仅保留顶面)
         obj.绘制表面()
+
+
 if __name__ == '__main__':
     PointCloudProcessor.main()
