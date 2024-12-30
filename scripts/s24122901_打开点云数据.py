@@ -8,6 +8,8 @@ import open3d as o3d
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
+from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
+
 
 class PointCloudProcessor:
     def __init__(self, base_dir: Path, project_name: str):
@@ -341,6 +343,67 @@ class PointCloudProcessor:
         rotated_points = points.dot(best_rotation.T)
         self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
 
+    def only_top(self):
+
+        """
+        细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
+        """
+        points = np.asarray(self.point_cloud.points)
+
+        point_z = points[:, 2]
+        bottom_center = np.min(point_z)
+        top_center = np.max(point_z)
+        range_z = (top_center - bottom_center)
+        bottom_center += range_z * 0.1
+        top_center -= range_z * 0.4
+        z_selector = (point_z > bottom_center) & (point_z < top_center)
+        points = points[z_selector]
+        point_x, point_y = points[:, 0], points[:, 1]
+
+        plt.clf()
+        plt.hist(point_y, bins=100)
+        plt.show()
+
+        left_center, right_center = get_two_main_value_filtered(point_x)
+        front_center, back_center = get_two_main_value_filtered(point_y)
+
+        print(f'{left_center=} {right_center=}')
+        print(f'{front_center=} {back_center=}')
+
+        assert back_center > front_center
+        assert right_center > left_center
+
+        # 2. 扩展边界范围，向内外分别扩展10%
+        extend_x = 0.2 * (right_center - left_center)
+        extend_y = 0.2 * (back_center - front_center)
+
+        definite_front = front_center + extend_y
+        definite_back = back_center - extend_y
+        definite_left = left_center + extend_x
+        definite_right = right_center - extend_x
+
+        left_points = points[np.abs(point_x - left_center) < extend_x]
+        right_points = points[np.abs(point_x - right_center) < extend_x]
+        front_points = points[np.abs(point_y - front_center) < extend_y]
+        back_points = points[np.abs(point_y - back_center) < extend_y]
+
+        left_points = left_points[(left_points[:, 1] > definite_front) & (left_points[:, 1] < definite_back)]
+        right_points = right_points[(right_points[:, 1] > definite_front) & (right_points[:, 1] < definite_back)]
+        front_points = front_points[(front_points[:, 0] > definite_left) & (front_points[:, 0] < definite_right)]
+        # back_points = back_points[(back_points[:, 0] > definite_left) & (back_points[:, 0] < definite_right)]
+
+        v = back_points
+        plt.clf()
+        plt.hist(v[:, 0], bins=100)
+        plt.show()
+        plt.clf()
+        plt.hist(v[:, 1], bins=100)
+        plt.show()
+        plt.clf()
+        plt.hist(v[:, 2], bins=100)
+        plt.show()
+        raise
+
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
@@ -350,8 +413,10 @@ class PointCloudProcessor:
         processor.align_density_square(grid_size=1, threshold=50)
         processor.evaluate_and_flip_z()
         processor.plot_density('xOy', grid_size=0.1, threshold=10)
+        processor.plot_density('xOz', grid_size=0.1, threshold=10)
         processor.fine_align()
-        processor.plot_density('xOy', grid_size=0.1, threshold=10)
+        processor.only_top()
+        processor.plot_density('xOz', grid_size=0.1, threshold=10)
 
 
 if __name__ == '__main__':
