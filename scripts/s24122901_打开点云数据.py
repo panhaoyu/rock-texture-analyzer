@@ -1,3 +1,4 @@
+from functools import cached_property
 from pathlib import Path
 
 import cv2
@@ -418,7 +419,8 @@ class PointCloudProcessor:
         self.point_cloud.points = o3d.utility.Vector3dVector(points[top_selector])
         self.point_cloud.colors = o3d.utility.Vector3dVector(colors[top_selector])
 
-    def generate_interpolated_matrix(self, resolution: float) -> np.ndarray:
+    @cached_property
+    def interpolated_surface_matrix(self) -> np.ndarray:
         """
         将上表面的点云通过散点插值转换为 x, y 平面内的 [z, r, g, b] 四层矩阵。
 
@@ -428,6 +430,12 @@ class PointCloudProcessor:
         Returns:
             np.ndarray: 生成的矩阵，包含 [z, r, g, b] 四个层。
         """
+        cache_path = self.ply_file.parent.joinpath('cache/interpolated_surface_matrix.npy')
+        if cache_path.exists():
+            return np.load(cache_path)
+
+        resolution: float = 0.2
+
         points = np.asarray(self.point_cloud.points)
         colors = np.asarray(self.point_cloud.colors)
 
@@ -458,6 +466,8 @@ class PointCloudProcessor:
         # 生成 [z, r, g, b] 四层矩阵
         interpolated_matrix = np.stack([z_interp, r_interp, g_interp, b_interp], axis=-1)
 
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(cache_path, interpolated_matrix)
         return interpolated_matrix
 
     def plot_interpolated_surface(self, resolution: float):
@@ -467,7 +477,7 @@ class PointCloudProcessor:
         Args:
             resolution: (x_res, y_res)，表示插值后矩阵的大小，即 x 和 y 方向的分辨率。
         """
-        interpolated_matrix = self.generate_interpolated_matrix(resolution)
+        interpolated_matrix = self.interpolated_surface_matrix
 
         # 绘制高程图
         plt.figure(figsize=(10, 8))
@@ -494,7 +504,7 @@ class PointCloudProcessor:
         使用PIL将高程和图像的结果分别存储为PNG文件，存储路径与输入文件所在文件夹相同。
         """
         # 获取高程数据
-        result = self.generate_interpolated_matrix(0.2)
+        result = self.interpolated_surface_matrix
         elevation = result[:, 0]
         image = result[:, 1:]
 
