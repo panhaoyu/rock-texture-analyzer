@@ -184,17 +184,15 @@ class PointCloudProcessor:
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
-        project_name = 'Group_4'
-        grid_size = 0.1
-        threshold = 10
+        project_name = 'Group_3'
+        grid_size = 1
+        threshold = 50
 
         processor = cls(base_dir, project_name)
         processor.adjust_main_plane()
         processor.align_density_square(grid_size, threshold)
         processor.evaluate_and_flip_z()
-        processor.plot_density('xOy', grid_size, threshold)
-        processor.plot_density('xOz', grid_size, threshold)
-        processor.plot_density('yOz', grid_size, threshold)
+        processor.plot_point_cloud()
 
 
 if __name__ == '__main__':
