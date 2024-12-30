@@ -190,12 +190,14 @@ class PointCloudProcessor:
 
         # 1. 分别对X轴和Y轴进行K-Means聚类
         # 对X轴聚类
-        kmeans_x = KMeans(n_clusters=2, random_state=0).fit(points[:, 0].reshape(-1, 1))
+        kmeans_x = KMeans(n_clusters=2, random_state=0)
+        kmeans_x.fit(points[:, 0].reshape(-1, 1))
         centers_x = sorted(kmeans_x.cluster_centers_.flatten())
         xmin, xmax = centers_x[0], centers_x[1]
 
         # 对Y轴聚类
-        kmeans_y = KMeans(n_clusters=2, random_state=0).fit(points[:, 1].reshape(-1, 1))
+        kmeans_y = KMeans(n_clusters=2, random_state=0)
+        kmeans_y.fit(points[:, 1].reshape(-1, 1))
         centers_y = sorted(kmeans_y.cluster_centers_.flatten())
         ymin, ymax = centers_y[0], centers_y[1]
 
