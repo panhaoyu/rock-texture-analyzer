@@ -1,3 +1,4 @@
+import copy
 from functools import cached_property
 from pathlib import Path
 
@@ -8,14 +9,24 @@ import more_itertools
 import numpy as np
 import open3d as o3d
 from PIL import Image
+from joblib import Memory
+from open3d.cpu.pybind.geometry import PointCloud
+from open3d.cpu.pybind.t.io import read_point_cloud
+from open3d.cpu.pybind.utility import Vector3dVector
 from scipy.interpolate import griddata
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
+from rock_texture_analyzer.utils.method_cache import MethodDiskCache, method_cache
+
+base_dir = Path(r'F:\data\laser-scanner')
+project_name = 'Group_4'
+
+memory = Memory(base_dir / project_name / 'cache')
 
 
-class PointCloudProcessor:
+class PointCloudProcessor(MethodDiskCache):
     def __init__(self, base_dir: Path, project_name: str):
         self.base_dir = base_dir
         self.project_name = project_name
@@ -28,16 +39,24 @@ class PointCloudProcessor:
                 f"Multiple PLY files found in {self.base_dir / self.project_name}, expected only one."
             )
         self.ply_file: Path = more_itertools.only(ply_files)
-        self.point_cloud = self.load_point_cloud()
 
-    def load_point_cloud(self) -> o3d.geometry.PointCloud:
-        return o3d.io.read_point_cloud(str(self.ply_file))
+    def get_cache_folder(self) -> Path:
+        return self.base_dir / self.project_name / 'cache'
 
-    def adjust_main_plane(self):
-        points = np.asarray(self.point_cloud.points)
+    @property
+    @method_cache
+    def p1_读取点云原始数据(self) -> PointCloud:
+        return read_point_cloud(self.ply_file.as_posix())
+
+    @property
+    @method_cache
+    def p2_调整为主平面(self):
+        cloud = self.p1_读取点云原始数据
+        points = np.asarray(cloud.points)
         centroid = np.mean(points, axis=0)
         centered_points = points - centroid
-        self.point_cloud.points = o3d.utility.Vector3dVector(centered_points)
+        cloud = copy.deepcopy(cloud)
+        cloud.points = Vector3dVector(centered_points)
 
         cov_matrix = np.cov(centered_points, rowvar=False)
         _, _, vh = np.linalg.svd(cov_matrix)
@@ -58,13 +77,14 @@ class PointCloudProcessor:
             R = np.eye(3) + vx + np.matmul(vx, vx) * ((1 - c) / (s ** 2))
 
         rotated_points = centered_points.dot(R.T)
-        self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
+        cloud.points = Vector3dVector(rotated_points)
+        return cloud
 
-    def plot_point_cloud(self):
-        o3d.visualization.draw_geometries([self.point_cloud], window_name="Point Cloud")
+    def plot_point_cloud(self, cloud: PointCloud):
+        o3d.visualization.draw_geometries([cloud])
 
-    def plot_density(self, plane: str, grid_size: float, threshold: int):
-        points = np.asarray(self.point_cloud.points)
+    def plot_density(self, cloud: PointCloud, plane: str, grid_size: float, threshold: int):
+        points = np.asarray(cloud.points)
         match plane:
             case 'xOy':
                 projected_points = points[:, :2]
@@ -99,8 +119,14 @@ class PointCloudProcessor:
         plt.tight_layout()
         plt.show()
 
-    def align_density_square(self, grid_size: float, threshold: int):
-        points = np.asarray(self.point_cloud.points)
+    @property
+    @method_cache
+    def f3_xOy平面对正(self):
+        grid_size = 1
+        threshold = 50
+        cloud = self.p2_调整为主平面
+        cloud = copy.deepcopy(cloud)
+        points = np.asarray(cloud.points)
         projected_points = points[:, :2]
 
         x_min, y_min = projected_points.min(axis=0)
@@ -143,10 +169,14 @@ class PointCloudProcessor:
         ])
 
         rotated_points = points.dot(R_z.T)
-        self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
+        cloud.points = o3d.utility.Vector3dVector(rotated_points)
+        return cloud
 
-    def evaluate_and_flip_z(self):
-        points = np.asarray(self.point_cloud.points)
+    @property
+    @method_cache
+    def f4_地面在下(self):
+        cloud = copy.deepcopy(self.f3_xOy平面对正)
+        points = np.asarray(cloud.points)
         x = points[:, 0].reshape(-1, 1)
         y = points[:, 1].reshape(-1, 1)
 
@@ -528,19 +558,21 @@ class PointCloudProcessor:
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
         project_name = 'Group_4'
-        processor = cls(base_dir, project_name)
-        # processor.adjust_main_plane()
-        # processor.align_density_square(grid_size=1, threshold=50)
-        # processor.evaluate_and_flip_z()
+        obj = cls(base_dir, project_name)
+        obj.plot_point_cloud(obj.p1_读取点云原始数据)
+
+        # obj.adjust_main_plane()
+        # obj.align_density_square(grid_size=1, threshold=50)
+        # obj.evaluate_and_flip_z()
         # # processor.plot_density('xOy', grid_size=0.1, threshold=10)
         # # processor.plot_density('xOz', grid_size=0.1, threshold=10)
-        # processor.fine_align()
-        # processor.only_top()
-        # processor.plot_point_cloud()
-        # print(processor.point_cloud.points)
-        processor.plot_interpolated_surface()
-        # processor.plot_density('xOz', grid_size=0.1, threshold=10)
-        # processor.save_results_as_png()
+        # obj.fine_align()
+        # obj.only_top()
+        # obj.plot_point_cloud()
+        # print(obj.point_cloud.points)
+        # obj.plot_interpolated_surface()
+        # obj.plot_density('xOz', grid_size=0.1, threshold=10)
+        # obj.save_results_as_png()
 
 
 if __name__ == '__main__':
