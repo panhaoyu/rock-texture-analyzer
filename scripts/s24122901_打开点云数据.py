@@ -485,6 +485,35 @@ class PointCloudProcessor:
         plt.ylabel('Y')
         plt.tight_layout()
         plt.show()
+    def save_results_as_png(self):
+        """
+        使用PIL将高程和图像的结果分别存储为PNG文件，存储路径与输入文件所在文件夹相同。
+        """
+        # 获取高程数据
+        points = np.asarray(self.point_cloud.points)
+        elevation = points[:, 2].reshape(-1, 1)
+
+        # 获取图像数据：使用密度图作为图像
+        density_image = self.generate_density_image()
+
+        # 获取输入点云文件夹路径
+        ply_files = list(self.base_dir.glob(f'{self.project_name}/*.ply'))
+        ply_file = more_itertools.only(ply_files)
+        output_dir = ply_file.parent
+
+        # 生成高程图像
+        elevation_image = np.full((elevation.shape[0], 1), elevation)
+        elevation_image = np.reshape(elevation_image, (int(np.sqrt(elevation.shape[0])), int(np.sqrt(elevation.shape[0]))))
+        elevation_image = (elevation_image - elevation_image.min()) / (elevation_image.max() - elevation_image.min()) * 255
+        elevation_image = Image.fromarray(elevation_image.astype(np.uint8))
+
+        # 保存高程图像为PNG
+        elevation_image.save(output_dir / f'{self.project_name}_elevation.png')
+
+        # 生成并保存密度图像
+        density_image = Image.fromarray(density_image)
+        density_image.save(output_dir / f'{self.project_name}_density.png')
+
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
@@ -499,8 +528,9 @@ class PointCloudProcessor:
         processor.only_top()
         # processor.plot_point_cloud()
         # print(processor.point_cloud.points)
-        processor.plot_interpolated_surface(0.2)
+        # processor.plot_interpolated_surface(0.2)
         # processor.plot_density('xOz', grid_size=0.1, threshold=10)
+        processor.save_results_as_png()
 
 
 if __name__ == '__main__':
