@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import cv2
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
@@ -17,9 +18,7 @@ class PointCloudProcessor:
     def __init__(self, base_dir: Path, project_name: str):
         self.base_dir = base_dir
         self.project_name = project_name
-        self.point_cloud = self.load_point_cloud()
 
-    def load_point_cloud(self) -> o3d.geometry.PointCloud:
         ply_files = list(self.base_dir.glob(f'{self.project_name}/*.ply'))
         if not ply_files:
             raise FileNotFoundError(f"No PLY files found in {self.base_dir / self.project_name}")
@@ -27,8 +26,11 @@ class PointCloudProcessor:
             raise FileNotFoundError(
                 f"Multiple PLY files found in {self.base_dir / self.project_name}, expected only one."
             )
-        ply_file = more_itertools.only(ply_files)
-        return o3d.io.read_point_cloud(str(ply_file))
+        self.ply_file: Path = more_itertools.only(ply_files)
+        self.point_cloud = self.load_point_cloud()
+
+    def load_point_cloud(self) -> o3d.geometry.PointCloud:
+        return o3d.io.read_point_cloud(str(self.ply_file))
 
     def adjust_main_plane(self):
         points = np.asarray(self.point_cloud.points)
@@ -486,27 +488,25 @@ class PointCloudProcessor:
         plt.ylabel('Y')
         plt.tight_layout()
         plt.show()
+
     def save_results_as_png(self):
         """
         使用PIL将高程和图像的结果分别存储为PNG文件，存储路径与输入文件所在文件夹相同。
         """
         # 获取高程数据
-        points = np.asarray(self.point_cloud.points)
-        elevation = points[:, 2].reshape(-1, 1)
+        result = self.generate_interpolated_matrix(0.2)
+        elevation = result[:, 0]
+        image = result[:, 1:]
 
-        # 获取输入点云文件夹路径
-        ply_files = list(self.base_dir.glob(f'{self.project_name}/*.ply'))
-        ply_file = more_itertools.only(ply_files)
-        output_dir = ply_file.parent
+        norm = plt.Normalize(vmin=np.min(elevation), vmax=np.max(elevation))
+        scalar_map = cm.ScalarMappable(cmap='terrain', norm=norm)
+        elevation_image = (scalar_map.to_rgba(elevation)[:, :, :3] * 255).astype(np.uint8)
 
-        # 生成高程图像
-        elevation_image = np.full((elevation.shape[0], 1), elevation)
-        elevation_image = np.reshape(elevation_image, (int(np.sqrt(elevation.shape[0])), int(np.sqrt(elevation.shape[0]))))
-        elevation_image = (elevation_image - elevation_image.min()) / (elevation_image.max() - elevation_image.min()) * 255
-        elevation_image = Image.fromarray(elevation_image.astype(np.uint8))
+        # 保存高程图像
+        Image.fromarray(elevation_image).save(self.ply_file.with_name('elevation.png'))
 
-        # 保存高程图像为PNG
-        elevation_image.save(output_dir / f'{self.project_name}_elevation.png')
+        # 保存原始图像
+        Image.fromarray(image.astype(np.uint8)).save(self.ply_file.with_name('surface.png'))
 
     @classmethod
     def main(cls):
