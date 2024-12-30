@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
 import open3d as o3d
+from sklearn.cluster import KMeans
 
 
 class PointCloudProcessor:
@@ -157,6 +158,81 @@ class PointCloudProcessor:
         self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
         print("点云已根据密度图旋转以对齐方形边界。")
 
+    def evaluate_and_flip_z(self):
+        """
+        评估是否需要翻转点云的 z 方向。如果需要，则进行翻转。
+        步骤：
+        1. 分别对 x 和 y 轴进行 K-Means 聚类，获取 xmin, xmax, ymin, ymax。
+        2. 扩展每个边界 10%。
+        3. 提取边界内点和外部点。
+        4. 计算 z 值的中位数。
+        5. 比较并决定是否翻转 z 方向。
+        """
+        points = np.asarray(self.point_cloud.points)
+        x = points[:, 0].reshape(-1, 1)
+        y = points[:, 1].reshape(-1, 1)
+
+        # 对 x 轴进行聚类
+        kmeans_x = KMeans(n_clusters=2, random_state=0).fit(x)
+        centers_x = sorted(kmeans_x.cluster_centers_.flatten())
+        xmin, xmax = centers_x[0], centers_x[1]
+        print(f"X轴聚类中心: xmin={xmin}, xmax={xmax}")
+
+        # 对 y 轴进行聚类
+        kmeans_y = KMeans(n_clusters=2, random_state=0).fit(y)
+        centers_y = sorted(kmeans_y.cluster_centers_.flatten())
+        ymin, ymax = centers_y[0], centers_y[1]
+        print(f"Y轴聚类中心: ymin={ymin}, ymax={ymax}")
+
+        # 计算扩展量（10%）
+        extend_x = 0.1 * (xmax - xmin)
+        extend_y = 0.1 * (ymax - ymin)
+
+        # 扩展边界
+        xmin_ext = xmin - extend_x
+        xmax_ext = xmax + extend_x
+        ymin_ext = ymin - extend_y
+        ymax_ext = ymax + extend_y
+
+        print(f"扩展后的边界: xmin={xmin_ext}, xmax={xmax_ext}, ymin={ymin_ext}, ymax={ymax_ext}")
+
+        # 定义边界内的掩码
+        boundary_mask = (
+                (points[:, 0] >= xmin_ext) & (points[:, 0] <= xmax_ext) &
+                (points[:, 1] >= ymin_ext) & (points[:, 1] <= ymax_ext)
+        )
+
+        # 边界内点
+        boundary_points = points[boundary_mask]
+        # 边界外点：x > xmax_ext 或 y > ymax_ext，且 x >= xmin_ext
+        external_mask = (
+                ((points[:, 0] > xmax_ext) | (points[:, 1] > ymax_ext)) &
+                (points[:, 0] >= xmin_ext)
+        )
+        external_points = points[external_mask]
+
+        print(f"边界内点数量: {len(boundary_points)}")
+        print(f"外部点数量: {len(external_points)}")
+
+        if len(boundary_points) == 0 or len(external_points) == 0:
+            print("无法确定边界内或外部的 z 值，跳过翻转。")
+            return
+
+        median_z_inside = np.median(boundary_points[:, 2])
+        median_z_outside = np.median(external_points[:, 2])
+        print(f"边界内 z 中位数: {median_z_inside}")
+        print(f"外部 z 中位数: {median_z_outside}")
+
+        # 判断是否需要翻转
+        if median_z_outside > median_z_inside:
+            print("需要翻转 z 方向。")
+            flipped_points = points.copy()
+            flipped_points[:, 2] = -flipped_points[:, 2]
+            self.point_cloud.points = o3d.utility.Vector3dVector(flipped_points)
+            print("点云的 z 方向已翻转。")
+        else:
+            print("不需要翻转 z 方向。")
+
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
@@ -169,6 +245,7 @@ class PointCloudProcessor:
 
         processor.adjust_main_plane()
         processor.align_density_square(grid_size, threshold)
+        processor.evaluate_and_flip_z()
         processor.plot_density('xOy', grid_size, threshold)
         processor.plot_density('xOz', grid_size, threshold)
         processor.plot_density('yOz', grid_size, threshold)
