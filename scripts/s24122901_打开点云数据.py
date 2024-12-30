@@ -7,11 +7,10 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
-import open3d as o3d
+import open3d
 from PIL import Image
 from joblib import Memory
 from open3d.cpu.pybind.geometry import PointCloud
-from open3d.cpu.pybind.t.io import read_point_cloud
 from open3d.cpu.pybind.utility import Vector3dVector
 from scipy.interpolate import griddata
 from scipy.optimize import minimize
@@ -46,7 +45,7 @@ class PointCloudProcessor(MethodDiskCache):
     @property
     @method_cache
     def p1_读取点云原始数据(self) -> PointCloud:
-        return read_point_cloud(self.ply_file.as_posix())
+        return open3d.io.read_point_cloud(self.ply_file.as_posix())
 
     @property
     @method_cache
@@ -81,7 +80,8 @@ class PointCloudProcessor(MethodDiskCache):
         return cloud
 
     def plot_point_cloud(self, cloud: PointCloud):
-        o3d.visualization.draw_geometries([cloud])
+        print(cloud.points)
+        open3d.visualization.draw_geometries([cloud])
 
     def plot_density(self, cloud: PointCloud, plane: str, grid_size: float, threshold: int):
         points = np.asarray(cloud.points)
