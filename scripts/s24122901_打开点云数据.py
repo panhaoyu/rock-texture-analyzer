@@ -374,8 +374,8 @@ class PointCloudProcessor:
         assert right_center > left_center
 
         # 2. 扩展边界范围，向内外分别扩展10%
-        extend_x = 0.2 * (right_center - left_center)
-        extend_y = 0.2 * (back_center - front_center)
+        extend_x = 0.1 * (right_center - left_center)
+        extend_y = 0.1 * (back_center - front_center)
 
         definite_front = front_center + extend_y
         definite_back = back_center - extend_y
