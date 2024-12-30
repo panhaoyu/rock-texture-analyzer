@@ -342,7 +342,7 @@ class PointCloudProcessor:
     @classmethod
     def main(cls):
         base_dir = Path(r'F:\data\laser-scanner')
-        project_name = 'Group_3'
+        project_name = 'Group_4'
         processor = cls(base_dir, project_name)
         processor.adjust_main_plane()
         processor.align_density_square(grid_size=1, threshold=50)
