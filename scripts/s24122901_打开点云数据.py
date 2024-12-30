@@ -79,7 +79,7 @@ class PointCloudProcessor(MethodDiskCache):
         cloud.points = Vector3dVector(rotated_points)
         return cloud
 
-    def plot_point_cloud(self, cloud: PointCloud):
+    def 绘制点云(self, cloud: PointCloud):
         open3d.visualization.draw_geometries([cloud])
 
     def plot_density(self, cloud: PointCloud, plane: str, grid_size: float, threshold: int):
@@ -458,7 +458,8 @@ class PointCloudProcessor(MethodDiskCache):
         return cloud
 
     @cached_property
-    def interpolated_surface_matrix(self) -> np.ndarray:
+    @method_cache
+    def p7_表面二维重构(self) -> np.ndarray:
         """
         将上表面的点云通过散点插值转换为 x, y 平面内的 [z, r, g, b] 四层矩阵。
 
@@ -468,14 +469,12 @@ class PointCloudProcessor(MethodDiskCache):
         Returns:
             np.ndarray: 生成的矩阵，包含 [z, r, g, b] 四个层。
         """
-        cache_path = self.ply_file.parent.joinpath('cache/interpolated_surface_matrix.npy')
-        if cache_path.exists():
-            return np.load(cache_path)
+        cloud = self.p6_仅保留顶面
 
         resolution: float = 0.2
 
-        points = np.asarray(self.point_cloud.points)
-        colors = np.asarray(self.point_cloud.colors)
+        points = np.asarray(cloud.points)
+        colors = np.asarray(cloud.colors)
 
         # 提取 x, y, z, r, g, b 数据
         x, y, z = points.T
@@ -499,33 +498,38 @@ class PointCloudProcessor(MethodDiskCache):
         g_interp = griddata((x, y), g, (x_grid, y_grid), method='cubic')
         b_interp = griddata((x, y), b, (x_grid, y_grid), method='cubic')
 
-        print(z_interp)
-
         # 生成 [z, r, g, b] 四层矩阵
         interpolated_matrix = np.stack([z_interp, r_interp, g_interp, b_interp], axis=-1)
 
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(cache_path, interpolated_matrix)
         return interpolated_matrix
 
-    def plot_interpolated_surface(self):
-        """
-        绘制插值后的高程图和色彩图。
-
-        Args:
-            resolution: (x_res, y_res)，表示插值后矩阵的大小，即 x 和 y 方向的分辨率。
-        """
-        interpolated_matrix = self.interpolated_surface_matrix
+    def 绘制表面(self):
+        interpolated_matrix = self.p7_表面二维重构
 
         # 绘制高程图
         plt.figure(figsize=(10, 8))
         elevation = interpolated_matrix[:, :, 0]
         color = interpolated_matrix[:, :, 1:]
+        for i in range(3):
+            v = color[:, :, i]
+            vmin = np.nanmin(v)
+            vmax = np.nanmax(v)
+            v = (v - vmin) / (vmax - vmin) * 255
+            color[:, :, i] = v
+
+        color = np.uint8(np.round(color))
 
         # elevation = elevation[100:140, 100:140]
         # color = color[100:140, 100:140]
 
-        plt.imshow(elevation, cmap='rainbow', origin='lower')
+        norm = plt.Normalize(vmin=np.nanmin(elevation), vmax=np.nanmax(elevation))
+        scalar_map = cm.ScalarMappable(cmap='jet', norm=norm)
+        elevation = (scalar_map.to_rgba(elevation)[:, :, :3] * 255)
+        elevation = np.uint8(elevation)
+        Image.fromarray(elevation).save(self.ply_file.with_name('elevation.png'))
+        Image.fromarray(color).save(self.ply_file.with_name('surface.png'))
+
+        plt.imshow(elevation, cmap='jet', origin='lower')
         plt.colorbar(label='Elevation (z)')
         plt.title('Elevation Map')
         plt.xlabel('X')
@@ -543,45 +547,10 @@ class PointCloudProcessor(MethodDiskCache):
         plt.tight_layout()
         plt.show()
 
-    def save_results_as_png(self):
-        """
-        使用PIL将高程和图像的结果分别存储为PNG文件，存储路径与输入文件所在文件夹相同。
-        """
-        # 获取高程数据
-        result = self.interpolated_surface_matrix
-        elevation = result[:, 0]
-        image = result[:, 1:]
-
-        norm = plt.Normalize(vmin=np.min(elevation), vmax=np.max(elevation))
-        scalar_map = cm.ScalarMappable(cmap='terrain', norm=norm)
-        elevation_image = (scalar_map.to_rgba(elevation)[:, :, :3] * 255).astype(np.uint8)
-
-        # 保存高程图像
-        Image.fromarray(elevation_image).save(self.ply_file.with_name('elevation.png'))
-
-        # 保存原始图像
-        Image.fromarray(image.astype(np.uint8)).save(self.ply_file.with_name('surface.png'))
-
     @classmethod
     def main(cls):
-        base_dir = Path(r'F:\data\laser-scanner')
-        project_name = 'Group_4'
-        obj = cls(base_dir, project_name)
-        obj.plot_point_cloud(obj.p6_仅保留顶面)
-
-        # obj.adjust_main_plane()
-        # obj.align_density_square(grid_size=1, threshold=50)
-        # obj.evaluate_and_flip_z()
-        # # processor.plot_density('xOy', grid_size=0.1, threshold=10)
-        # # processor.plot_density('xOz', grid_size=0.1, threshold=10)
-        # obj.fine_align()
-        # obj.only_top()
-        # obj.plot_point_cloud()
-        # print(obj.point_cloud.points)
-        # obj.plot_interpolated_surface()
-        # obj.plot_density('xOz', grid_size=0.1, threshold=10)
-        # obj.save_results_as_png()
-
-
+        obj = cls(Path(r'F:\data\laser-scanner'), 'Group_4')
+        # obj.绘制点云(obj.p6_仅保留顶面)
+        obj.绘制表面()
 if __name__ == '__main__':
     PointCloudProcessor.main()
