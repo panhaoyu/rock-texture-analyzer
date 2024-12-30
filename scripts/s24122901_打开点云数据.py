@@ -120,7 +120,7 @@ class PointCloudProcessor(MethodDiskCache):
 
     @property
     @method_cache
-    def f3_xOy平面对正(self):
+    def p3_xOy平面对正(self):
         grid_size = 1
         threshold = 50
         cloud = self.p2_调整为主平面
@@ -168,13 +168,13 @@ class PointCloudProcessor(MethodDiskCache):
         ])
 
         rotated_points = points.dot(R_z.T)
-        cloud.points = o3d.utility.Vector3dVector(rotated_points)
+        cloud.points = open3d.utility.Vector3dVector(rotated_points)
         return cloud
 
     @property
     @method_cache
-    def f4_地面在下(self):
-        cloud = copy.deepcopy(self.f3_xOy平面对正)
+    def p4_地面在下(self):
+        cloud = copy.deepcopy(self.p3_xOy平面对正)
         points = np.asarray(cloud.points)
         x = points[:, 0].reshape(-1, 1)
         y = points[:, 1].reshape(-1, 1)
@@ -216,13 +216,18 @@ class PointCloudProcessor(MethodDiskCache):
         if median_z_outside > median_z_inside:
             flipped_points = points.copy()
             flipped_points[:, 2] = -flipped_points[:, 2]
-            self.point_cloud.points = o3d.utility.Vector3dVector(flipped_points)
+            cloud.points = open3d.utility.Vector3dVector(flipped_points)
 
-    def fine_align(self):
+        return cloud
+
+    @property
+    @method_cache
+    def p5_优化精细对正(self):
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
         """
-        points = np.asarray(self.point_cloud.points)
+        cloud = copy.deepcopy(self.p4_地面在下)
+        points = np.asarray(cloud.points)
 
         # 1. 分别对X轴和Y轴进行K-Means聚类
         # 对X轴聚类
@@ -375,14 +380,17 @@ class PointCloudProcessor(MethodDiskCache):
 
         # 8. 应用最佳旋转到整个点云
         rotated_points = points.dot(best_rotation.T)
-        self.point_cloud.points = o3d.utility.Vector3dVector(rotated_points)
+        cloud.points = open3d.utility.Vector3dVector(rotated_points)
+        return cloud
 
-    def only_top(self):
-
+    @property
+    @method_cache
+    def p6_仅保留顶面(self):
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
         """
-        points = np.asarray(self.point_cloud.points)
+        cloud = copy.deepcopy(self.p5_优化精细对正)
+        points = np.asarray(cloud.points)
 
         point_z = points[:, 2]
         bottom_center = np.min(point_z)
@@ -444,9 +452,10 @@ class PointCloudProcessor(MethodDiskCache):
                 & (point_z > bottom_center + range_z * 0.5)
         )
 
-        colors = np.asarray(self.point_cloud.colors)
-        self.point_cloud.points = o3d.utility.Vector3dVector(points[top_selector])
-        self.point_cloud.colors = o3d.utility.Vector3dVector(colors[top_selector])
+        colors = np.asarray(cloud.colors)
+        cloud.points = open3d.utility.Vector3dVector(points[top_selector])
+        cloud.colors = open3d.utility.Vector3dVector(colors[top_selector])
+        return cloud
 
     @cached_property
     def interpolated_surface_matrix(self) -> np.ndarray:
@@ -558,7 +567,7 @@ class PointCloudProcessor(MethodDiskCache):
         base_dir = Path(r'F:\data\laser-scanner')
         project_name = 'Group_4'
         obj = cls(base_dir, project_name)
-        obj.plot_point_cloud(obj.p1_读取点云原始数据)
+        obj.plot_point_cloud(obj.p6_仅保留顶面)
 
         # obj.adjust_main_plane()
         # obj.align_density_square(grid_size=1, threshold=50)
