@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
 import open3d as o3d
+from PIL import Image
 from scipy.interpolate import griddata
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
@@ -493,9 +494,6 @@ class PointCloudProcessor:
         points = np.asarray(self.point_cloud.points)
         elevation = points[:, 2].reshape(-1, 1)
 
-        # 获取图像数据：使用密度图作为图像
-        density_image = self.generate_density_image()
-
         # 获取输入点云文件夹路径
         ply_files = list(self.base_dir.glob(f'{self.project_name}/*.ply'))
         ply_file = more_itertools.only(ply_files)
@@ -509,10 +507,6 @@ class PointCloudProcessor:
 
         # 保存高程图像为PNG
         elevation_image.save(output_dir / f'{self.project_name}_elevation.png')
-
-        # 生成并保存密度图像
-        density_image = Image.fromarray(density_image)
-        density_image.save(output_dir / f'{self.project_name}_density.png')
 
     @classmethod
     def main(cls):
