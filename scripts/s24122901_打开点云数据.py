@@ -354,9 +354,7 @@ class PointCloudProcessor:
         bottom_center = np.min(point_z)
         top_center = np.max(point_z)
         range_z = (top_center - bottom_center)
-        bottom_center += range_z * 0.1
-        top_center -= range_z * 0.4
-        z_selector = (point_z > bottom_center) & (point_z < top_center)
+        z_selector = (point_z > (bottom_center + range_z * 0.1)) & (point_z < (top_center - range_z * 0.4))
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
 
@@ -397,15 +395,20 @@ class PointCloudProcessor:
         back_mean = np.mean(back_points[:, 1])
         back_std = np.std(back_points[:, 1])
 
-        left = left_mean + 3 * left_std
-        right = right_mean - 3 * right_std
-        front = front_mean + 3 * front_std
-        back = back_mean - 3 * back_std
+        std_range = 5
+        left = left_mean + std_range * left_std
+        right = right_mean - std_range * right_std
+        front = front_mean + std_range * front_std
+        back = back_mean - std_range * back_std
 
         print(f'{left=} {right=} {front=} {back=}')
 
-        point_x, point_y = points[:, 0], points[:, 1]
-        top_selector = (point_x > left) & (point_x < right) & (point_y > front) & (point_y < back)
+        point_x, point_y, point_z = points[:, 0], points[:, 1], points[:, 2]
+        top_selector = (
+                (point_x > left) & (point_x < right)
+                & (point_y > front) & (point_y < back)
+                & (point_z > bottom_center + range_z * 0.5)
+        )
 
         colors = np.asarray(self.point_cloud.colors)
         self.point_cloud.points = o3d.utility.Vector3dVector(points[top_selector])
