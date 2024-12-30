@@ -350,7 +350,7 @@ class PointCloudProcessor:
         processor.align_density_square(grid_size=1, threshold=50)
         processor.evaluate_and_flip_z()
         processor.plot_density('xOy', grid_size=0.1, threshold=10)
-        processor.fine_align()  # 使用SciPy的优化方法进行细化对正
+        processor.fine_align()
         processor.plot_density('xOy', grid_size=0.1, threshold=10)
 
 
