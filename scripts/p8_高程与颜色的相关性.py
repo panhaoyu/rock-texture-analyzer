@@ -28,7 +28,7 @@ class PointCloudProcessorP8(PointCloudProcessorP7):
         grad_y_smoothed = gaussian_filter(grad_y, sigma=sigma)
 
         # 计算一阶梯度的幅值
-        first_gradient_magnitude = np.hypot(grad_x_smoothed + grad_y_smoothed)
+        first_gradient_magnitude = np.hypot(grad_x_smoothed, grad_y_smoothed)
 
         return first_gradient_magnitude
 
@@ -58,7 +58,7 @@ class PointCloudProcessorP8(PointCloudProcessorP7):
 
         # 计算二阶梯度的大小
         # second_gradient_magnitude = np.abs(d2f_dxx) + np.abs(d2f_dyy)
-        second_gradient_magnitude = np.hypot(d2f_dxx + d2f_dyy)
+        second_gradient_magnitude = np.hypot(d2f_dxx, d2f_dyy)
 
         return second_gradient_magnitude
 
