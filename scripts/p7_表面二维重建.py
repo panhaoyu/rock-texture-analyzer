@@ -122,6 +122,7 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
 
         Args:
             interpolated_matrix (np.ndarray): 预先计算好的插值结果矩阵。
+            name (str): 名称的前缀。
         """
         # 绘制高程图
         elevation = interpolated_matrix[:, :, 0]
