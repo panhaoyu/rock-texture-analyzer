@@ -50,7 +50,7 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         # 插值 z, r, g, b 数据
         arrays = []
         z_interp = griddata((x, y), z, (x_grid, y_grid), method='cubic')
-        arrays.extend([z_interp])
+        arrays.append(z_interp)
         colors = np.asarray(cloud.colors)
         if colors.size:
             r, g, b = colors.T
@@ -70,7 +70,10 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
             nan_count = np.isnan(layer).sum()
             nan_percentage = (nan_count / total) * 100
             layer_name = layer_names[i] if i < len(layer_names) else f'layer_{i}'
-            print(f"Layer '{layer_name}': NaN 占比 = {nan_percentage:.2f}%")
+            print(f"Layer '{layer_name}':")
+            print(f"  总元素数量 (Total elements) = {total}")
+            print(f"  NaN 数量 (NaN count) = {nan_count}")
+            print(f"  NaN 占比 (NaN percentage) = {nan_percentage:.2f}%\n")
 
         return interpolated_matrix
 
