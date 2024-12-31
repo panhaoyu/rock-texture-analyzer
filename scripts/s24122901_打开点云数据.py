@@ -534,8 +534,8 @@ class PointCloudProcessor(MethodDiskCache):
         obj = cls(Path(r'F:\data\laser-scanner'), 'Group_4')
         # obj.绘制点云(obj.p1_读取点云原始数据)
         # obj.绘制点云(obj.p2_调整为主平面)
-        # obj.绘制点云(obj.p6_仅保留顶面)
-        obj.绘制表面()
+        obj.绘制点云(obj.p6_仅保留顶面)
+        # obj.绘制表面()
 
 
 if __name__ == '__main__':
