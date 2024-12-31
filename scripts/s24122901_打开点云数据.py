@@ -12,12 +12,12 @@ from PIL import Image
 from joblib import Memory
 from open3d.cpu.pybind.geometry import PointCloud
 from open3d.cpu.pybind.utility import Vector3dVector
+from sci_cache import MethodDiskCache, method_cache
 from scipy.interpolate import griddata
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
-from rock_texture_analyzer.utils.method_cache import MethodDiskCache, method_cache
 
 base_dir = Path(r'F:\data\laser-scanner')
 project_name = 'Group_4'
