@@ -17,6 +17,7 @@ from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
+from scripts.config import base_dir, project_name
 
 
 class PointCloudProcessor(MethodDiskCache):
@@ -531,7 +532,7 @@ class PointCloudProcessor(MethodDiskCache):
 
     @classmethod
     def main(cls):
-        obj = cls(Path(r'F:\data\laser-scanner'), 'Group_4')
+        obj = cls(base_dir, project_name)
         # obj.绘制点云(obj.p1_读取点云原始数据)
         # obj.绘制点云(obj.p2_调整为主平面)
         obj.绘制点云(obj.p6_仅保留顶面)
