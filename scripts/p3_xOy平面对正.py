@@ -70,4 +70,4 @@ class PointCloudProcessorP3(PointCloudProcessorP2):
 
 
 if __name__ == '__main__':
-    PointCloudProcessorP2.main()
+    PointCloudProcessorP3.main()
