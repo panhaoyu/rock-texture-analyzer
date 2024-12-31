@@ -1,6 +1,4 @@
 import copy
-import warnings
-from functools import cached_property
 from pathlib import Path
 
 import cv2
@@ -43,42 +41,10 @@ class PointCloudProcessor(MethodDiskCache):
     def p1_读取点云原始数据(self) -> PointCloud:
         return open3d.io.read_point_cloud(self.ply_file.as_posix())
 
-    @property
-    @method_cache
-    def p2_调整为主平面(self):
-        cloud = self.p1_读取点云原始数据
-        points = np.asarray(cloud.points)
-        centroid = np.mean(points, axis=0)
-        centered_points = points - centroid
-        cloud = copy.deepcopy(cloud)
-        cloud.points = Vector3dVector(centered_points)
-
-        cov_matrix = np.cov(centered_points, rowvar=False)
-        _, _, vh = np.linalg.svd(cov_matrix)
-        plane_normal = vh[-1]
-        plane_normal /= np.linalg.norm(plane_normal)
-
-        target_normal = np.array([0, 0, 1])
-        v = np.cross(plane_normal, target_normal)
-        s = np.linalg.norm(v)
-        c = np.dot(plane_normal, target_normal)
-
-        if s < 1e-6:
-            R = np.eye(3)
-        else:
-            vx = np.array([[0, -v[2], v[1]],
-                           [v[2], 0, -v[0]],
-                           [-v[1], v[0], 0]])
-            R = np.eye(3) + vx + np.matmul(vx, vx) * ((1 - c) / (s ** 2))
-
-        rotated_points = centered_points.dot(R.T)
-        cloud.points = Vector3dVector(rotated_points)
-        return cloud
-
     def 绘制点云(self, cloud: PointCloud):
         open3d.visualization.draw_geometries([cloud])
 
-    def plot_density(self, cloud: PointCloud, plane: str, grid_size: float, threshold: int):
+    def 绘制平面投影(self, cloud: PointCloud, plane: str, grid_size: float, threshold: int):
         points = np.asarray(cloud.points)
         match plane:
             case 'xOy':
@@ -113,59 +79,6 @@ class PointCloudProcessor(MethodDiskCache):
         plt.colorbar(label='Density')
         plt.tight_layout()
         plt.show()
-
-    @property
-    @method_cache
-    def p3_xOy平面对正(self):
-        grid_size = 1
-        threshold = 50
-        cloud = self.p2_调整为主平面
-        cloud = copy.deepcopy(cloud)
-        points = np.asarray(cloud.points)
-        projected_points = points[:, :2]
-
-        x_min, y_min = projected_points.min(axis=0)
-        x_max, y_max = projected_points.max(axis=0)
-
-        x_bins = np.arange(x_min, x_max + grid_size, grid_size)
-        y_bins = np.arange(y_min, y_max + grid_size, grid_size)
-
-        hist, x_edges, y_edges = np.histogram2d(
-            projected_points[:, 0],
-            projected_points[:, 1],
-            bins=[x_bins, y_bins]
-        )
-
-        hist_filtered = np.where(hist > threshold, 255, 0).astype(np.uint8)
-        density_image = hist_filtered
-        density_image = density_image[::-1]
-
-        contours, _ = cv2.findContours(density_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        if not contours:
-            return
-
-        largest_contour = max(contours, key=cv2.contourArea)
-        rect = cv2.minAreaRect(largest_contour)
-        angle = rect[-1]
-
-        if angle < -45:
-            angle = 90 + angle
-        else:
-            angle = angle
-
-        theta = np.radians(-angle)
-        cos_theta = np.cos(theta)
-        sin_theta = np.sin(theta)
-        R_z = np.array([
-            [cos_theta, -sin_theta, 0],
-            [sin_theta, cos_theta, 0],
-            [0, 0, 1]
-        ])
-
-        rotated_points = points.dot(R_z.T)
-        cloud.points = open3d.utility.Vector3dVector(rotated_points)
-        return cloud
 
     @property
     @method_cache
@@ -455,9 +368,16 @@ class PointCloudProcessor(MethodDiskCache):
             cloud.colors = open3d.utility.Vector3dVector(colors[top_selector])
         return cloud
 
-    @cached_property
+    @property
     @method_cache
-    def p7_表面二维重构(self) -> np.ndarray:
+    def p7_仅保留明确的矩形区域(self):
+        cloud = self.p6_仅保留顶面
+        print(123)
+        return cloud
+
+    @property
+    @method_cache
+    def p8_表面二维重建(self) -> np.ndarray:
         """
         将上表面的点云通过散点插值转换为 x, y 平面内的 [z, r, g, b] 四层矩阵。
 
@@ -507,7 +427,7 @@ class PointCloudProcessor(MethodDiskCache):
         return interpolated_matrix
 
     def 绘制表面(self):
-        interpolated_matrix = self.p7_表面二维重构
+        interpolated_matrix = self.p8_表面二维重建
 
         # 绘制高程图
         elevation = interpolated_matrix[:, :, 0]
@@ -534,9 +454,9 @@ class PointCloudProcessor(MethodDiskCache):
     @classmethod
     def main(cls):
         obj = cls(base_dir, project_name)
-        # obj.绘制点云(obj.p1_读取点云原始数据)
-        # obj.绘制点云(obj.p2_调整为主平面)
-        obj.绘制点云(obj.p6_仅保留顶面)
+        obj.绘制点云(obj.p1_读取点云原始数据)
+        # obj.绘制点云(obj.p6_仅保留顶面)
+        # obj.绘制平面投影(obj.p7_仅保留明确的矩形区域, 'xOy', 0.1, 1)
         # obj.绘制表面()
 
 
