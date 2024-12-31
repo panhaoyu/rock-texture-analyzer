@@ -9,7 +9,6 @@ import more_itertools
 import numpy as np
 import open3d
 from PIL import Image
-from joblib import Memory
 from open3d.cpu.pybind.geometry import PointCloud
 from open3d.cpu.pybind.utility import Vector3dVector
 from sci_cache import MethodDiskCache, method_cache
@@ -18,11 +17,6 @@ from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
-
-base_dir = Path(r'F:\data\laser-scanner')
-project_name = 'Group_4'
-
-memory = Memory(base_dir / project_name / 'cache')
 
 
 class PointCloudProcessor(MethodDiskCache):
@@ -537,7 +531,7 @@ class PointCloudProcessor(MethodDiskCache):
 
     @classmethod
     def main(cls):
-        obj = cls(Path(r'F:\data\laser-scanner'), 'fast-scan')
+        obj = cls(Path(r'F:\data\laser-scanner'), 'Group_4')
         # obj.绘制点云(obj.p1_读取点云原始数据)
         # obj.绘制点云(obj.p2_调整为主平面)
         # obj.绘制点云(obj.p6_仅保留顶面)
