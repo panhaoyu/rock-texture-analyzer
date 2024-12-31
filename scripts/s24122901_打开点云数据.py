@@ -504,20 +504,6 @@ class PointCloudProcessor(MethodDiskCache):
         # 生成 [z, r, g, b] 四层矩阵
         interpolated_matrix = np.stack(arrays, axis=-1)
 
-        # 由于未知原因，最外一层全都是nan。对其进行处理，删除即可。
-        values = np.concatenate([
-            interpolated_matrix[[1, -1], :, :].ravel(),
-            interpolated_matrix[:, [1, -1], :].ravel(),
-        ])
-        ratio = np.sum(~np.isnan(values)) / values.size
-        if ratio != 0:
-            warnings.warn(f'Not all edge values are nan, {ratio=}')
-
-        interpolated_matrix = interpolated_matrix[1:-1, 1:-1, :]
-        ratio = np.sum(np.isnan(interpolated_matrix)) / interpolated_matrix.size
-        if ratio != 0:
-            warnings.warn(f'Not all center values are not nan, {ratio=}')
-
         return interpolated_matrix
 
     def 绘制表面(self):
