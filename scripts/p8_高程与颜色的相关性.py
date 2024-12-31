@@ -7,6 +7,8 @@ from scripts.p7_表面二维重建 import PointCloudProcessorP7
 
 
 class PointCloudProcessorP8(PointCloudProcessorP7):
+    p8_gaussian_sigma = 0
+
     @property
     @sci_method_cache
     def p8_一阶梯度幅值(self) -> np.ndarray:
@@ -23,7 +25,7 @@ class PointCloudProcessorP8(PointCloudProcessorP7):
         grad_y, grad_x = np.gradient(elevation)
 
         # 对一阶梯度进行高斯平滑
-        sigma = 2.0  # 可根据需要调整
+        sigma = self.p8_gaussian_sigma
         grad_x_smoothed = gaussian_filter(grad_x, sigma=sigma)
         grad_y_smoothed = gaussian_filter(grad_y, sigma=sigma)
 
@@ -46,22 +48,22 @@ class PointCloudProcessorP8(PointCloudProcessorP7):
 
         # 计算一阶梯度
         grad_y, grad_x = np.gradient(elevation)
-
-        # 对一阶梯度进行高斯平滑
-        sigma = 2.0  # 可根据需要调整
-        grad_x_smoothed = gaussian_filter(grad_x, sigma=sigma)
-        grad_y_smoothed = gaussian_filter(grad_y, sigma=sigma)
+        if sigma := self.p8_gaussian_sigma:
+            grad_x = gaussian_filter(grad_x, sigma=sigma)
+            grad_y = gaussian_filter(grad_y, sigma=sigma)
 
         # 计算二阶梯度
-        d2f_dxx = np.gradient(grad_x_smoothed, axis=1)  # 二阶导数 x 方向
-        d2f_dyy = np.gradient(grad_y_smoothed, axis=0)  # 二阶导数 y 方向
+        d2f_dxx = np.gradient(grad_x, axis=1)
+        d2f_dyy = np.gradient(grad_y, axis=0)
+        if sigma := self.p8_gaussian_sigma:
+            d2f_dxx = gaussian_filter(d2f_dxx, sigma=sigma)
+            d2f_dyy = gaussian_filter(d2f_dyy, sigma=sigma)
 
         # 计算二阶梯度的大小
         # second_gradient_magnitude = np.abs(d2f_dxx) + np.abs(d2f_dyy)
         second_gradient_magnitude = np.hypot(d2f_dxx, d2f_dyy)
 
         return second_gradient_magnitude
-
     @classmethod
     def main(cls):
         """
