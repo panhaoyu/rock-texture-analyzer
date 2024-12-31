@@ -2,6 +2,7 @@ import numpy as np
 from sci_cache import sci_method_cache
 from scipy.ndimage import gaussian_filter
 
+from scripts.config import project_name, base_dir
 from scripts.p7_表面二维重建 import PointCloudProcessorP7
 
 
@@ -61,11 +62,14 @@ class PointCloudProcessorP8(PointCloudProcessorP7):
         # second_gradient_magnitude = np.sqrt(d2f_dxx**2 + d2f_dyy**2)
 
         return second_gradient_magnitude
+
     @classmethod
-    def main(self):
+    def main(cls):
         """
         主方法，执行表面绘制和梯度计算与保存。
         """
+        self = cls(base_dir, project_name)
+
         # 获取插值后的表面数据
         interpolated_matrix = self.p7_表面二维重建  # 使用三次插值
 
