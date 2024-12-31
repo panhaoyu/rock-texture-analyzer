@@ -180,9 +180,9 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         obj = cls(base_dir, project_name)
         # 使用不同的缓存属性绘制表面
         # obj.绘制表面(obj.p7_表面二维重建_三次插值)  # 使用三次插值
-        obj.绘制表面(obj.p7_表面二维重建_线性插值)  # 使用线性插值
+        # obj.绘制表面(obj.p7_表面二维重建_线性插值)  # 使用线性插值
         # obj.绘制表面(obj.p7_表面二维重建_最近邻插值)  # 使用最近邻插值
-        # obj.绘制表面(obj.p7_表面二维重建)  # 使用最近邻插值
+        obj.绘制表面(obj.p7_表面二维重建)  # 使用最近邻插值
 
 
 if __name__ == '__main__':
