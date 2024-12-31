@@ -126,7 +126,10 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         """
         # 绘制高程图
         elevation = interpolated_matrix[:, :, 0]
-        norm = plt.Normalize(vmin=np.nanmin(elevation), vmax=np.nanmax(elevation))
+        norm = plt.Normalize(
+            vmin=float(np.nanquantile(elevation, 0.01)),
+            vmax=float(np.nanquantile(elevation, 0.99)),
+        )
         scalar_map = cm.ScalarMappable(cmap='jet', norm=norm)
         elevation_rgba = scalar_map.to_rgba(elevation)
         elevation_rgb = (elevation_rgba[:, :, :3] * 255).astype(np.uint8)
@@ -142,8 +145,8 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
             color = interpolated_matrix[:, :, 1:].copy()
             for i in range(3):
                 v = color[:, :, i]
-                v_min = np.nanmin(v)
-                v_max = np.nanmax(v)
+                v_min = np.nanquantile(v, 0.01)
+                v_max = np.nanquantile(v, 0.99)
                 if v_max - v_min == 0:
                     normalized_v = np.zeros_like(v)
                 else:
