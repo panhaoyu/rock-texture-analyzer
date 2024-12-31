@@ -1,4 +1,5 @@
 import copy
+import warnings
 from functools import cached_property
 from pathlib import Path
 
@@ -468,7 +469,7 @@ class PointCloudProcessor(MethodDiskCache):
         """
         cloud = self.p6_仅保留顶面
 
-        resolution: float = 0.2
+        resolution: float = 0.1
 
         points = np.asarray(cloud.points)
 
@@ -502,6 +503,20 @@ class PointCloudProcessor(MethodDiskCache):
 
         # 生成 [z, r, g, b] 四层矩阵
         interpolated_matrix = np.stack(arrays, axis=-1)
+
+        # 由于未知原因，最外一层全都是nan。对其进行处理，删除即可。
+        values = np.concatenate([
+            interpolated_matrix[[1, -1], :, :].ravel(),
+            interpolated_matrix[:, [1, -1], :].ravel(),
+        ])
+        ratio = np.sum(~np.isnan(values)) / values.size
+        if ratio != 0:
+            warnings.warn(f'Not all edge values are nan, {ratio=}')
+
+        interpolated_matrix = interpolated_matrix[1:-1, 1:-1, :]
+        ratio = np.sum(np.isnan(interpolated_matrix)) / interpolated_matrix.size
+        if ratio != 0:
+            warnings.warn(f'Not all center values are not nan, {ratio=}')
 
         return interpolated_matrix
 
