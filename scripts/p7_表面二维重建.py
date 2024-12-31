@@ -114,7 +114,7 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         """
         return self.p7_表面二维重建_三次插值
 
-    def 绘制表面(self, interpolated_matrix: np.ndarray):
+    def 绘制表面(self, interpolated_matrix: np.ndarray, name: str = 'output'):
         """
         绘制表面高程图和颜色图，保存后根据是否存在颜色图像进行显示。
         如果存在颜色图像，则将高程图和颜色图左右合并并显示。
@@ -130,7 +130,9 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         elevation_rgba = scalar_map.to_rgba(elevation)
         elevation_rgb = (elevation_rgba[:, :, :3] * 255).astype(np.uint8)
         elevation_image = Image.fromarray(elevation_rgb)
-        elevation_path = self.ply_file.with_name('elevation.png')
+        output_dir = self.ply_file.with_name('images')
+        output_dir.mkdir(parents=True, exist_ok=True)
+        elevation_path = output_dir.joinpath(f'{name}-elevation.png')
         elevation_image.save(elevation_path)
 
         surface_image = None
@@ -149,7 +151,7 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
 
             color_uint8 = np.clip(np.round(color), 0, 255).astype(np.uint8)
             surface_image = Image.fromarray(color_uint8)
-            surface_path = self.ply_file.with_name('surface.png')
+            surface_path = output_dir.joinpath(f'{name}-surface.png')
             surface_image.save(surface_path)
 
         # 显示图像
