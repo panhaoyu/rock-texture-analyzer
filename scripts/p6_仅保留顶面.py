@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 import open3d
-from sci_cache import method_cache
+from sci_cache import sci_method_cache
 
 from scripts.config import base_dir, project_name
 from scripts.p5_精细化对正 import PointCloudProcessorP5
@@ -10,7 +10,7 @@ from scripts.p5_精细化对正 import PointCloudProcessorP5
 
 class PointCloudProcessorP6(PointCloudProcessorP5):
     @property
-    @method_cache
+    @sci_method_cache
     def p6_仅保留顶面(self):
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。

@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 import open3d
-from sci_cache import method_cache
+from sci_cache import sci_method_cache
 from sklearn.cluster import KMeans
 
 from scripts.config import base_dir, project_name
@@ -12,7 +12,7 @@ from scripts.p4_调整地面在下方 import PointCloudProcessorP4
 class PointCloudProcessorP5(PointCloudProcessorP4):
 
     @property
-    @method_cache
+    @sci_method_cache
     def p5_优化精细对正(self):
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。

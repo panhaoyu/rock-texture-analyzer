@@ -1,4 +1,3 @@
-import copy
 from pathlib import Path
 
 import matplotlib.cm as cm
@@ -8,12 +7,9 @@ import numpy as np
 import open3d
 from PIL import Image
 from open3d.cpu.pybind.geometry import PointCloud
-from sci_cache import MethodDiskCache, method_cache
+from sci_cache import MethodDiskCache, sci_method_cache
 from scipy.interpolate import griddata
-from scipy.optimize import minimize
-from sklearn.cluster import KMeans
 
-from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
 from scripts.config import base_dir, project_name
 
 
@@ -35,7 +31,7 @@ class PointCloudProcessor(MethodDiskCache):
         return self.base_dir / self.project_name / 'cache'
 
     @property
-    @method_cache
+    @sci_method_cache
     def p1_读取点云原始数据(self) -> PointCloud:
         return open3d.io.read_point_cloud(self.ply_file.as_posix())
 
@@ -79,14 +75,7 @@ class PointCloudProcessor(MethodDiskCache):
         plt.show()
 
     @property
-    @method_cache
-    def p7_仅保留明确的矩形区域(self):
-        cloud = self.p6_仅保留顶面
-        print(123)
-        return cloud
-
-    @property
-    @method_cache
+    @sci_method_cache
     def p8_表面二维重建(self) -> np.ndarray:
         """
         将上表面的点云通过散点插值转换为 x, y 平面内的 [z, r, g, b] 四层矩阵。

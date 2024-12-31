@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 import open3d
-from sci_cache import method_cache
+from sci_cache import sci_method_cache
 from sklearn.cluster import KMeans
 
 from scripts.config import base_dir, project_name
@@ -11,7 +11,7 @@ from scripts.p3_xOy平面对正 import PointCloudProcessorP3
 
 class PointCloudProcessorP4(PointCloudProcessorP3):
     @property
-    @method_cache
+    @sci_method_cache
     def p4_地面在下(self):
         cloud = copy.deepcopy(self.p3_xOy平面对正)
         points = np.asarray(cloud.points)

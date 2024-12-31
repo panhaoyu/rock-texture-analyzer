@@ -1488,13 +1488,13 @@ files = [
 
 [[package]]
 name = "sci-cache"
-version = "0.1.2"
+version = "0.1.4"
 description = "A Python library for caching scientific data on disk, streamlining research workflows by storing intermediate results."
 optional = false
-python-versions = "<4.0,>=3.9"
+python-versions = "<4.0,>=3.10"
 files = [
-    {file = "sci_cache-0.1.2-py3-none-any.whl", hash = "sha256:dbee9bf237dfa7baa6da42b94ec9468901f0e845aa35661e34092c5fa3e9980c"},
-    {file = "sci_cache-0.1.2.tar.gz", hash = "sha256:83c16e01f7ffe3e282354dae29c03244b36eca5c5243fb93bb5ba5eeb3627a7a"},
+    {file = "sci_cache-0.1.4-py3-none-any.whl", hash = "sha256:54fa84f27e8fca515d6765948cd0c1a019c44249a2efe78214a4c36aa34fbef7"},
+    {file = "sci_cache-0.1.4.tar.gz", hash = "sha256:d46538a101b014be31239685b379c0ce64cfc997708c33276921acb5d6d8e836"},
 ]
 
 [package.dependencies]
@@ -1796,4 +1796,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "effb1c1c0710f19c6a190980411f877c43d04c6f792d3f17488201979a621080"
+content-hash = "0b88f7214678831edd817e720c620df9093df0f9f0df4918b2f5d78028b4f84c"

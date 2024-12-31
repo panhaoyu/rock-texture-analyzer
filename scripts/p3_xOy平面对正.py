@@ -3,7 +3,7 @@ import copy
 import cv2
 import numpy as np
 import open3d
-from sci_cache import method_cache
+from sci_cache import sci_method_cache
 
 from scripts.config import base_dir, project_name
 from scripts.p2_调整为主平面 import PointCloudProcessorP2
@@ -11,7 +11,7 @@ from scripts.p2_调整为主平面 import PointCloudProcessorP2
 
 class PointCloudProcessorP3(PointCloudProcessorP2):
     @property
-    @method_cache
+    @sci_method_cache
     def p3_xOy平面对正(self):
         grid_size = 1
         threshold = 50

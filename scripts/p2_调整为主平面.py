@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 from open3d.cpu.pybind.utility import Vector3dVector
-from sci_cache import method_cache
+from sci_cache import sci_method_cache
 
 from scripts.config import base_dir, project_name
 from scripts.p1_读取点云数据 import PointCloudProcessor
@@ -11,7 +11,7 @@ from scripts.p1_读取点云数据 import PointCloudProcessor
 class PointCloudProcessorP2(PointCloudProcessor):
 
     @property
-    @method_cache
+    @sci_method_cache
     def p2_调整为主平面(self):
         cloud = self.p1_读取点云原始数据
         points = np.asarray(cloud.points)
