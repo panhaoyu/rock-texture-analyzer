@@ -31,6 +31,7 @@ def get_two_main_value_filtered(data: np.ndarray) -> tuple[float, float]:
     peaks = find_peaks(density, prominence=0.05)[0]
 
     if len(peaks) < 2:
+        # 如果没有启用精细扫描，则点位数量可能不足，因此侧面的点位数量变少，密度不足以达到0.05。
         peaks = find_peaks(density, prominence=0.02)[0]
 
     if len(peaks) < 2:
