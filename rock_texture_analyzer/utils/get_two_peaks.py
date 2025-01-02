@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks
 from sklearn.neighbors import KernelDensity
@@ -30,6 +31,15 @@ def get_two_main_value_filtered(data: np.ndarray) -> tuple[float, float]:
     peaks = find_peaks(density, prominence=0.05)[0]
 
     if len(peaks) < 2:
+        peaks = find_peaks(density, prominence=0.02)[0]
+
+    if len(peaks) < 2:
+        plt.figure()
+        plt.hist(data, bins=100)
+        plt.show()
+        plt.figure()
+        plt.plot(density)
+        plt.show()
         raise ValueError("无法检测到两个明显的峰值，请调整参数.")
 
     # 返回峰值对应的 x 值作为两个主要峰的中心位置

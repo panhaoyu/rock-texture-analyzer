@@ -3,6 +3,7 @@ import copy
 import numpy as np
 import open3d
 from sci_cache import sci_method_cache
+from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
 from scripts.config import base_dir, project_name
