@@ -1,3 +1,4 @@
+import matlab.engine
 import numpy as np
 from PIL import Image
 from matplotlib import pyplot as plt, cm
@@ -181,6 +182,54 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
             # 仅显示高程图像
             elevation_image.show()
 
+    def 绘制三维表面_matlab(self, array: np.ndarray):
+        """
+        使用 MATLAB 绘制三维表面高程图。
+
+        Args:
+            array (np.ndarray): 输入的三维矩阵，形状为 (M, N, 1) 或 (M, N, 4)。
+        """
+        # 只取第一层作为高程数据
+        elevation = array[:, :, 0]
+        elevation_min, elevation_max = np.nanquantile(elevation, 0.01), np.nanquantile(elevation, 0.99)
+        elevation[elevation < elevation_min] = elevation_min
+        elevation[elevation > elevation_max] = elevation_max
+
+        # 获取矩阵大小
+        M, N = elevation.shape
+
+        resolution = self.grid_resolution
+
+        # 生成x和y坐标，确保长度为 N 和 M
+        x_edge = np.linspace(0, (N - 1) * resolution, N)
+        y_edge = np.linspace(0, (M - 1) * resolution, M)
+        x_grid, y_grid = np.meshgrid(x_edge, y_edge)
+
+        # 确认网格和Z的形状一致
+        if x_grid.shape != elevation.shape or y_grid.shape != elevation.shape:
+            raise ValueError(f"网格和高程数据的形状不匹配: X={x_grid.shape}, Y={y_grid.shape}, Z={elevation.shape}")
+
+        eng = matlab.engine.start_matlab()
+
+        X = matlab.double(x_grid.tolist())
+        Y = matlab.double(y_grid.tolist())
+        Z = matlab.double(elevation.tolist())
+
+        # 调用 MATLAB 绘图函数
+        print("在 MATLAB 中绘制三维表面...")
+        eng.figure(nargout=0)
+        eng.mesh(X, Y, Z, nargout=0)
+        eng.grid(nargout=0)
+
+        output_dir = self.ply_file.with_name('images')
+        output_dir.mkdir(parents=True, exist_ok=True)
+        matlab_plot_path = str(output_dir.joinpath('matlab_surface_plot.png'))
+        eng.savefig(matlab_plot_path, nargout=0)
+        print(f"MATLAB 图像已保存到 {matlab_plot_path}")
+
+        # 显示 MATLAB 图形窗口
+        eng.show(nargout=0)
+
     @classmethod
     def main(cls):
         obj = cls(base_dir, project_name)
@@ -188,8 +237,8 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         # obj.绘制表面(obj.p7_表面二维重建_三次插值)  # 使用三次插值
         # obj.绘制表面(obj.p7_表面二维重建_线性插值)  # 使用线性插值
         # obj.绘制表面(obj.p7_表面二维重建_最近邻插值)  # 使用最近邻插值
-        obj.绘制表面(obj.p7_表面二维重建)  # 使用最近邻插值
-
+        # obj.绘制表面(obj.p7_表面二维重建)
+        obj.绘制三维表面_matlab(obj.p7_表面二维重建)
 
 if __name__ == '__main__':
     PointCloudProcessorP7.main()
