@@ -245,6 +245,11 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         elevation_min, elevation_max = np.nanquantile(elevation, 0.01), np.nanquantile(elevation, 0.99)
         elevation = np.clip(elevation, elevation_min, elevation_max)
 
+        # 高度放缩系数
+        scale_z = 10.0
+        avg_z = np.nanmean(elevation)
+        elevation = (elevation - avg_z) * scale_z + avg_z
+
         M, N = elevation.shape
         x_edge = np.linspace(0, (N - 1) * resolution_mm, N)
         y_edge = np.linspace(0, (M - 1) * resolution_mm, M)
@@ -296,9 +301,9 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         # obj.绘制表面(obj.p7_表面二维重建_三次插值)  # 使用三次插值
         # obj.绘制表面(obj.p7_表面二维重建_线性插值)  # 使用线性插值
         # obj.绘制表面(obj.p7_表面二维重建_最近邻插值)  # 使用最近邻插值
-        # obj.绘制表面(obj.p7_表面二维重建)
+        obj.绘制表面(obj.p7_表面二维重建[:, :])
         # obj.绘制三维表面_matlab(obj.p7_表面二维重建)
-        obj.绘制表面_导出到AutoCAD(obj.p7_表面二维重建)
+        # obj.绘制表面_导出到AutoCAD(obj.p7_表面二维重建)
 
 if __name__ == '__main__':
     PointCloudProcessorP7.main()
