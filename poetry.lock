@@ -348,6 +348,69 @@ files = [
 ]
 
 [[package]]
+name = "ezdxf"
+version = "1.3.5"
+description = "A Python package to create/manipulate DXF drawings."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "ezdxf-1.3.5-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3389ed1f57ebc2cfe7cea83a3f1c22a7cd77f6e8a49d318d7c3da45ffdab2505"},
+    {file = "ezdxf-1.3.5-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bec1c278e456a35852f248865b6d038b5371fa8a6c7e298d8dd489cffcd4394b"},
+    {file = "ezdxf-1.3.5-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d17565a4a034cbab72a7a5c104c5ceb323f3383c0b07e60cbae91d0f0fb5b166"},
+    {file = "ezdxf-1.3.5-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:73ec8a8fc6b686d65ea56b1a0e79d76ac1ed93eb51368dd33bc52f9fb852de1d"},
+    {file = "ezdxf-1.3.5-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fded6c3a34057b4eaff2ea78b1ce3b1b74ec7cca829ffc3fee936abfe431d9b9"},
+    {file = "ezdxf-1.3.5-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:b7bb0d0645928197871dd83f7f6002c1ed04df2d6aa1cd546f0a56d21db99c49"},
+    {file = "ezdxf-1.3.5-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:91288f38313bbe392a1c7a50fdd71ed1715a9d6f6ccc45f98575ed3ffc3aaaf8"},
+    {file = "ezdxf-1.3.5-cp310-cp310-win_amd64.whl", hash = "sha256:a52cdf616166f63b0195dd09452c9d5a00d4104946d016be5f475f61c0dc6778"},
+    {file = "ezdxf-1.3.5-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:600917e94b4eb2f2f7a4070c7e4d887028c3f5431878b05ab83b1c563327188f"},
+    {file = "ezdxf-1.3.5-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:e95165e08df11492d39a084a1805716a79010f382006cc219b1145f70440c362"},
+    {file = "ezdxf-1.3.5-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5e615064827381057f7aa9807fe3cc6c106578ee7af58777513dd097b38e41e5"},
+    {file = "ezdxf-1.3.5-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:29884caac5acc35f9e04355fb244bf780576ade6299a09f174324550bf43b36e"},
+    {file = "ezdxf-1.3.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5e69bd6c636a71059d7f4e8b21149f1cee90e1ac52a2ab42f60c1c2772168435"},
+    {file = "ezdxf-1.3.5-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:ec2d04e913453851d623f58b0dce8bab291ae4b5fec355dfc15b6746757bd5f8"},
+    {file = "ezdxf-1.3.5-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:f79f656983937ea41a3f83bbb4fbeee8feb44f10ed4e7d2b515436513da9d4f9"},
+    {file = "ezdxf-1.3.5-cp311-cp311-win_amd64.whl", hash = "sha256:1113554bc3f24c31a4220c7415e6d0e6d3ae4206ac478398a4da4cba30ab4dea"},
+    {file = "ezdxf-1.3.5-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:444d466648653a28bd1a2da08a9e9ced547a2b76d6e5ce5158114e5fb3eec2b8"},
+    {file = "ezdxf-1.3.5-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:623ccf1c5a0b4b0f08481298549727cd4597810c121f31c996a13589c25ef938"},
+    {file = "ezdxf-1.3.5-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ce74cf72678898be380836cf73786fd259322813e27f53f4b34be3d39b4989e4"},
+    {file = "ezdxf-1.3.5-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b7a298ec70ac8065b72d11cfbc64eed9e2ac3938061f455fc1fb09d9b9701370"},
+    {file = "ezdxf-1.3.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4fc459fc6dea1e05eeb605f097a924de1dd8d750be963c9f0e86a869e5ab3fe3"},
+    {file = "ezdxf-1.3.5-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:88442a6f2778fb2c502f1844f216414e63d23ff9999e36249017701f6a45f479"},
+    {file = "ezdxf-1.3.5-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:a3e73af302c6e75c8dd92af72d88ced11dbc9819bfbec95ff334e203f899865d"},
+    {file = "ezdxf-1.3.5-cp312-cp312-win_amd64.whl", hash = "sha256:296942af908a037ce1b5fa0b49111d8517d66e70fedf4166d293ed082761181e"},
+    {file = "ezdxf-1.3.5-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:55eea09ee11b123736a8f19966987d82abe24eb56653daca6e79f4c6df004493"},
+    {file = "ezdxf-1.3.5-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:8a756e48b11123a0e2751aaf5f7ba3bb23b967f38aac62e598fe6138fee8e111"},
+    {file = "ezdxf-1.3.5-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f6913ea16130472a238970b69e969eb2ba555a22e91aa3beb990640b6efcdaac"},
+    {file = "ezdxf-1.3.5-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:df97527c934ead755b67957608592673ae4fb589b36b547b990804a3be47f48a"},
+    {file = "ezdxf-1.3.5-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5850a508ba78e65b3729be26e65170011c0d0d7199e718f3a3737b7cd7e44c5d"},
+    {file = "ezdxf-1.3.5-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:f8bc4272d17b2225d5340d255a39d973560f45094a568e6ff3cad86daa45e3f5"},
+    {file = "ezdxf-1.3.5-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:b2571b24b443d7dca61b1401e6e221cb69c8bb1814ede3f13733d1b709296115"},
+    {file = "ezdxf-1.3.5-cp313-cp313-win_amd64.whl", hash = "sha256:45d678ac6efd92036aaea9d6ea695baa4a1ccf2d70a61d06984ed1fc8444c266"},
+    {file = "ezdxf-1.3.5-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:446559e1e1c85dfa55eaf2ec6cd4a255a583f448631b4fe32daaab31d5af12d5"},
+    {file = "ezdxf-1.3.5-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:6945e68efb5d3a1e8510b6869c37eac1e585b95ca51daf93b80bb4f81a8c8dd0"},
+    {file = "ezdxf-1.3.5-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:4c8bd4d1ad4101096b2952dd8254f8d2b95b68ba4bc1784ae6ef9be394c83a5c"},
+    {file = "ezdxf-1.3.5-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0cf6646fc64bc411d1362b3c9466a873caf739a9198ee972b37b12389ea23a39"},
+    {file = "ezdxf-1.3.5-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:3504053616116006f53c83eee3faf4334d62dd24177930a755d3ead2bf8cf707"},
+    {file = "ezdxf-1.3.5-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:397fa5532b2535f570ff118342dccb940a8a002d9751dc050d8df9872ae133f6"},
+    {file = "ezdxf-1.3.5-cp39-cp39-musllinux_1_2_aarch64.whl", hash = "sha256:4c87766810797d9ccabad6572d7630c2d59a3efc7c6e127d2dcc07da488409df"},
+    {file = "ezdxf-1.3.5-cp39-cp39-win_amd64.whl", hash = "sha256:16b12c698658021126a1cfe0f986fe32600ec7eee52f9717f8d2873d52ce213a"},
+    {file = "ezdxf-1.3.5-py3-none-any.whl", hash = "sha256:3fcbe4937d74c8a978e5aa025989a557a57d068b75831d661c07a8608ad6a85e"},
+    {file = "ezdxf-1.3.5.zip", hash = "sha256:24e7c0ebe947f0ba073bd0a1c7570dae265b99daf5dd0fb5688533132c71b723"},
+]
+
+[package.dependencies]
+fonttools = "*"
+numpy = "*"
+pyparsing = ">=2.0.1"
+typing_extensions = ">=4.6.0"
+
+[package.extras]
+dev = ["Cython", "Pillow", "PyMuPDF (>=1.20.0)", "PySide6", "matplotlib", "pytest", "setuptools", "wheel"]
+dev5 = ["Cython", "Pillow", "PyMuPDF (>=1.20.0)", "PyQt5", "matplotlib", "pytest", "setuptools", "wheel"]
+draw = ["Pillow", "PyMuPDF (>=1.20.0)", "PySide6", "matplotlib"]
+draw5 = ["Pillow", "PyMuPDF (>=1.20.0)", "PyQt5", "matplotlib"]
+
+[[package]]
 name = "fastjsonschema"
 version = "2.21.1"
 description = "Fastest Python implementation of JSON schema"
@@ -1796,4 +1859,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "0b88f7214678831edd817e720c620df9093df0f9f0df4918b2f5d78028b4f84c"
+content-hash = "bfbef9f7882177404682e5e4b0d9bc2a00e4c728a460dd4a46827c2a0289c4a7"

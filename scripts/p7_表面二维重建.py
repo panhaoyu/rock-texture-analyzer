@@ -1,3 +1,4 @@
+import ezdxf
 import matlab.engine
 import numpy as np
 from PIL import Image
@@ -230,6 +231,44 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         # 显示 MATLAB 图形窗口
         eng.show(nargout=0)
 
+    def 绘制表面_导出到AutoCAD(self, array: np.ndarray):
+        """
+        将插值后的高程数据导出为 AutoCAD 支持的 DXF 文件。
+
+        Args:
+            array (np.ndarray): 插值后的 [z, r, g, b] 矩阵。
+            filename (str): 导出 DXF 文件的名称。
+        """
+        # 创建一个新的 DXF 文档
+        doc = ezdxf.new(dxfversion='R2010')
+        msp = doc.modelspace()
+
+        # 提取高程数据
+        z = array[:, :, 0]
+
+        num_rows, num_cols = z.shape
+
+        # 获取点云的 x 和 y 范围
+        points = np.asarray(self.p6_仅保留顶面.points)
+        x_min = np.min(points[:, 0]) + 0.2
+        y_min = np.min(points[:, 1]) + 0.2
+
+        # 遍历网格，添加 3D 点到 DXF
+        for i in range(num_rows):
+            for j in range(num_cols):
+                elevation = z[i, j]
+                if not np.isnan(elevation):
+                    x = x_min + j * self.grid_resolution
+                    y = y_min + i * self.grid_resolution
+                    msp.add_point((x, y, elevation))
+
+        # 保存 DXF 文件
+        output_dir = self.ply_file.with_name('autocad_exports')
+        output_dir.mkdir(parents=True, exist_ok=True)
+        dxf_path = output_dir.joinpath('elevation.dxf')
+        doc.saveas(str(dxf_path))
+        print(f"高程数据已成功导出到 {dxf_path}")
+
     @classmethod
     def main(cls):
         obj = cls(base_dir, project_name)
@@ -238,7 +277,8 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         # obj.绘制表面(obj.p7_表面二维重建_线性插值)  # 使用线性插值
         # obj.绘制表面(obj.p7_表面二维重建_最近邻插值)  # 使用最近邻插值
         # obj.绘制表面(obj.p7_表面二维重建)
-        obj.绘制三维表面_matlab(obj.p7_表面二维重建)
+        # obj.绘制三维表面_matlab(obj.p7_表面二维重建)
+        obj.绘制表面_导出到AutoCAD(obj.p7_表面二维重建)
 
 if __name__ == '__main__':
     PointCloudProcessorP7.main()
