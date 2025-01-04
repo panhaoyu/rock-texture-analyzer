@@ -2,6 +2,8 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 
 
@@ -10,15 +12,13 @@ class Processor:
     s1_name = r'1-原始数据'
     s2_name = r'2-转换为PNG'
     s3_name = r'3-裁剪后的PNG'
-    s4_name = r'4-灰度图像'
-    s5_name = r'5-二值化图像'
+    s4_name = r'4-直方图'
     print_lock = threading.Lock()
 
     def __init__(self):
         (self.base_dir / self.s2_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s3_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s4_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s5_name).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
@@ -49,10 +49,40 @@ class Processor:
             cropped_image.save(output_file)
         self.print_safe(f"{stem} 已裁剪并保存。")
 
+    def s4_生成直方图(self, stem):
+        input_file = self.base_dir / self.s3_name / f"{stem}.png"
+        output_file = self.base_dir / self.s4_name / f"{stem}.png"
+        if output_file.exists():
+            return
+        with Image.open(input_file) as image:
+            # 提取左右各100像素的边界区域
+            left_boundary = image.crop((0, 0, 100, image.height))
+            right_boundary = image.crop((image.width - 100, 0, image.width, image.height))
+
+            # 计算边界区域的平均颜色
+            left_average = np.array(left_boundary).mean()
+            right_average = np.array(right_boundary).mean()
+            background_color = (left_average + right_average) / 2
+
+            # 计算所有像素点与背景颜色的距离
+            pixels = np.array(image).flatten()
+            distances = np.abs(pixels - background_color)
+
+            # 绘制距离直方图
+            plt.figure()
+            plt.hist(distances, bins=100)
+            plt.title(f'{stem} 距离直方图')
+            plt.xlabel('距离')
+            plt.ylabel('像素数量')
+            plt.tight_layout()
+            plt.savefig(output_file)
+            plt.close()
+        self.print_safe(f"{stem} 直方图已生成并保存。")
 
     def process_stem(self, stem):
         self.s2_将jpg格式转换为png格式(stem)
         self.s3_裁剪左右两侧(stem)
+        self.s4_生成直方图(stem)
 
     @classmethod
     def main(cls):
