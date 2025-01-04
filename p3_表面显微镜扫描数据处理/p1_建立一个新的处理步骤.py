@@ -25,7 +25,7 @@ class Processor:
         output_dir = self.base_dir / self.s3_name
         output_dir.mkdir(parents=True, exist_ok=True)
         files = list(input_dir.glob('*.png'))
-        left_crop = 1500
+        left_crop = 1600
         right_crop = 1200
 
         def process(file_path):
