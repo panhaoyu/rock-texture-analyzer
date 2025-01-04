@@ -13,12 +13,8 @@ class Processor:
     print_lock = threading.Lock()
 
     def __init__(self):
-        self.output_dirs = {
-            's2': self.base_dir / self.s2_name,
-            's3': self.base_dir / self.s3_name
-        }
-        for dir_path in self.output_dirs.values():
-            dir_path.mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.s2_name).mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.s3_name).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
@@ -26,31 +22,30 @@ class Processor:
 
     def s2_将jpg格式转换为png格式(self, stem):
         input_file = self.base_dir / self.s1_name / f"{stem}.jpg"
-        output_file = self.output_dirs['s2'] / f"{stem}.png"
+        output_file = self.base_dir / self.s2_name / f"{stem}.png"
         if output_file.exists():
-            self.print_safe(f"已存在: {output_file}，跳过转换。")
+            self.print_safe(f"{stem} 已存在，跳过转换。")
             return
         with Image.open(input_file) as image:
             image.save(output_file)
-        self.print_safe(f"已转换并保存: {output_file}")
+        self.print_safe(f"{stem} 已转换并保存。")
 
     def s3_裁剪左右两侧(self, stem):
-        input_file = self.output_dirs['s2'] / f"{stem}.png"
-        output_file = self.output_dirs['s3'] / f"{stem}_cropped.png"
+        input_file = self.base_dir / self.s2_name / f"{stem}.png"
+        output_file = self.base_dir / self.s3_name / f"{stem}.png"
         if output_file.exists():
-            self.print_safe(f"已存在: {output_file}，跳过裁剪。")
+            self.print_safe(f"{stem} 已存在，跳过裁剪。")
             return
         with Image.open(input_file) as image:
             left_crop = 1600
             right_crop = 1200
             width, height = image.size
             if width <= left_crop + right_crop:
-                self.print_safe(
-                    f"图像 {input_file.name} 宽度不足以截取 {left_crop} 左边和 {right_crop} 右边像素。跳过裁剪。")
+                self.print_safe(f"{stem} 图像宽度不足以截取 {left_crop} 左边和 {right_crop} 右边像素。跳过裁剪。")
                 return
             cropped_image = image.crop((left_crop, 0, width - right_crop, height))
             cropped_image.save(output_file)
-        self.print_safe(f"已裁剪并保存: {output_file}")
+        self.print_safe(f"{stem} 已裁剪并保存。")
 
     def process_stem(self, stem):
         self.s2_将jpg格式转换为png格式(stem)
