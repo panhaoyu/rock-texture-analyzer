@@ -63,13 +63,13 @@ class Processor:
             right_boundary = image.crop((image.width - 100, 0, image.width, image.height))
 
             # 计算边界区域的平均颜色
-            left_average = np.array(left_boundary).mean()
-            right_average = np.array(right_boundary).mean()
+            left_average = np.array(left_boundary).mean(axis=(0, 1))
+            right_average = np.array(right_boundary).mean(axis=(0, 1))
             background_color = (left_average + right_average) / 2
 
             # 计算所有像素点与背景颜色的距离
-            pixels = np.array(image).flatten()
-            distances = np.abs(pixels - background_color)
+            pixels = np.array(image).reshape(-1, 3)
+            distances = np.linalg.norm(pixels - background_color, axis=1)
 
             # 使用面向对象的Matplotlib接口绘制直方图
             fig = plt.Figure()
@@ -92,12 +92,12 @@ class Processor:
             left_boundary = image.crop((0, 0, 100, image.height))
             right_boundary = image.crop((image.width - 100, 0, image.width, image.height))
 
-            left_average = np.array(left_boundary).mean()
-            right_average = np.array(right_boundary).mean()
+            left_average = np.array(left_boundary).mean(axis=(0, 1))
+            right_average = np.array(right_boundary).mean(axis=(0, 1))
             background_color = (left_average + right_average) / 2
 
-            pixels = np.array(image).flatten()
-            distances = np.abs(pixels - background_color)
+            pixels = np.array(image).reshape(-1, 3)
+            distances = np.linalg.norm(pixels - background_color, axis=1)
 
             sorted_indices = np.argsort(distances)
             cutoff_index = int(len(distances) * 0.15)
