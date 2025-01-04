@@ -1,11 +1,9 @@
 from pathlib import Path
 
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import more_itertools
 import numpy as np
 import open3d
-from PIL import Image
 from open3d.cpu.pybind.geometry import PointCloud
 from sci_cache import MethodDiskCache, sci_method_cache
 
