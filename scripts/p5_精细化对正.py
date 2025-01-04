@@ -165,7 +165,7 @@ class PointCloudProcessorP5(PointCloudProcessorP4):
         ])
         R_z = np.array([
             [np.cos(gamma_rad), -np.sin(gamma_rad), 0],
-            [np.sin(gamma_rad), np.cos(gamma_rad), 0],
+            [np.sin(gamma_rad),  np.cos(gamma_rad), 0],
             [0, 0, 1]
         ])
         best_rotation = R_z @ R_y @ R_x
