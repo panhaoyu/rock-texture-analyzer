@@ -120,7 +120,7 @@ class Processor:
         if output_file.exists():
             return
         with Image.open(input_file) as image:
-            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=2))
+            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=5))
             threshold = 128
             binary_pixels = np.array(blurred_image).flatten()
             binary_pixels = np.where(binary_pixels <= threshold, 0, 255).astype(np.uint8)
