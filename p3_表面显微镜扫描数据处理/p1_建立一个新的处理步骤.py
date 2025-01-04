@@ -68,15 +68,16 @@ class Processor:
             pixels = np.array(image).flatten()
             distances = np.abs(pixels - background_color)
 
-            # 绘制距离直方图
-            plt.figure()
-            plt.hist(distances, bins=100)
-            plt.title(f'{stem} 距离直方图')
-            plt.xlabel('距离')
-            plt.ylabel('像素数量')
-            plt.tight_layout()
-            plt.savefig(output_file)
-            plt.close()
+            # 使用面向对象的Matplotlib接口绘制直方图
+            fig = plt.Figure()
+            ax = fig.add_subplot(111)
+            ax.hist(distances, bins=100, color='gray')
+            ax.set_title(f'{stem} 距离直方图')
+            ax.set_xlabel('距离')
+            ax.set_ylabel('像素数量')
+            fig.tight_layout()
+            fig.savefig(output_file)
+            plt.close(fig)
         self.print_safe(f"{stem} 直方图已生成并保存。")
 
     def process_stem(self, stem):
