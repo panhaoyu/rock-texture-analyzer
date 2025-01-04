@@ -4,7 +4,7 @@ from scipy.signal import find_peaks
 from sklearn.neighbors import KernelDensity
 
 
-def get_two_main_value_filtered(data: np.ndarray) -> tuple[float, float]:
+def get_two_main_value_filtered(data: np.ndarray, prominence: float = 0.05) -> tuple[float, float]:
     """
     去除背景数据后提取双峰分布的两个主要峰值，基于KDE方法.
 
@@ -28,11 +28,11 @@ def get_two_main_value_filtered(data: np.ndarray) -> tuple[float, float]:
     density = np.exp(log_density)
 
     # 通过查找密度的峰值来确定主要峰
-    peaks = find_peaks(density, prominence=0.05)[0]
+    peaks = find_peaks(density, prominence=prominence)[0]
 
-    if len(peaks) < 2:
-        # 如果没有启用精细扫描，则点位数量可能不足，因此侧面的点位数量变少，密度不足以达到0.05。
-        peaks = find_peaks(density, prominence=0.02)[0]
+    # if len(peaks) < 2:
+    #     # 如果没有启用精细扫描，则点位数量可能不足，因此侧面的点位数量变少，密度不足以达到0.05。
+    #     peaks = find_peaks(density, prominence=0.02)[0]
 
     if len(peaks) < 2:
         plt.figure()

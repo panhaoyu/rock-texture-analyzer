@@ -28,7 +28,6 @@ class Processor:
         input_file = self.base_dir / self.s1_name / f"{stem}.jpg"
         output_file = self.base_dir / self.s2_name / f"{stem}.png"
         if output_file.exists():
-            self.print_safe(f"{stem} 已存在，跳过转换。")
             return
         with Image.open(input_file) as image:
             image.save(output_file)
@@ -38,11 +37,10 @@ class Processor:
         input_file = self.base_dir / self.s2_name / f"{stem}.png"
         output_file = self.base_dir / self.s3_name / f"{stem}.png"
         if output_file.exists():
-            self.print_safe(f"{stem} 已存在，跳过裁剪。")
             return
         with Image.open(input_file) as image:
-            left_crop = 1600
-            right_crop = 1200
+            left_crop = 1400
+            right_crop = 1000
             width, height = image.size
             if width <= left_crop + right_crop:
                 self.print_safe(f"{stem} 图像宽度不足以截取 {left_crop} 左边和 {right_crop} 右边像素。跳过裁剪。")
@@ -51,44 +49,10 @@ class Processor:
             cropped_image.save(output_file)
         self.print_safe(f"{stem} 已裁剪并保存。")
 
-    def s4_转换为灰度(self, stem):
-        input_file = self.base_dir / self.s3_name / f"{stem}.png"
-        output_file = self.base_dir / self.s4_name / f"{stem}.png"
-        if output_file.exists():
-            self.print_safe(f"{stem} 已存在，跳过灰度转换。")
-            return
-        with Image.open(input_file) as image:
-            grayscale_image = image.convert("L")
-            grayscale_image.save(output_file)
-        self.print_safe(f"{stem} 已转换为灰度。")
-
-    def s5_二值化(self, stem):
-        input_file = self.base_dir / self.s4_name / f"{stem}.png"
-        output_file = self.base_dir / self.s5_name / f"{stem}.png"
-        if output_file.exists():
-            self.print_safe(f"{stem} 已存在，跳过二值化。")
-            return
-        with Image.open(input_file) as image:
-            histogram = image.histogram()
-            # 简单双峰检测
-            peak1 = histogram.index(max(histogram))
-            histogram[peak1] = 0
-            peak2 = histogram.index(max(histogram))
-            if peak1 < peak2:
-                start, end = peak1, peak2
-            else:
-                start, end = peak2, peak1
-            valley = min(range(start, end + 1), key=lambda x: histogram[x])
-            threshold = valley
-            binary_image = image.point(lambda p: 255 if p > threshold else 0)
-            binary_image.save(output_file)
-        self.print_safe(f"{stem} 已二值化并保存。")
 
     def process_stem(self, stem):
         self.s2_将jpg格式转换为png格式(stem)
         self.s3_裁剪左右两侧(stem)
-        self.s4_转换为灰度(stem)
-        # self.s5_二值化(stem)
 
     @classmethod
     def main(cls):
