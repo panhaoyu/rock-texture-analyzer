@@ -13,12 +13,14 @@ class Processor:
     s2_name = r'2-转换为PNG'
     s3_name = r'3-裁剪后的PNG'
     s4_name = r'4-直方图'
+    s5_name = r'5-二值化图像'
     print_lock = threading.Lock()
 
     def __init__(self):
         (self.base_dir / self.s2_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s3_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s4_name).mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.s5_name).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
@@ -80,10 +82,36 @@ class Processor:
             plt.close(fig)
         self.print_safe(f"{stem} 直方图已生成并保存。")
 
+    def s5_二值化(self, stem):
+        input_file = self.base_dir / self.s3_name / f"{stem}.png"
+        output_file = self.base_dir / self.s5_name / f"{stem}.png"
+        if output_file.exists():
+            return
+        with Image.open(input_file) as image:
+            left_boundary = image.crop((0, 0, 100, image.height))
+            right_boundary = image.crop((image.width - 100, 0, image.width, image.height))
+
+            left_average = np.array(left_boundary).mean()
+            right_average = np.array(right_boundary).mean()
+            background_color = (left_average + right_average) / 2
+
+            pixels = np.array(image).flatten()
+            distances = np.abs(pixels - background_color)
+
+            sorted_indices = np.argsort(distances)
+            cutoff_index = int(len(distances) * 0.15)
+            threshold = distances[sorted_indices[cutoff_index]]
+
+            binary_pixels = np.where(distances <= threshold, 0, 255).astype(np.uint8)
+            binary_image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
+            binary_image.save(output_file)
+        self.print_safe(f"{stem} 二值化图像已生成并保存。")
+
     def process_stem(self, stem):
         self.s2_将jpg格式转换为png格式(stem)
         self.s3_裁剪左右两侧(stem)
         self.s4_生成直方图(stem)
+        self.s5_二值化(stem)
 
     @classmethod
     def main(cls):
