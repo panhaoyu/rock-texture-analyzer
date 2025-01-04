@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 
 class Processor:
@@ -15,6 +15,7 @@ class Processor:
     s3_name = r'3-裁剪后的PNG'
     s4_name = r'4-直方图'
     s5_name = r'5-二值化图像'
+    s6_name = r'6-降噪二值化图像'
     print_lock = threading.Lock()
 
     def __init__(self):
@@ -22,6 +23,7 @@ class Processor:
         (self.base_dir / self.s3_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s4_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s5_name).mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.s6_name).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
@@ -105,12 +107,26 @@ class Processor:
 
             pixels = np.array(image).reshape(-1, 3)
             distances = np.linalg.norm(pixels - background_color, axis=1)
-            threshold = np.quantile(distances, 0.9)
+            threshold = np.quantile(distances, 0.7)
 
             binary_pixels = np.where(distances <= threshold, 0, 255).astype(np.uint8)
             binary_image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
             binary_image.save(output_file)
         self.print_safe(f"{stem} 二值化图像已生成并保存。")
+
+    def s6_降噪二值化(self, stem):
+        input_file = self.base_dir / self.s5_name / f"{stem}.png"
+        output_file = self.base_dir / self.s6_name / f"{stem}.png"
+        if output_file.exists():
+            return
+        with Image.open(input_file) as image:
+            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=2))
+            threshold = 128
+            binary_pixels = np.array(blurred_image).flatten()
+            binary_pixels = np.where(binary_pixels <= threshold, 0, 255).astype(np.uint8)
+            denoised_image = Image.fromarray(binary_pixels.reshape(image.height, image.width), mode='L')
+            denoised_image.save(output_file)
+        self.print_safe(f"{stem} 降噪二值化图像已生成并保存。")
 
     def process_stem(self, stem):
         try:
@@ -118,6 +134,7 @@ class Processor:
             self.s3_裁剪左右两侧(stem)
             self.s4_生成直方图(stem)
             self.s5_二值化(stem)
+            self.s6_降噪二值化(stem)
         except:
             with self.print_lock:
                 traceback.print_exc()
