@@ -18,6 +18,7 @@ class Processor:
     s6_name = r'6-降噪二值化图像'
     s7_name = r'7-x方向白色点数量直方图'
     s8_name = r'8-边界裁剪图像'
+    s9_name = r'9-进一步边界裁剪图像'
     print_lock = threading.Lock()
 
     def __init__(self):
@@ -28,6 +29,7 @@ class Processor:
         (self.base_dir / self.s6_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s7_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s8_name).mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.s9_name).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
@@ -192,6 +194,60 @@ class Processor:
             cropped_image.save(output_file)
         self.print_safe(f"{stem} 边界裁剪图像已生成并保存。")
 
+    def s9_进一步边界裁剪图像(self, stem):
+        binary_input_file = self.base_dir / self.s5_name / f"{stem}.png"
+        color_input_file = self.base_dir / self.s3_name / f"{stem}.png"
+        output_file = self.base_dir / self.s9_name / f"{stem}.png"
+
+        if output_file.exists():
+            return
+
+        # 打开并处理二值化图像
+        with Image.open(binary_input_file) as binary_image:
+            if binary_image.mode != 'L':
+                binary_image = binary_image.convert("L")
+            binary_array = np.array(binary_image)
+
+            if binary_array.ndim != 2:
+                self.print_safe(f"{stem} 二值化图像不是二维的，无法进行边界裁剪。")
+                return
+
+            height, width = binary_array.shape
+
+            # 计算每个x坐标上白色点的数量
+            white_counts = np.sum(binary_array > 128, axis=0)
+
+            # 计算阈值为白色点数量直方图最大值的50%
+            max_count = white_counts.max()
+            threshold = 0.5 * max_count
+
+            # 找到左边界：第一个x坐标的白色点数量大于阈值
+            left_boundary_candidates = np.where(white_counts > threshold)[0]
+            if left_boundary_candidates.size == 0:
+                self.print_safe(f"{stem} 没有检测到满足阈值的白色点，跳过进一步边界裁剪。")
+                return
+            left_boundary = left_boundary_candidates.min()
+
+            # 找到右边界：最后一个x坐标的白色点数量大于阈值
+            right_boundary_candidates = np.where(white_counts > threshold)[0]
+            right_boundary = right_boundary_candidates.max()
+
+            # 往内收缩5个像素，确保不超出图像范围
+            left_boundary = min(left_boundary + 5, width)
+            right_boundary = max(right_boundary - 5, 0)
+
+            if left_boundary >= right_boundary:
+                self.print_safe(f"{stem} 进一步边界裁剪后区域无效，跳过裁剪。")
+                return
+
+        # 打开原始裁剪后的彩色PNG图像并进行进一步裁剪
+        with Image.open(color_input_file) as color_image:
+            cropped_image = color_image.crop((left_boundary, 0, right_boundary, height))
+            cropped_image.save(output_file)
+
+        self.print_safe(f"{stem} 进一步边界裁剪图像已生成并保存。")
+
+
     def process_stem(self, stem):
         try:
             self.s2_将jpg格式转换为png格式(stem)
@@ -201,6 +257,7 @@ class Processor:
             self.s6_降噪二值化(stem)
             self.s7_绘制x方向白色点数量直方图(stem)
             self.s8_边界裁剪图像(stem)
+            self.s9_进一步边界裁剪图像(stem)
         except:
             with self.print_lock:
                 traceback.print_exc()
