@@ -1,4 +1,5 @@
 import threading
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -102,16 +103,22 @@ class Processor:
             cutoff_index = int(len(distances) * 0.15)
             threshold = distances[sorted_indices[cutoff_index]]
 
+            print(5)
             binary_pixels = np.where(distances <= threshold, 0, 255).astype(np.uint8)
             binary_image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
             binary_image.save(output_file)
+            print(6)
         self.print_safe(f"{stem} 二值化图像已生成并保存。")
 
     def process_stem(self, stem):
-        self.s2_将jpg格式转换为png格式(stem)
-        self.s3_裁剪左右两侧(stem)
-        self.s4_生成直方图(stem)
-        self.s5_二值化(stem)
+        try:
+            self.s2_将jpg格式转换为png格式(stem)
+            self.s3_裁剪左右两侧(stem)
+            self.s4_生成直方图(stem)
+            self.s5_二值化(stem)
+        except:
+            with self.print_lock:
+                traceback.print_exc()
 
     @classmethod
     def main(cls):
