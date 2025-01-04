@@ -58,9 +58,12 @@ class Processor:
         if output_file.exists():
             return
         with Image.open(input_file) as image:
-            # 提取左右各100像素的边界区域
-            left_boundary = image.crop((0, 0, 100, image.height))
-            right_boundary = image.crop((image.width - 100, 0, image.width, image.height))
+            height = image.height
+            top = int(height * 0.1)
+            bottom = int(height * 0.9)
+            # 提取左右各100像素的边界区域，排除上下10%
+            left_boundary = image.crop((0, top, 100, bottom))
+            right_boundary = image.crop((image.width - 100, top, image.width, bottom))
 
             # 计算边界区域的平均颜色
             left_average = np.array(left_boundary).mean(axis=(0, 1))
@@ -89,8 +92,12 @@ class Processor:
         if output_file.exists():
             return
         with Image.open(input_file) as image:
-            left_boundary = image.crop((0, 0, 100, image.height))
-            right_boundary = image.crop((image.width - 100, 0, image.width, image.height))
+            height = image.height
+            top = int(height * 0.1)
+            bottom = int(height * 0.9)
+            # 提取左右各100像素的边界区域，排除上下10%
+            left_boundary = image.crop((0, top, 100, bottom))
+            right_boundary = image.crop((image.width - 100, top, image.width, bottom))
 
             left_average = np.array(left_boundary).mean(axis=(0, 1))
             right_average = np.array(right_boundary).mean(axis=(0, 1))
