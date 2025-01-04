@@ -16,6 +16,7 @@ class Processor:
     s4_name = r'4-直方图'
     s5_name = r'5-二值化图像'
     s6_name = r'6-降噪二值化图像'
+    s7_name = r'7-x方向白色点数量直方图'
     print_lock = threading.Lock()
 
     def __init__(self):
@@ -24,6 +25,7 @@ class Processor:
         (self.base_dir / self.s4_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s5_name).mkdir(parents=True, exist_ok=True)
         (self.base_dir / self.s6_name).mkdir(parents=True, exist_ok=True)
+        (self.base_dir / self.s7_name).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
@@ -128,6 +130,26 @@ class Processor:
             denoised_image.save(output_file)
         self.print_safe(f"{stem} 降噪二值化图像已生成并保存。")
 
+    def s7_绘制x方向白色点数量直方图(self, stem):
+        input_file = self.base_dir / self.s5_name / f"{stem}.png"
+        output_file = self.base_dir / self.s7_name / f"{stem}.png"
+        if output_file.exists():
+            return
+        with Image.open(input_file) as image:
+            binary_array = np.array(image)
+            white_counts = np.sum(binary_array > 128, axis=0)
+
+            fig = plt.Figure()
+            ax = fig.add_subplot(111)
+            ax.hist(white_counts, bins=100, color='blue')
+            ax.set_title(f'{stem} x方向白色点数量直方图')
+            ax.set_xlabel('白色点数量')
+            ax.set_ylabel('像素数量')
+            fig.tight_layout()
+            fig.savefig(output_file)
+            plt.close(fig)
+        self.print_safe(f"{stem} x方向白色点数量直方图已生成并保存。")
+
     def process_stem(self, stem):
         try:
             self.s2_将jpg格式转换为png格式(stem)
@@ -135,6 +157,7 @@ class Processor:
             self.s4_生成直方图(stem)
             self.s5_二值化(stem)
             self.s6_降噪二值化(stem)
+            self.s7_绘制x方向白色点数量直方图(stem)
         except:
             with self.print_lock:
                 traceback.print_exc()
