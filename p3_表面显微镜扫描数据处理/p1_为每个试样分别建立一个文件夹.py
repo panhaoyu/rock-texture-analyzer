@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from p3_表面显微镜扫描数据处理 import config
+from p2_点云数据处理 import config
 
 
 def main():

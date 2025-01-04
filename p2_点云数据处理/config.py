@@ -1,6 +1,6 @@
 from pathlib import Path
 
-base_dir = Path(r'F:\data\laser-scanner')
+base_dir = Path(r'F:\data\laser-scanner\working')
 specimen_name = 'test specimen'
 project_direction = 'B'
 
