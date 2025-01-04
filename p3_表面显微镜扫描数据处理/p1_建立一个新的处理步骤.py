@@ -98,10 +98,7 @@ class Processor:
 
             pixels = np.array(image).reshape(-1, 3)
             distances = np.linalg.norm(pixels - background_color, axis=1)
-
-            sorted_indices = np.argsort(distances)
-            cutoff_index = int(len(distances) * 0.15)
-            threshold = distances[sorted_indices[cutoff_index]]
+            threshold = np.quantile(distances, 0.9)
 
             binary_pixels = np.where(distances <= threshold, 0, 255).astype(np.uint8)
             binary_image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
