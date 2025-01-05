@@ -10,19 +10,19 @@ from PIL import Image, ImageFilter  # 导入ImageOps
 
 class Processor:
     base_dir = Path(r'F:\data\laser-scanner\others\侧面光学扫描的预处理')
-    s1_name = r'1-原始数据'
-    s2_name = r'2-转换为PNG'
-    s3_name = r'3-裁剪后的PNG'
-    s4_name = r'4-直方图'
-    s5_name = r'5-二值化图像'
-    s6_name = r'6-降噪二值化图像'
-    s7_name = r'7-x方向白色点数量直方图'
-    s8_name = r'8-边界裁剪图像'
-    s9_name = r'9-进一步边界裁剪图像'
-    s10_name = r'10-纵向有效点分布直方图'
-    s11_name = r'11-纵向裁剪图像'
-    s12_name = r'12-进一步纵向裁剪图像'
-    s13_name = r'13-自动对比度调整'  # 更新步骤13名称
+    dir1_原始数据 = r'1-原始数据'
+    dir2_转换为PNG = r'2-转换为PNG'
+    dir3_裁剪后的PNG = r'3-裁剪后的PNG'
+    dir4_直方图 = r'4-直方图'
+    dir5_二值化图像 = r'5-二值化图像'
+    dir6_降噪二值化图像 = r'6-降噪二值化图像'
+    dir7_x方向白色点数量直方图 = r'7-x方向白色点数量直方图'
+    dir8_左右边界裁剪二值图 = r'8-边界裁剪图像'
+    dir9_左右边界裁剪彩图 = r'9-进一步边界裁剪图像'
+    dir10_y方向白色点数量直方图 = r'10-纵向有效点分布直方图'
+    dir11_上下边界裁剪二值图 = r'11-纵向裁剪图像'
+    dir12_上下边界裁剪彩图 = r'12-进一步纵向裁剪图像'
+    dir13_亮度直方图 = r'13-亮度直方图'  # 更新步骤13名称
 
     # 参数定义
     s3_左侧裁剪区域_像素 = 1400
@@ -40,10 +40,10 @@ class Processor:
 
     def __init__(self):
         for folder in [
-            self.s2_name, self.s3_name, self.s4_name,
-            self.s5_name, self.s6_name, self.s7_name,
-            self.s8_name, self.s9_name, self.s10_name,
-            self.s11_name, self.s12_name, self.s13_name  # 创建步骤13的文件夹
+            self.dir2_转换为PNG, self.dir3_裁剪后的PNG, self.dir4_直方图,
+            self.dir5_二值化图像, self.dir6_降噪二值化图像, self.dir7_x方向白色点数量直方图,
+            self.dir8_左右边界裁剪二值图, self.dir9_左右边界裁剪彩图, self.dir10_y方向白色点数量直方图,
+            self.dir11_上下边界裁剪二值图, self.dir12_上下边界裁剪彩图, self.dir13_亮度直方图  # 创建步骤13的文件夹
         ]:
             (self.base_dir / folder).mkdir(parents=True, exist_ok=True)
 
@@ -52,13 +52,13 @@ class Processor:
             print(message)
 
     def s2_将jpg格式转换为png格式(self, output_path):
-        input_file = self.base_dir / self.s1_name / f"{output_path.stem}.jpg"
+        input_file = self.base_dir / self.dir1_原始数据 / f"{output_path.stem}.jpg"
         with Image.open(input_file) as image:
             image.save(output_path)
         self.print_safe(f"{output_path.stem} 已转换并保存。")
 
     def s3_裁剪左右两侧(self, output_path):
-        input_file = self.base_dir / self.s2_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir2_转换为PNG / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             left_crop = self.s3_左侧裁剪区域_像素
             right_crop = self.s3_右侧裁剪区域_像素
@@ -72,7 +72,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} 已裁剪并保存。")
 
     def s4_生成直方图(self, output_path):
-        input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir3_裁剪后的PNG / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             height = image.height
             top = int(height * self.s4_根据左右区域识别背景颜色时的上下裁剪区域_比例)
@@ -99,7 +99,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} 直方图已生成并保存。")
 
     def s5_二值化(self, output_path):
-        input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir3_裁剪后的PNG / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             height = image.height
             top = int(height * self.s4_根据左右区域识别背景颜色时的上下裁剪区域_比例)
@@ -121,7 +121,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} 二值化图像已生成并保存。")
 
     def s6_降噪二值化(self, output_path):
-        input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir5_二值化图像 / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             blurred_image = image.filter(ImageFilter.GaussianBlur(radius=self.s6_高斯模糊半径_像素))
             threshold = 128
@@ -132,7 +132,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} 降噪二值化图像已生成并保存。")
 
     def s7_绘制x方向白色点数量直方图(self, output_path):
-        input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir5_二值化图像 / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             binary_array = np.array(image)
             white_counts = np.sum(binary_array > 128, axis=0)
@@ -149,7 +149,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} x方向白色点数量图已生成并保存。")
 
     def s8_边界裁剪图像(self, output_path):
-        input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir5_二值化图像 / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             binary_array = np.array(image)
             height, width = binary_array.shape
@@ -180,8 +180,8 @@ class Processor:
         self.print_safe(f"{output_path.stem} 边界裁剪图像已生成并保存。")
 
     def s9_进一步边界裁剪图像(self, output_path):
-        binary_input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
-        color_input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
+        binary_input_file = self.base_dir / self.dir5_二值化图像 / f"{output_path.stem}.png"
+        color_input_file = self.base_dir / self.dir3_裁剪后的PNG / f"{output_path.stem}.png"
 
         with Image.open(binary_input_file) as binary_image:
             if binary_image.mode != 'L':
@@ -221,7 +221,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} 进一步边界裁剪图像已生成并保存。")
 
     def s10_生成纵向有效点分布直方图(self, output_path):
-        input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir8_左右边界裁剪二值图 / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             binary_array = np.array(image)
             white_counts = np.sum(binary_array > 128, axis=1)
@@ -238,7 +238,7 @@ class Processor:
         self.print_safe(f"{output_path.stem} 纵向有效点分布图已生成并保存。")
 
     def s11_纵向裁剪图像(self, output_path):
-        input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
+        input_file = self.base_dir / self.dir8_左右边界裁剪二值图 / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             binary_array = np.array(image)
             height, width = binary_array.shape
@@ -269,8 +269,8 @@ class Processor:
         self.print_safe(f"{output_path.stem} 纵向裁剪图像已生成并保存。")
 
     def s12_进一步纵向裁剪图像(self, output_path):
-        binary_input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
-        color_input_file = self.base_dir / self.s9_name / f"{output_path.stem}.png"
+        binary_input_file = self.base_dir / self.dir8_左右边界裁剪二值图 / f"{output_path.stem}.png"
+        color_input_file = self.base_dir / self.dir9_左右边界裁剪彩图 / f"{output_path.stem}.png"
 
         with Image.open(binary_input_file) as binary_image:
             if binary_image.mode != 'L':
@@ -309,45 +309,34 @@ class Processor:
             cropped_image.save(output_path)
         self.print_safe(f"{output_path.stem} 进一步纵向裁剪图像已生成并保存。")
 
-    def s13_自动对比度调整(self, output_path):
-        input_file = self.base_dir / self.s12_name / f"{output_path.stem}.png"
+    def s13_亮度直方图(self, output_path):
+        input_file = self.base_dir / self.dir12_上下边界裁剪彩图 / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
-
-            hsv = image.convert('HSV')
-            np_hsv = np.array(hsv)
-            v = np_hsv[:, :, 2]
-
-            # Histogram equalization on V channel
-            hist, bins = np.histogram(v.flatten(), 256, [0, 256])
-            cdf = hist.cumsum()
-            cdf_masked = np.ma.masked_equal(cdf, 0)
-            cdf_masked = (cdf_masked - cdf_masked.min()) * 255 / (cdf_masked.max() - cdf_masked.min())
-            cdf = np.ma.filled(cdf_masked, 0).astype('uint8')
-            np_hsv[:, :, 2] = cdf[v]
-
-            equalized_hsv = Image.fromarray(np_hsv, 'HSV')
-            equalized_image = equalized_hsv.convert('RGB')
-            equalized_image.save(output_path)
-
-        self.print_safe(f"{output_path.stem} 自动对比度调整图像已生成并保存。")
-
+            assert image.mode == 'RGB'
+            lab = image.convert('LAB')
+        l, a, b = lab.split()
+        l = np.asarray(l)
+        l = l.ravel()
+        figure = plt.figure()
+        ax = figure.add_subplot(111)
+        ax.hist(l, bins=256)
+        figure.savefig(output_path)
+        
     def process_stem(self, stem):
         try:
             steps = [
-                (self.s2_name, self.s2_将jpg格式转换为png格式),
-                (self.s3_name, self.s3_裁剪左右两侧),
-                (self.s4_name, self.s4_生成直方图),
-                (self.s5_name, self.s5_二值化),
+                (self.dir2_转换为PNG, self.s2_将jpg格式转换为png格式),
+                (self.dir3_裁剪后的PNG, self.s3_裁剪左右两侧),
+                (self.dir4_直方图, self.s4_生成直方图),
+                (self.dir5_二值化图像, self.s5_二值化),
                 # (self.s6_name, self.s6_降噪二值化),
-                (self.s7_name, self.s7_绘制x方向白色点数量直方图),
-                (self.s8_name, self.s8_边界裁剪图像),
-                (self.s9_name, self.s9_进一步边界裁剪图像),
-                (self.s10_name, self.s10_生成纵向有效点分布直方图),
-                (self.s11_name, self.s11_纵向裁剪图像),
-                (self.s12_name, self.s12_进一步纵向裁剪图像),
-                (self.s13_name, self.s13_自动对比度调整),  # 添加步骤13
+                (self.dir7_x方向白色点数量直方图, self.s7_绘制x方向白色点数量直方图),
+                (self.dir8_左右边界裁剪二值图, self.s8_边界裁剪图像),
+                (self.dir9_左右边界裁剪彩图, self.s9_进一步边界裁剪图像),
+                (self.dir10_y方向白色点数量直方图, self.s10_生成纵向有效点分布直方图),
+                (self.dir11_上下边界裁剪二值图, self.s11_纵向裁剪图像),
+                (self.dir12_上下边界裁剪彩图, self.s12_进一步纵向裁剪图像),
+                (self.dir13_亮度直方图, self.s13_亮度直方图),  # 添加步骤13
             ]
             for folder, func in steps:
                 output_path = self.base_dir / folder / f"{stem}.png"
@@ -361,7 +350,7 @@ class Processor:
     @classmethod
     def main(cls):
         obj = cls()
-        s1_dir = obj.base_dir / obj.s1_name
+        s1_dir = obj.base_dir / obj.dir1_原始数据
         stems = [file.stem for file in s1_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
