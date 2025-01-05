@@ -32,7 +32,7 @@ class Processor:
     s6_高斯模糊半径_像素 = 10
     s8_水平裁剪过程的有效点阈值_比例 = 0.5
     s8_水平边界裁剪收缩_像素 = 10
-    s10_纵向裁剪过程的有效点阈值_比例 = 0.5
+    s10_纵向裁剪过程的有效点阈值_比例 = 0.6
     s10_纵向边界裁剪收缩_像素 = 10
 
     print_lock = threading.Lock()
@@ -227,14 +227,14 @@ class Processor:
 
             fig = plt.Figure()
             ax = fig.add_subplot(111)
-            ax.hist(white_counts, bins=100, color='green')
-            ax.set_title(f'{output_path.stem} 纵向有效点分布直方图')
-            ax.set_xlabel('白色点数量')
-            ax.set_ylabel('像素行数')
+            ax.plot(range(len(white_counts)), white_counts, color='green')
+            ax.set_title(f'{output_path.stem} 纵向有效点分布')
+            ax.set_xlabel('Y 坐标')
+            ax.set_ylabel('有效点数量')
             fig.tight_layout()
             fig.savefig(output_path)
             plt.close(fig)
-        self.print_safe(f"{output_path.stem} 纵向有效点分布直方图已生成并保存。")
+        self.print_safe(f"{output_path.stem} 纵向有效点分布图已生成并保存。")
 
     def s11_纵向裁剪图像(self, output_path):
         input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
