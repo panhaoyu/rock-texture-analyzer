@@ -41,10 +41,9 @@ class Processor:
             self.s12_进一步纵向裁剪图像,
             self.s13_亮度直方图
         ]
-        directories: set[Path] = set()
-        for func in self.step_functions:
-            dir_path: Path = self.get_directory_path(func)
-            directories.add(dir_path)
+        directories: set[Path] = {
+            self.get_file_path(func, 'dummy').parent for func in self.step_functions
+        }
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)
 
@@ -66,8 +65,6 @@ class Processor:
         with Image.open(input_path) as image:
             left_crop: int = self.s3_左侧裁剪区域_像素
             right_crop: int = self.s3_右侧裁剪区域_像素
-            width: int
-            height: int
             width, height = image.size
             if width <= left_crop + right_crop:
                 self.print_safe(
@@ -153,8 +150,6 @@ class Processor:
         input_path: Path = self.get_file_path(self.s5_二值化, output_path.stem)
         with Image.open(input_path) as image:
             binary_array: np.ndarray = np.array(image)
-            height: int
-            width: int
             height, width = binary_array.shape
             white_counts: np.ndarray = np.sum(binary_array > 128, axis=0)
             max_count: int = white_counts.max()
@@ -185,8 +180,7 @@ class Processor:
             if binary_array.ndim != 2:
                 self.print_safe(f"{output_path.stem} 二值化图像不是二维的，无法进行边界裁剪。")
                 return
-            height: int = binary_array.shape[0]
-            width: int = binary_array.shape[1]
+            height, width = binary_array.shape
             white_counts: np.ndarray = np.sum(binary_array > 128, axis=0)
             max_count: int = white_counts.max()
             threshold: float = self.s8_水平裁剪过程的有效点阈值_比例 * max_count
@@ -227,8 +221,7 @@ class Processor:
         input_path: Path = self.get_file_path(self.s8_边界裁剪图像, output_path.stem)
         with Image.open(input_path) as image:
             binary_array: np.ndarray = np.array(image)
-            height: int = binary_array.shape[0]
-            width: int = binary_array.shape[1]
+            height, width = binary_array.shape
             white_counts: np.ndarray = np.sum(binary_array > 128, axis=1)
             max_count: int = white_counts.max()
             threshold: float = self.s10_纵向裁剪过程的有效点阈值_比例 * max_count
@@ -258,8 +251,7 @@ class Processor:
             if binary_array.ndim != 2:
                 self.print_safe(f"{output_path.stem} 二值化图像不是二维的，无法进行纵向裁剪。")
                 return
-            height: int = binary_array.shape[0]
-            width: int = binary_array.shape[1]
+            height, width = binary_array.shape
             white_counts: np.ndarray = np.sum(binary_array > 128, axis=1)
             max_count: int = white_counts.max()
             threshold: float = self.s10_纵向裁剪过程的有效点阈值_比例 * max_count
@@ -293,14 +285,11 @@ class Processor:
         ax.set_xlim(0, 160)
         fig.savefig(output_path)
         plt.close(fig)
+        self.print_safe(f"{output_path.stem} 亮度直方图已生成并保存。")
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
-        dir_path: Path = self.get_directory_path(func)
+        dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
         return dir_path / f'{stem}.png'
-
-    def get_directory_path(self, func: Callable[[Path], None]) -> Path:
-        dir_name: str = func.__name__.replace('_', '-').lstrip('s')
-        return self.base_dir / dir_name
 
     def process_stem(self, stem: str) -> None:
         try:
@@ -316,7 +305,7 @@ class Processor:
     @classmethod
     def main(cls) -> None:
         obj: Processor = cls()
-        s1_dir: Path = obj.get_directory_path(obj.s1_原始数据)
+        s1_dir: Path = obj.get_file_path(obj.s1_原始数据, 'dummy').parent
         stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
