@@ -320,7 +320,7 @@ class Processor:
         figure = plt.figure()
         ax: plt.Axes = figure.add_subplot(111)
         ax.hist(l, bins=256)
-        ax.set_xlim(0, 256)
+        ax.set_xlim(0, 160)
         figure.savefig(output_path)
         plt.close(figure)
         
