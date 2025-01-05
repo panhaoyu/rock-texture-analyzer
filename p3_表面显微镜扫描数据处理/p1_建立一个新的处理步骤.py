@@ -11,7 +11,7 @@ from PIL import Image, ImageFilter
 
 
 class Processor:
-    base_dir: Path = Path(r'F:\data\laser-scanner\others\侧面光学扫描的预处理')
+    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理\1-原始数据')
 
     s3_左侧裁剪区域_像素: int = 1400
     s3_右侧裁剪区域_像素: int = 1000
