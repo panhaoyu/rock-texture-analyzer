@@ -358,6 +358,7 @@ class Processor:
         obj: Processor = cls()
         s1_dir: Path = obj.get_file_path(obj.s1_原始数据, 'dummy').parent
         stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
+        stems = [i for i in stems if i.startswith('G')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
         obj.s15_打包处理结果(s1_dir)
