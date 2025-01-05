@@ -22,6 +22,19 @@ class Processor:
     s10_name = r'10-纵向有效点分布直方图'
     s11_name = r'11-纵向裁剪图像'
     s12_name = r'12-进一步纵向裁剪图像'
+
+    # 参数定义
+    s3_左侧裁剪区域_像素 = 1400
+    s3_右侧裁剪区域_像素 = 1000
+    s4_左右边界裁剪宽度_像素 = 100
+    s4_根据左右区域识别背景颜色时的上下裁剪区域_比例 = 0.1
+    s5_二值化阈值_比例 = 0.7
+    s6_高斯模糊半径_像素 = 5
+    s8_水平裁剪过程的有效点阈值_比例 = 0.5
+    s8_水平边界裁剪收缩_像素 = 5
+    s10_纵向裁剪过程的有效点阈值_比例 = 0.5
+    s10_纵向边界裁剪收缩_像素 = 5
+
     print_lock = threading.Lock()
 
     def __init__(self):
@@ -46,8 +59,8 @@ class Processor:
     def s3_裁剪左右两侧(self, output_path):
         input_file = self.base_dir / self.s2_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
-            left_crop = 1400
-            right_crop = 1000
+            left_crop = self.s3_左侧裁剪区域_像素
+            right_crop = self.s3_右侧裁剪区域_像素
             width, height = image.size
             if width <= left_crop + right_crop:
                 self.print_safe(
@@ -61,10 +74,10 @@ class Processor:
         input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             height = image.height
-            top = int(height * 0.1)
-            bottom = int(height * 0.9)
-            left_boundary = image.crop((0, top, 100, bottom))
-            right_boundary = image.crop((image.width - 100, top, image.width, bottom))
+            top = int(height * self.s4_根据左右区域识别背景颜色时的上下裁剪区域_比例)
+            bottom = int(height * (1 - self.s4_根据左右区域识别背景颜色时的上下裁剪区域_比例))
+            left_boundary = image.crop((0, top, self.s4_左右边界裁剪宽度_像素, bottom))
+            right_boundary = image.crop((image.width - self.s4_左右边界裁剪宽度_像素, top, image.width, bottom))
 
             left_average = np.array(left_boundary).mean(axis=(0, 1))
             right_average = np.array(right_boundary).mean(axis=(0, 1))
@@ -88,10 +101,10 @@ class Processor:
         input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             height = image.height
-            top = int(height * 0.1)
-            bottom = int(height * 0.9)
-            left_boundary = image.crop((0, top, 100, bottom))
-            right_boundary = image.crop((image.width - 100, top, image.width, bottom))
+            top = int(height * self.s4_根据左右区域识别背景颜色时的上下裁剪区域_比例)
+            bottom = int(height * (1 - self.s4_根据左右区域识别背景颜色时的上下裁剪区域_比例))
+            left_boundary = image.crop((0, top, self.s4_左右边界裁剪宽度_像素, bottom))
+            right_boundary = image.crop((image.width - self.s4_左右边界裁剪宽度_像素, top, image.width, bottom))
 
             left_average = np.array(left_boundary).mean(axis=(0, 1))
             right_average = np.array(right_boundary).mean(axis=(0, 1))
@@ -99,7 +112,7 @@ class Processor:
 
             pixels = np.array(image).reshape(-1, 3)
             distances = np.linalg.norm(pixels - background_color, axis=1)
-            threshold = np.quantile(distances, 0.7)
+            threshold = np.quantile(distances, self.s5_二值化阈值_比例)
 
             binary_pixels = np.where(distances <= threshold, 0, 255).astype(np.uint8)
             binary_image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
@@ -109,7 +122,7 @@ class Processor:
     def s6_降噪二值化(self, output_path):
         input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
-            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=5))
+            blurred_image = image.filter(ImageFilter.GaussianBlur(radius=self.s6_高斯模糊半径_像素))
             threshold = 128
             binary_pixels = np.array(blurred_image).flatten()
             binary_pixels = np.where(binary_pixels <= threshold, 0, 255).astype(np.uint8)
@@ -143,7 +156,7 @@ class Processor:
             white_counts = np.sum(binary_array > 128, axis=0)
 
             max_count = white_counts.max()
-            threshold = 0.5 * max_count
+            threshold = self.s8_水平裁剪过程的有效点阈值_比例 * max_count
 
             left_boundary_candidates = np.where(white_counts > threshold)[0]
             if left_boundary_candidates.size == 0:
@@ -154,8 +167,8 @@ class Processor:
             right_boundary_candidates = np.where(white_counts > threshold)[0]
             right_boundary = right_boundary_candidates.max()
 
-            left_boundary = min(left_boundary + 5, width)
-            right_boundary = max(right_boundary - 5, 0)
+            left_boundary = min(left_boundary + self.s8_水平边界裁剪收缩_像素, width)
+            right_boundary = max(right_boundary - self.s8_水平边界裁剪收缩_像素, 0)
 
             if left_boundary >= right_boundary:
                 self.print_safe(f"{output_path.stem} 边界裁剪后区域无效，跳过裁剪。")
@@ -183,7 +196,7 @@ class Processor:
             white_counts = np.sum(binary_array > 128, axis=0)
 
             max_count = white_counts.max()
-            threshold = 0.5 * max_count
+            threshold = self.s8_水平裁剪过程的有效点阈值_比例 * max_count
 
             left_boundary_candidates = np.where(white_counts > threshold)[0]
             if left_boundary_candidates.size == 0:
@@ -194,8 +207,8 @@ class Processor:
             right_boundary_candidates = np.where(white_counts > threshold)[0]
             right_boundary = right_boundary_candidates.max()
 
-            left_boundary = min(left_boundary + 5, width)
-            right_boundary = max(right_boundary - 5, 0)
+            left_boundary = min(left_boundary + self.s8_水平边界裁剪收缩_像素, width)
+            right_boundary = max(right_boundary - self.s8_水平边界裁剪收缩_像素, 0)
 
             if left_boundary >= right_boundary:
                 self.print_safe(f"{output_path.stem} 进一步边界裁剪后区域无效，跳过裁剪。")
@@ -232,7 +245,7 @@ class Processor:
             white_counts = np.sum(binary_array > 128, axis=1)
 
             max_count = white_counts.max()
-            threshold = 0.5 * max_count
+            threshold = self.s10_纵向裁剪过程的有效点阈值_比例 * max_count
 
             top_boundary_candidates = np.where(white_counts > threshold)[0]
             if top_boundary_candidates.size == 0:
@@ -243,8 +256,8 @@ class Processor:
             bottom_boundary_candidates = np.where(white_counts > threshold)[0]
             bottom_boundary = bottom_boundary_candidates.max()
 
-            top_boundary = min(top_boundary + 5, height)
-            bottom_boundary = max(bottom_boundary - 5, 0)
+            top_boundary = min(top_boundary + self.s10_纵向边界裁剪收缩_像素, height)
+            bottom_boundary = max(bottom_boundary - self.s10_纵向边界裁剪收缩_像素, 0)
 
             if top_boundary >= bottom_boundary:
                 self.print_safe(f"{output_path.stem} 纵向裁剪后区域无效，跳过裁剪。")
@@ -272,7 +285,7 @@ class Processor:
             white_counts = np.sum(binary_array > 128, axis=1)
 
             max_count = white_counts.max()
-            threshold = 0.5 * max_count
+            threshold = self.s10_纵向裁剪过程的有效点阈值_比例 * max_count
 
             top_boundary_candidates = np.where(white_counts > threshold)[0]
             if top_boundary_candidates.size == 0:
@@ -283,8 +296,8 @@ class Processor:
             bottom_boundary_candidates = np.where(white_counts > threshold)[0]
             bottom_boundary = bottom_boundary_candidates.max()
 
-            top_boundary = min(top_boundary + 5, height)
-            bottom_boundary = max(bottom_boundary - 5, 0)
+            top_boundary = min(top_boundary + self.s10_纵向边界裁剪收缩_像素, height)
+            bottom_boundary = max(bottom_boundary - self.s10_纵向边界裁剪收缩_像素, 0)
 
             if top_boundary >= bottom_boundary:
                 self.print_safe(f"{output_path.stem} 进一步纵向裁剪后区域无效，跳过裁剪。")
