@@ -22,20 +22,19 @@ class Processor:
     print_lock = threading.Lock()
 
     def __init__(self):
-        (self.base_dir / self.s2_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s3_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s4_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s5_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s6_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s7_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s8_name).mkdir(parents=True, exist_ok=True)
-        (self.base_dir / self.s9_name).mkdir(parents=True, exist_ok=True)
+        for folder in [
+            self.s2_name, self.s3_name, self.s4_name,
+            self.s5_name, self.s6_name, self.s7_name,
+            self.s8_name, self.s9_name
+        ]:
+            (self.base_dir / folder).mkdir(parents=True, exist_ok=True)
 
     def print_safe(self, message):
         with self.print_lock:
             print(message)
 
-    def s2_将jpg格式转换为png格式(self, stem):
+    def s2_将jpg格式转换为png格式(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s1_name / f"{stem}.jpg"
         output_file = self.base_dir / self.s2_name / f"{stem}.png"
         if output_file.exists():
@@ -44,7 +43,8 @@ class Processor:
             image.save(output_file)
         self.print_safe(f"{stem} 已转换并保存。")
 
-    def s3_裁剪左右两侧(self, stem):
+    def s3_裁剪左右两侧(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s2_name / f"{stem}.png"
         output_file = self.base_dir / self.s3_name / f"{stem}.png"
         if output_file.exists():
@@ -60,7 +60,8 @@ class Processor:
             cropped_image.save(output_file)
         self.print_safe(f"{stem} 已裁剪并保存。")
 
-    def s4_生成直方图(self, stem):
+    def s4_生成直方图(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s3_name / f"{stem}.png"
         output_file = self.base_dir / self.s4_name / f"{stem}.png"
         if output_file.exists():
@@ -69,20 +70,16 @@ class Processor:
             height = image.height
             top = int(height * 0.1)
             bottom = int(height * 0.9)
-            # 提取左右各100像素的边界区域，排除上下10%
             left_boundary = image.crop((0, top, 100, bottom))
             right_boundary = image.crop((image.width - 100, top, image.width, bottom))
 
-            # 计算边界区域的平均颜色
             left_average = np.array(left_boundary).mean(axis=(0, 1))
             right_average = np.array(right_boundary).mean(axis=(0, 1))
             background_color = (left_average + right_average) / 2
 
-            # 计算所有像素点与背景颜色的距离
             pixels = np.array(image).reshape(-1, 3)
             distances = np.linalg.norm(pixels - background_color, axis=1)
 
-            # 使用面向对象的Matplotlib接口绘制直方图
             fig = plt.Figure()
             ax = fig.add_subplot(111)
             ax.hist(distances, bins=100, color='gray')
@@ -94,7 +91,8 @@ class Processor:
             plt.close(fig)
         self.print_safe(f"{stem} 直方图已生成并保存。")
 
-    def s5_二值化(self, stem):
+    def s5_二值化(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s3_name / f"{stem}.png"
         output_file = self.base_dir / self.s5_name / f"{stem}.png"
         if output_file.exists():
@@ -103,7 +101,6 @@ class Processor:
             height = image.height
             top = int(height * 0.1)
             bottom = int(height * 0.9)
-            # 提取左右各100像素的边界区域，排除上下10%
             left_boundary = image.crop((0, top, 100, bottom))
             right_boundary = image.crop((image.width - 100, top, image.width, bottom))
 
@@ -120,7 +117,8 @@ class Processor:
             binary_image.save(output_file)
         self.print_safe(f"{stem} 二值化图像已生成并保存。")
 
-    def s6_降噪二值化(self, stem):
+    def s6_降噪二值化(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s5_name / f"{stem}.png"
         output_file = self.base_dir / self.s6_name / f"{stem}.png"
         if output_file.exists():
@@ -134,7 +132,8 @@ class Processor:
             denoised_image.save(output_file)
         self.print_safe(f"{stem} 降噪二值化图像已生成并保存。")
 
-    def s7_绘制x方向白色点数量直方图(self, stem):
+    def s7_绘制x方向白色点数量直方图(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s5_name / f"{stem}.png"
         output_file = self.base_dir / self.s7_name / f"{stem}.png"
         if output_file.exists():
@@ -154,7 +153,8 @@ class Processor:
             plt.close(fig)
         self.print_safe(f"{stem} x方向白色点数量图已生成并保存。")
 
-    def s8_边界裁剪图像(self, stem):
+    def s8_边界裁剪图像(self, output_path):
+        stem = output_path.stem
         input_file = self.base_dir / self.s5_name / f"{stem}.png"
         output_file = self.base_dir / self.s8_name / f"{stem}.png"
         if output_file.exists():
@@ -163,25 +163,20 @@ class Processor:
             binary_array = np.array(image)
             height, width = binary_array.shape
 
-            # 计算每个x坐标上白色点的数量
             white_counts = np.sum(binary_array > 128, axis=0)
 
-            # 计算阈值为直方图最大值的50%
             max_count = white_counts.max()
             threshold = 0.5 * max_count
 
-            # 找到左边界：第一个x坐标的白色点数量大于阈值
             left_boundary_candidates = np.where(white_counts > threshold)[0]
             if left_boundary_candidates.size == 0:
                 self.print_safe(f"{stem} 没有检测到满足阈值的白色点，跳过边界裁剪。")
                 return
             left_boundary = left_boundary_candidates.min()
 
-            # 找到右边界：最后一个x坐标的白色点数量大于阈值
             right_boundary_candidates = np.where(white_counts > threshold)[0]
             right_boundary = right_boundary_candidates.max()
 
-            # 往内收缩5个像素
             left_boundary = min(left_boundary + 5, width)
             right_boundary = max(right_boundary - 5, 0)
 
@@ -189,12 +184,12 @@ class Processor:
                 self.print_safe(f"{stem} 边界裁剪后区域无效，跳过裁剪。")
                 return
 
-            # 裁剪图像
             cropped_image = image.crop((left_boundary, 0, right_boundary, height))
             cropped_image.save(output_file)
         self.print_safe(f"{stem} 边界裁剪图像已生成并保存。")
 
-    def s9_进一步边界裁剪图像(self, stem):
+    def s9_进一步边界裁剪图像(self, output_path):
+        stem = output_path.stem
         binary_input_file = self.base_dir / self.s5_name / f"{stem}.png"
         color_input_file = self.base_dir / self.s3_name / f"{stem}.png"
         output_file = self.base_dir / self.s9_name / f"{stem}.png"
@@ -202,7 +197,6 @@ class Processor:
         if output_file.exists():
             return
 
-        # 打开并处理二值化图像
         with Image.open(binary_input_file) as binary_image:
             if binary_image.mode != 'L':
                 binary_image = binary_image.convert("L")
@@ -214,25 +208,20 @@ class Processor:
 
             height, width = binary_array.shape
 
-            # 计算每个x坐标上白色点的数量
             white_counts = np.sum(binary_array > 128, axis=0)
 
-            # 计算阈值为白色点数量直方图最大值的50%
             max_count = white_counts.max()
             threshold = 0.5 * max_count
 
-            # 找到左边界：第一个x坐标的白色点数量大于阈值
             left_boundary_candidates = np.where(white_counts > threshold)[0]
             if left_boundary_candidates.size == 0:
                 self.print_safe(f"{stem} 没有检测到满足阈值的白色点，跳过进一步边界裁剪。")
                 return
             left_boundary = left_boundary_candidates.min()
 
-            # 找到右边界：最后一个x坐标的白色点数量大于阈值
             right_boundary_candidates = np.where(white_counts > threshold)[0]
             right_boundary = right_boundary_candidates.max()
 
-            # 往内收缩5个像素，确保不超出图像范围
             left_boundary = min(left_boundary + 5, width)
             right_boundary = max(right_boundary - 5, 0)
 
@@ -240,24 +229,27 @@ class Processor:
                 self.print_safe(f"{stem} 进一步边界裁剪后区域无效，跳过裁剪。")
                 return
 
-        # 打开原始裁剪后的彩色PNG图像并进行进一步裁剪
         with Image.open(color_input_file) as color_image:
             cropped_image = color_image.crop((left_boundary, 0, right_boundary, height))
             cropped_image.save(output_file)
 
         self.print_safe(f"{stem} 进一步边界裁剪图像已生成并保存。")
 
-
     def process_stem(self, stem):
         try:
-            self.s2_将jpg格式转换为png格式(stem)
-            self.s3_裁剪左右两侧(stem)
-            self.s4_生成直方图(stem)
-            self.s5_二值化(stem)
-            self.s6_降噪二值化(stem)
-            self.s7_绘制x方向白色点数量直方图(stem)
-            self.s8_边界裁剪图像(stem)
-            self.s9_进一步边界裁剪图像(stem)
+            steps = [
+                (self.s2_name, self.s2_将jpg格式转换为png格式),
+                (self.s3_name, self.s3_裁剪左右两侧),
+                (self.s4_name, self.s4_生成直方图),
+                (self.s5_name, self.s5_二值化),
+                (self.s6_name, self.s6_降噪二值化),
+                (self.s7_name, self.s7_绘制x方向白色点数量直方图),
+                (self.s8_name, self.s8_边界裁剪图像),
+                (self.s9_name, self.s9_进一步边界裁剪图像),
+            ]
+            for folder, func in steps:
+                output_path = self.base_dir / folder / f"{stem}.png"
+                func(output_path)
         except:
             with self.print_lock:
                 traceback.print_exc()
