@@ -44,6 +44,7 @@ class Processor:
             self.s12_进一步纵向裁剪图像,
             self.s13_亮度直方图,
             self.s14_调整亮度,
+            self.s16_绘制RGB的KDE,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -314,6 +315,28 @@ class Processor:
         with zipfile.ZipFile(zip_path, 'w') as zipf:
             [zipf.write(file, file.name) for file in step14_dir.glob('*.png')]
         self.print_safe(f"处理结果已打包并保存到 {zip_path}")
+
+    def s16_绘制RGB的KDE(self, output_path: Path) -> None:
+        """绘制RGB通道的核密度估计曲线"""
+        input_path: Path = self.get_file_path(self.s14_调整亮度, output_path.stem)
+        with Image.open(input_path) as image:
+            rgb_array: np.ndarray = np.array(image)
+        fig: plt.Figure = plt.Figure()
+        ax: plt.Axes = fig.add_subplot(111)
+        colors = ['red', 'green', 'blue']
+        kernel = np.ones(5) / 5  # 平滑核
+        for channel, color in zip(rgb_array.reshape(-1, 3).T, colors):
+            counts, bin_edges = np.histogram(channel, bins=256, density=True)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            smoothed_counts = np.convolve(counts, kernel, mode='same')
+            ax.plot(bin_centers, smoothed_counts, color=color)
+        ax.set_title(f'{output_path.stem} RGB KDE')
+        ax.set_xlabel('像素值')
+        ax.set_ylabel('密度')
+        fig.tight_layout()
+        fig.savefig(output_path)
+        plt.close(fig)
+        self.print_safe(f"{output_path.stem} RGB KDE曲线已生成并保存。")
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
