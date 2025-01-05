@@ -22,6 +22,8 @@ class Processor:
     s8_水平边界裁剪收缩_像素: int = 10
     s10_纵向裁剪过程的有效点阈值_比例: float = 0.6
     s10_纵向边界裁剪收缩_像素: int = 10
+    s14_亮度最小值: float = 35
+    s14_亮度最大值: float = 100
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -39,7 +41,8 @@ class Processor:
             self.s10_生成纵向有效点分布直方图,
             self.s11_纵向裁剪图像,
             self.s12_进一步纵向裁剪图像,
-            self.s13_亮度直方图
+            self.s13_亮度直方图,
+            self.s14_调整亮度,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -279,6 +282,7 @@ class Processor:
             lab: Image.Image = image.convert('LAB')
             l, _, _ = lab.split()
             l_array: np.ndarray = np.asarray(l).ravel()
+        self.print_safe(f'{np.quantile(l_array, 0.05)=} {np.quantile(l_array, 0.95)=}')
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot(111)
         ax.hist(l_array, bins=256)
@@ -286,6 +290,21 @@ class Processor:
         fig.savefig(output_path)
         plt.close(fig)
         self.print_safe(f"{output_path.stem} 亮度直方图已生成并保存。")
+
+    def s14_调整亮度(self, output_path: Path) -> None:
+        """调整图像的全局亮度"""
+        input_path: Path = self.get_file_path(self.s12_进一步纵向裁剪图像, output_path.stem)
+        with Image.open(input_path) as image:
+            lab: Image.Image = image.convert('LAB')
+            l, a, b = lab.split()
+            l_array: np.ndarray = np.asarray(l).astype(np.float32)
+            l_scaled = (l_array - self.s14_亮度最小值) / (self.s14_亮度最大值 - self.s14_亮度最小值) * 255
+            l_scaled: np.ndarray = np.clip(l_scaled, a_min=0, a_max=255).astype(np.uint8)
+            l = Image.fromarray(l_scaled, mode='L')
+            lab = Image.merge('LAB', (l, a, b))
+            rgb: Image.Image = lab.convert('RGB')
+            rgb.save(output_path)
+        self.print_safe(f"{output_path.stem} 亮度已调整并保存。")
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
