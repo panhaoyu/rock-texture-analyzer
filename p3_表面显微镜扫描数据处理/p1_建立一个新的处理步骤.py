@@ -19,13 +19,17 @@ class Processor:
     s7_name = r'7-x方向白色点数量直方图'
     s8_name = r'8-边界裁剪图像'
     s9_name = r'9-进一步边界裁剪图像'
+    s10_name = r'10-纵向有效点分布直方图'
+    s11_name = r'11-纵向裁剪图像'
+    s12_name = r'12-进一步纵向裁剪图像'
     print_lock = threading.Lock()
 
     def __init__(self):
         for folder in [
             self.s2_name, self.s3_name, self.s4_name,
             self.s5_name, self.s6_name, self.s7_name,
-            self.s8_name, self.s9_name
+            self.s8_name, self.s9_name, self.s10_name,
+            self.s11_name, self.s12_name
         ]:
             (self.base_dir / folder).mkdir(parents=True, exist_ok=True)
 
@@ -202,6 +206,95 @@ class Processor:
             cropped_image.save(output_path)
         self.print_safe(f"{output_path.stem} 进一步边界裁剪图像已生成并保存。")
 
+    def s10_生成纵向有效点分布直方图(self, output_path):
+        input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
+        with Image.open(input_file) as image:
+            binary_array = np.array(image)
+            white_counts = np.sum(binary_array > 128, axis=1)
+
+            fig = plt.Figure()
+            ax = fig.add_subplot(111)
+            ax.hist(white_counts, bins=100, color='green')
+            ax.set_title(f'{output_path.stem} 纵向有效点分布直方图')
+            ax.set_xlabel('白色点数量')
+            ax.set_ylabel('像素行数')
+            fig.tight_layout()
+            fig.savefig(output_path)
+            plt.close(fig)
+        self.print_safe(f"{output_path.stem} 纵向有效点分布直方图已生成并保存。")
+
+    def s11_纵向裁剪图像(self, output_path):
+        input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
+        with Image.open(input_file) as image:
+            binary_array = np.array(image)
+            height, width = binary_array.shape
+
+            white_counts = np.sum(binary_array > 128, axis=1)
+
+            max_count = white_counts.max()
+            threshold = 0.5 * max_count
+
+            top_boundary_candidates = np.where(white_counts > threshold)[0]
+            if top_boundary_candidates.size == 0:
+                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过纵向裁剪。")
+                return
+            top_boundary = top_boundary_candidates.min()
+
+            bottom_boundary_candidates = np.where(white_counts > threshold)[0]
+            bottom_boundary = bottom_boundary_candidates.max()
+
+            top_boundary = min(top_boundary + 5, height)
+            bottom_boundary = max(bottom_boundary - 5, 0)
+
+            if top_boundary >= bottom_boundary:
+                self.print_safe(f"{output_path.stem} 纵向裁剪后区域无效，跳过裁剪。")
+                return
+
+            cropped_image = image.crop((0, top_boundary, width, bottom_boundary))
+            cropped_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 纵向裁剪图像已生成并保存。")
+
+    def s12_进一步纵向裁剪图像(self, output_path):
+        binary_input_file = self.base_dir / self.s8_name / f"{output_path.stem}.png"
+        color_input_file = self.base_dir / self.s9_name / f"{output_path.stem}.png"
+
+        with Image.open(binary_input_file) as binary_image:
+            if binary_image.mode != 'L':
+                binary_image = binary_image.convert("L")
+            binary_array = np.array(binary_image)
+
+            if binary_array.ndim != 2:
+                self.print_safe(f"{output_path.stem} 二值化图像不是二维的，无法进行纵向裁剪。")
+                return
+
+            height, width = binary_array.shape
+
+            white_counts = np.sum(binary_array > 128, axis=1)
+
+            max_count = white_counts.max()
+            threshold = 0.5 * max_count
+
+            top_boundary_candidates = np.where(white_counts > threshold)[0]
+            if top_boundary_candidates.size == 0:
+                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过进一步纵向裁剪。")
+                return
+            top_boundary = top_boundary_candidates.min()
+
+            bottom_boundary_candidates = np.where(white_counts > threshold)[0]
+            bottom_boundary = bottom_boundary_candidates.max()
+
+            top_boundary = min(top_boundary + 5, height)
+            bottom_boundary = max(bottom_boundary - 5, 0)
+
+            if top_boundary >= bottom_boundary:
+                self.print_safe(f"{output_path.stem} 进一步纵向裁剪后区域无效，跳过裁剪。")
+                return
+
+        with Image.open(color_input_file) as color_image:
+            cropped_image = color_image.crop((0, top_boundary, width, bottom_boundary))
+            cropped_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 进一步纵向裁剪图像已生成并保存。")
+
     def process_stem(self, stem):
         try:
             steps = [
@@ -213,6 +306,9 @@ class Processor:
                 (self.s7_name, self.s7_绘制x方向白色点数量直方图),
                 (self.s8_name, self.s8_边界裁剪图像),
                 (self.s9_name, self.s9_进一步边界裁剪图像),
+                (self.s10_name, self.s10_生成纵向有效点分布直方图),
+                (self.s11_name, self.s11_纵向裁剪图像),
+                (self.s12_name, self.s12_进一步纵向裁剪图像),
             ]
             for folder, func in steps:
                 output_path = self.base_dir / folder / f"{stem}.png"
