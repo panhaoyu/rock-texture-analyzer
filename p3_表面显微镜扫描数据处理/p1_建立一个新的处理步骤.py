@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter  # 导入ImageOps
 
 
 class Processor:
@@ -22,6 +22,7 @@ class Processor:
     s10_name = r'10-纵向有效点分布直方图'
     s11_name = r'11-纵向裁剪图像'
     s12_name = r'12-进一步纵向裁剪图像'
+    s13_name = r'13-自动对比度调整'  # 更新步骤13名称
 
     # 参数定义
     s3_左侧裁剪区域_像素 = 1400
@@ -42,7 +43,7 @@ class Processor:
             self.s2_name, self.s3_name, self.s4_name,
             self.s5_name, self.s6_name, self.s7_name,
             self.s8_name, self.s9_name, self.s10_name,
-            self.s11_name, self.s12_name
+            self.s11_name, self.s12_name, self.s13_name  # 创建步骤13的文件夹
         ]:
             (self.base_dir / folder).mkdir(parents=True, exist_ok=True)
 
@@ -308,6 +309,30 @@ class Processor:
             cropped_image.save(output_path)
         self.print_safe(f"{output_path.stem} 进一步纵向裁剪图像已生成并保存。")
 
+    def s13_自动对比度调整(self, output_path):
+        input_file = self.base_dir / self.s12_name / f"{output_path.stem}.png"
+        with Image.open(input_file) as image:
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+
+            hsv = image.convert('HSV')
+            np_hsv = np.array(hsv)
+            v = np_hsv[:, :, 2]
+
+            # Histogram equalization on V channel
+            hist, bins = np.histogram(v.flatten(), 256, [0, 256])
+            cdf = hist.cumsum()
+            cdf_masked = np.ma.masked_equal(cdf, 0)
+            cdf_masked = (cdf_masked - cdf_masked.min()) * 255 / (cdf_masked.max() - cdf_masked.min())
+            cdf = np.ma.filled(cdf_masked, 0).astype('uint8')
+            np_hsv[:, :, 2] = cdf[v]
+
+            equalized_hsv = Image.fromarray(np_hsv, 'HSV')
+            equalized_image = equalized_hsv.convert('RGB')
+            equalized_image.save(output_path)
+
+        self.print_safe(f"{output_path.stem} 自动对比度调整图像已生成并保存。")
+
     def process_stem(self, stem):
         try:
             steps = [
@@ -322,6 +347,7 @@ class Processor:
                 (self.s10_name, self.s10_生成纵向有效点分布直方图),
                 (self.s11_name, self.s11_纵向裁剪图像),
                 (self.s12_name, self.s12_进一步纵向裁剪图像),
+                (self.s13_name, self.s13_自动对比度调整),  # 添加步骤13
             ]
             for folder, func in steps:
                 output_path = self.base_dir / folder / f"{stem}.png"
