@@ -54,8 +54,9 @@ class Processor:
 
     def s1_原始数据(self, output_path: Path):
         pass
+
     def s2_将jpg格式转换为png格式(self, output_path):
-        input_file = self.base_dir / self.dir1_原始数据 / f"{output_path.stem}.jpg"
+        input_file = self.get_file_path(self.s1_原始数据, output_path.stem).with_suffix('.jpg')
         with Image.open(input_file) as image:
             image.save(output_path)
         self.print_safe(f"{output_path.stem} 已转换并保存。")
