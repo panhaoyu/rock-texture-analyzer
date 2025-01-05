@@ -29,11 +29,11 @@ class Processor:
     s4_左右边界裁剪宽度_像素 = 100
     s4_根据左右区域识别背景颜色时的上下裁剪区域_比例 = 0.1
     s5_二值化阈值_比例 = 0.7
-    s6_高斯模糊半径_像素 = 5
+    s6_高斯模糊半径_像素 = 10
     s8_水平裁剪过程的有效点阈值_比例 = 0.5
-    s8_水平边界裁剪收缩_像素 = 5
+    s8_水平边界裁剪收缩_像素 = 10
     s10_纵向裁剪过程的有效点阈值_比例 = 0.5
-    s10_纵向边界裁剪收缩_像素 = 5
+    s10_纵向边界裁剪收缩_像素 = 10
 
     print_lock = threading.Lock()
 
@@ -315,7 +315,7 @@ class Processor:
                 (self.s3_name, self.s3_裁剪左右两侧),
                 (self.s4_name, self.s4_生成直方图),
                 (self.s5_name, self.s5_二值化),
-                (self.s6_name, self.s6_降噪二值化),
+                # (self.s6_name, self.s6_降噪二值化),
                 (self.s7_name, self.s7_绘制x方向白色点数量直方图),
                 (self.s8_name, self.s8_边界裁剪图像),
                 (self.s9_name, self.s9_进一步边界裁剪图像),
