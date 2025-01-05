@@ -1,5 +1,6 @@
 import threading
 import traceback
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable, List
@@ -306,6 +307,14 @@ class Processor:
             rgb.save(output_path)
         self.print_safe(f"{output_path.stem} 亮度已调整并保存。")
 
+    def s15_打包处理结果(self, s1_dir: Path) -> None:
+        """将步骤14的处理结果打包为zip文件"""
+        zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
+        step14_dir = self.get_file_path(self.s14_调整亮度, 'dummy').parent
+        with zipfile.ZipFile(zip_path, 'w') as zipf:
+            [zipf.write(file, file.name) for file in step14_dir.glob('*.png')]
+        self.print_safe(f"处理结果已打包并保存到 {zip_path}")
+
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
         return dir_path / f'{stem}.png'
@@ -328,6 +337,7 @@ class Processor:
         stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
+        obj.s15_打包处理结果(s1_dir)
 
 
 if __name__ == '__main__':
