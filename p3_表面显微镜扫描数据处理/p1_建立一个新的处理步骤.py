@@ -26,7 +26,7 @@ class Processor:
     print_lock: threading.Lock = threading.Lock()
 
     def __init__(self) -> None:
-        step_functions: List[Callable[[Path], None]] = [
+        self.step_functions: List[Callable[[Path], None]] = [
             self.s1_原始数据,
             self.s2_将jpg格式转换为png格式,
             self.s3_裁剪左右两侧,
@@ -42,7 +42,7 @@ class Processor:
             self.s13_亮度直方图
         ]
         directories: set[Path] = set()
-        for func in step_functions:
+        for func in self.step_functions:
             dir_path: Path = self.get_directory_path(func)
             directories.add(dir_path)
         for directory in directories:
@@ -304,22 +304,7 @@ class Processor:
 
     def process_stem(self, stem: str) -> None:
         try:
-            steps: List[Callable[[Path], None]] = [
-                self.s1_原始数据,
-                self.s2_将jpg格式转换为png格式,
-                self.s3_裁剪左右两侧,
-                self.s4_生成直方图,
-                self.s5_二值化,
-                self.s6_降噪二值化,
-                self.s7_绘制x方向白色点数量直方图,
-                self.s8_边界裁剪图像,
-                self.s9_进一步边界裁剪图像,
-                self.s10_生成纵向有效点分布直方图,
-                self.s11_纵向裁剪图像,
-                self.s12_进一步纵向裁剪图像,
-                self.s13_亮度直方图
-            ]
-            for func in steps:
+            for func in self.step_functions:
                 output_path: Path = self.get_file_path(func, stem)
                 if output_path.exists():
                     continue
