@@ -2,6 +2,7 @@ import threading
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,6 +52,8 @@ class Processor:
         with self.print_lock:
             print(message)
 
+    def s1_原始数据(self, output_path: Path):
+        pass
     def s2_将jpg格式转换为png格式(self, output_path):
         input_file = self.base_dir / self.dir1_原始数据 / f"{output_path.stem}.jpg"
         with Image.open(input_file) as image:
@@ -323,25 +326,33 @@ class Processor:
         ax.set_xlim(0, 160)
         figure.savefig(output_path)
         plt.close(figure)
-        
+
+    def get_file_path(self, func: Callable, stem: str):
+        dir_name: str = func.__name__
+        dir_name = dir_name.replace('_', '-')
+        dir_name = dir_name.lstrip('s')
+        return self.base_dir / dir_name / f'{stem}.png'
+
     def process_stem(self, stem):
         try:
-            steps = [
-                (self.dir2_转换为PNG, self.s2_将jpg格式转换为png格式),
-                (self.dir3_裁剪后的PNG, self.s3_裁剪左右两侧),
-                (self.dir4_直方图, self.s4_生成直方图),
-                (self.dir5_二值化图像, self.s5_二值化),
-                # (self.s6_name, self.s6_降噪二值化),
-                (self.dir7_x方向白色点数量直方图, self.s7_绘制x方向白色点数量直方图),
-                (self.dir8_左右边界裁剪二值图, self.s8_边界裁剪图像),
-                (self.dir9_左右边界裁剪彩图, self.s9_进一步边界裁剪图像),
-                (self.dir10_y方向白色点数量直方图, self.s10_生成纵向有效点分布直方图),
-                (self.dir11_上下边界裁剪二值图, self.s11_纵向裁剪图像),
-                (self.dir12_上下边界裁剪彩图, self.s12_进一步纵向裁剪图像),
-                (self.dir13_亮度直方图, self.s13_亮度直方图),  # 添加步骤13
+            steps: list[Callable[[Path], None]] = [
+                self.s1_原始数据,
+                self.s2_将jpg格式转换为png格式,
+                self.s3_裁剪左右两侧,
+                self.s4_生成直方图,
+                self.s5_二值化,
+                self.s6_降噪二值化,
+                self.s7_绘制x方向白色点数量直方图,
+                self.s8_边界裁剪图像,
+                self.s9_进一步边界裁剪图像,
+                self.s10_生成纵向有效点分布直方图,
+                self.s11_纵向裁剪图像,
+                self.s12_进一步纵向裁剪图像,
+                self.s13_亮度直方图
             ]
-            for folder, func in steps:
-                output_path = self.base_dir / folder / f"{stem}.png"
+
+            for func in steps:
+                output_path = self.get_file_path(func, stem)
                 if output_path.exists():
                     continue
                 func(output_path)
