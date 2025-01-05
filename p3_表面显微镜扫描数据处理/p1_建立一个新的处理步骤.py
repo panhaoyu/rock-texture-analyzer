@@ -318,9 +318,11 @@ class Processor:
         l = np.asarray(l)
         l = l.ravel()
         figure = plt.figure()
-        ax = figure.add_subplot(111)
+        ax: plt.Axes = figure.add_subplot(111)
         ax.hist(l, bins=256)
+        ax.set_xlim(0, 256)
         figure.savefig(output_path)
+        plt.close(figure)
         
     def process_stem(self, stem):
         try:
