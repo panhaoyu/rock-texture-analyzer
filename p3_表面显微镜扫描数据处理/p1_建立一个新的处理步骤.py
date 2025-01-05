@@ -34,38 +34,27 @@ class Processor:
             print(message)
 
     def s2_将jpg格式转换为png格式(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s1_name / f"{stem}.jpg"
-        output_file = self.base_dir / self.s2_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s1_name / f"{output_path.stem}.jpg"
         with Image.open(input_file) as image:
-            image.save(output_file)
-        self.print_safe(f"{stem} 已转换并保存。")
+            image.save(output_path)
+        self.print_safe(f"{output_path.stem} 已转换并保存。")
 
     def s3_裁剪左右两侧(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s2_name / f"{stem}.png"
-        output_file = self.base_dir / self.s3_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s2_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             left_crop = 1400
             right_crop = 1000
             width, height = image.size
             if width <= left_crop + right_crop:
-                self.print_safe(f"{stem} 图像宽度不足以截取 {left_crop} 左边和 {right_crop} 右边像素。跳过裁剪。")
+                self.print_safe(
+                    f"{output_path.stem} 图像宽度不足以截取 {left_crop} 左边和 {right_crop} 右边像素。跳过裁剪。")
                 return
             cropped_image = image.crop((left_crop, 0, width - right_crop, height))
-            cropped_image.save(output_file)
-        self.print_safe(f"{stem} 已裁剪并保存。")
+            cropped_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 已裁剪并保存。")
 
     def s4_生成直方图(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s3_name / f"{stem}.png"
-        output_file = self.base_dir / self.s4_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             height = image.height
             top = int(height * 0.1)
@@ -83,20 +72,16 @@ class Processor:
             fig = plt.Figure()
             ax = fig.add_subplot(111)
             ax.hist(distances, bins=100, color='gray')
-            ax.set_title(f'{stem} 距离直方图')
+            ax.set_title(f'{output_path.stem} 距离直方图')
             ax.set_xlabel('距离')
             ax.set_ylabel('像素数量')
             fig.tight_layout()
-            fig.savefig(output_file)
+            fig.savefig(output_path)
             plt.close(fig)
-        self.print_safe(f"{stem} 直方图已生成并保存。")
+        self.print_safe(f"{output_path.stem} 直方图已生成并保存。")
 
     def s5_二值化(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s3_name / f"{stem}.png"
-        output_file = self.base_dir / self.s5_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             height = image.height
             top = int(height * 0.1)
@@ -114,30 +99,22 @@ class Processor:
 
             binary_pixels = np.where(distances <= threshold, 0, 255).astype(np.uint8)
             binary_image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
-            binary_image.save(output_file)
-        self.print_safe(f"{stem} 二值化图像已生成并保存。")
+            binary_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 二值化图像已生成并保存。")
 
     def s6_降噪二值化(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s5_name / f"{stem}.png"
-        output_file = self.base_dir / self.s6_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             blurred_image = image.filter(ImageFilter.GaussianBlur(radius=5))
             threshold = 128
             binary_pixels = np.array(blurred_image).flatten()
             binary_pixels = np.where(binary_pixels <= threshold, 0, 255).astype(np.uint8)
             denoised_image = Image.fromarray(binary_pixels.reshape(image.height, image.width), mode='L')
-            denoised_image.save(output_file)
-        self.print_safe(f"{stem} 降噪二值化图像已生成并保存。")
+            denoised_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 降噪二值化图像已生成并保存。")
 
     def s7_绘制x方向白色点数量直方图(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s5_name / f"{stem}.png"
-        output_file = self.base_dir / self.s7_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             binary_array = np.array(image)
             white_counts = np.sum(binary_array > 128, axis=0)
@@ -145,20 +122,16 @@ class Processor:
             fig = plt.Figure()
             ax = fig.add_subplot(111)
             ax.plot(range(len(white_counts)), white_counts, color='blue')
-            ax.set_title(f'{stem} x方向白色点数量')
+            ax.set_title(f'{output_path.stem} x方向白色点数量')
             ax.set_xlabel('X 坐标')
             ax.set_ylabel('白色点数量')
             fig.tight_layout()
-            fig.savefig(output_file)
+            fig.savefig(output_path)
             plt.close(fig)
-        self.print_safe(f"{stem} x方向白色点数量图已生成并保存。")
+        self.print_safe(f"{output_path.stem} x方向白色点数量图已生成并保存。")
 
     def s8_边界裁剪图像(self, output_path):
-        stem = output_path.stem
-        input_file = self.base_dir / self.s5_name / f"{stem}.png"
-        output_file = self.base_dir / self.s8_name / f"{stem}.png"
-        if output_file.exists():
-            return
+        input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
         with Image.open(input_file) as image:
             binary_array = np.array(image)
             height, width = binary_array.shape
@@ -170,7 +143,7 @@ class Processor:
 
             left_boundary_candidates = np.where(white_counts > threshold)[0]
             if left_boundary_candidates.size == 0:
-                self.print_safe(f"{stem} 没有检测到满足阈值的白色点，跳过边界裁剪。")
+                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过边界裁剪。")
                 return
             left_boundary = left_boundary_candidates.min()
 
@@ -181,21 +154,16 @@ class Processor:
             right_boundary = max(right_boundary - 5, 0)
 
             if left_boundary >= right_boundary:
-                self.print_safe(f"{stem} 边界裁剪后区域无效，跳过裁剪。")
+                self.print_safe(f"{output_path.stem} 边界裁剪后区域无效，跳过裁剪。")
                 return
 
             cropped_image = image.crop((left_boundary, 0, right_boundary, height))
-            cropped_image.save(output_file)
-        self.print_safe(f"{stem} 边界裁剪图像已生成并保存。")
+            cropped_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 边界裁剪图像已生成并保存。")
 
     def s9_进一步边界裁剪图像(self, output_path):
-        stem = output_path.stem
-        binary_input_file = self.base_dir / self.s5_name / f"{stem}.png"
-        color_input_file = self.base_dir / self.s3_name / f"{stem}.png"
-        output_file = self.base_dir / self.s9_name / f"{stem}.png"
-
-        if output_file.exists():
-            return
+        binary_input_file = self.base_dir / self.s5_name / f"{output_path.stem}.png"
+        color_input_file = self.base_dir / self.s3_name / f"{output_path.stem}.png"
 
         with Image.open(binary_input_file) as binary_image:
             if binary_image.mode != 'L':
@@ -203,7 +171,7 @@ class Processor:
             binary_array = np.array(binary_image)
 
             if binary_array.ndim != 2:
-                self.print_safe(f"{stem} 二值化图像不是二维的，无法进行边界裁剪。")
+                self.print_safe(f"{output_path.stem} 二值化图像不是二维的，无法进行边界裁剪。")
                 return
 
             height, width = binary_array.shape
@@ -215,7 +183,7 @@ class Processor:
 
             left_boundary_candidates = np.where(white_counts > threshold)[0]
             if left_boundary_candidates.size == 0:
-                self.print_safe(f"{stem} 没有检测到满足阈值的白色点，跳过进一步边界裁剪。")
+                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过进一步边界裁剪。")
                 return
             left_boundary = left_boundary_candidates.min()
 
@@ -226,14 +194,13 @@ class Processor:
             right_boundary = max(right_boundary - 5, 0)
 
             if left_boundary >= right_boundary:
-                self.print_safe(f"{stem} 进一步边界裁剪后区域无效，跳过裁剪。")
+                self.print_safe(f"{output_path.stem} 进一步边界裁剪后区域无效，跳过裁剪。")
                 return
 
         with Image.open(color_input_file) as color_image:
             cropped_image = color_image.crop((left_boundary, 0, right_boundary, height))
-            cropped_image.save(output_file)
-
-        self.print_safe(f"{stem} 进一步边界裁剪图像已生成并保存。")
+            cropped_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 进一步边界裁剪图像已生成并保存。")
 
     def process_stem(self, stem):
         try:
@@ -249,6 +216,8 @@ class Processor:
             ]
             for folder, func in steps:
                 output_path = self.base_dir / folder / f"{stem}.png"
+                if output_path.exists():
+                    continue
                 func(output_path)
         except:
             with self.print_lock:
