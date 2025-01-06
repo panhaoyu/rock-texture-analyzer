@@ -438,12 +438,6 @@ class Processor:
         original_image[self.p18_补全时的上下裁剪范围_像素:-self.p18_补全时的上下裁剪范围_像素, :, :] = patched_image
         Image.fromarray(original_image).save(output_path)
 
-    def s99_打包处理结果(self, s1_dir: Path) -> None:
-        zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
-        source_dir = self.get_file_path(self.f23_合并补全图像, 'dummy').parent
-        with zipfile.ZipFile(zip_path, 'w') as zip_file:
-            [zip_file.write(file, file.name) for file in source_dir.glob('*.png')]
-
     @classmethod
     def main(cls) -> None:
         obj: Processor = cls()
@@ -451,7 +445,10 @@ class Processor:
         stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
-        obj.s99_打包处理结果(s1_dir)
+        zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
+        final_dir = obj.get_file_path(obj.f23_合并补全图像, 'dummy').parent
+        with zipfile.ZipFile(zip_path, 'w') as zip_file:
+            [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
 
 
 if __name__ == '__main__':
