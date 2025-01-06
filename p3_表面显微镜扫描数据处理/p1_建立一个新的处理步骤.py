@@ -23,8 +23,9 @@ class Processor:
     s8_水平边界裁剪收缩_像素: int = 10
     s10_纵向裁剪过程的有效点阈值_比例: float = 0.6
     s10_纵向边界裁剪收缩_像素: int = 10
-    s14_亮度最小值: float = 35
-    s14_亮度最大值: float = 100
+    s14_亮度最小值: float = 10
+    s14_亮度最大值: float = 125
+    s16_直方图平滑窗口半径_像素: int = 10
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -324,7 +325,8 @@ class Processor:
         fig: plt.Figure = plt.Figure()
         ax: plt.Axes = fig.add_subplot(111)
         colors = ['red', 'green', 'blue']
-        kernel = np.ones(5) / 5  # 平滑核
+        size = self.s16_直方图平滑窗口半径_像素 * 2 - 1
+        kernel = np.ones(size) / size  # 平滑核
         for channel, color in zip(rgb_array.reshape(-1, 3).T, colors):
             counts, bin_edges = np.histogram(channel, bins=256, density=True)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
