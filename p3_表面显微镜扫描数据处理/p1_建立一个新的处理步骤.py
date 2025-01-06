@@ -393,22 +393,19 @@ class Processor:
 
             # 从中间位置查找连续的黑色区域
             indices = np.where(high_black)[0]
-            if indices.size == 0:
-                mask = np.zeros_like(pixels, dtype=np.uint8)
-            else:
-                expand = 10
-                closest_idx = int(indices[np.argmin(np.abs(indices - mid_y))])
-                # 找到连续区域的起始和结束，并扩展10像素
-                start = max(closest_idx, 0)
-                end = min(closest_idx, len(high_black) - 1)
-                while start > 0 and high_black[start - 1]:
-                    start = max(start - 1, 0)
-                while end < len(high_black) - 1 and high_black[end + 1]:
-                    end = min(end + 1, len(high_black) - 1)
-                start -= expand
-                end += expand
-                mask = np.zeros_like(pixels, dtype=np.uint8)
-                mask[start:end + 1, :] = 255
+            expand = 10
+            closest_idx = int(indices[np.argmin(np.abs(indices - mid_y))])
+            # 找到连续区域的起始和结束，并扩展10像素
+            start = max(closest_idx, 0)
+            end = min(closest_idx, len(high_black) - 1)
+            while start > 0 and high_black[start - 1]:
+                start = max(start - 1, 0)
+            while end < len(high_black) - 1 and high_black[end + 1]:
+                end = min(end + 1, len(high_black) - 1)
+            start -= expand
+            end += expand
+            mask = np.zeros_like(pixels, dtype=np.uint8)
+            mask[start:end + 1, :] = 255
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
         self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
@@ -420,6 +417,7 @@ class Processor:
             binary = np.array(image)
             inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
             Image.fromarray(inverted, mode='L').save(output_path)
+        raise
         self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
     def s21_补全黑线(self, output_path: Path) -> None:
