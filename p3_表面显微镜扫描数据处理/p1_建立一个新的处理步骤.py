@@ -434,8 +434,8 @@ class Processor:
     def s99_打包处理结果(self, s1_dir: Path) -> None:
         zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
         source_dir = self.get_file_path(self.s23_合并补全图像, 'dummy').parent
-        with zipfile.ZipFile(zip_path, 'w') as file:
-            [file.write(file, file.name) for file in source_dir.glob('*.png')]
+        with zipfile.ZipFile(zip_path, 'w') as zip_file:
+            [zip_file.write(file, file.name) for file in source_dir.glob('*.png')]
 
     @classmethod
     def main(cls) -> None:
