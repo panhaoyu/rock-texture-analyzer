@@ -4,3 +4,4 @@ keep_image_url = 'https://zhaogroup.oss-cn-shanghai.aliyuncs.com/temp/20-翻转�
 
 bucket_name = "panhaoyu-static"
 endpoint = 'oss-cn-shanghai.aliyuncs.com'
+dashscope_api_key = 'sk-a8c7e5ded0ae4a04936e130f4c7887f5'

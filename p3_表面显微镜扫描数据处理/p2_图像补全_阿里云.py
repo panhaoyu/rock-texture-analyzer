@@ -1,5 +1,3 @@
-
-import os
 import subprocess
 import time
 from pathlib import Path
@@ -7,12 +5,12 @@ from pprint import pprint
 
 import requests
 
-from p3_表面显微镜扫描数据处理.config import endpoint, bucket_name
+from p3_表面显微镜扫描数据处理.config import endpoint, bucket_name, dashscope_api_key
 
 
 def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
     """图像擦除补全函数"""
-    api_key = os.getenv('DASHSCOPE_API_KEY')
+    api_key = dashscope_api_key
     headers = {
         "Authorization": f"Bearer {api_key}",
         "X-DashScope-Async": "enable",
@@ -27,7 +25,7 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
             "foreground_url": foreground_url
         },
         "parameters": {
-            "dilate_flag": False,
+            "dilate_flag": True,
             'fast_mode': False,
             'add_watermark': False,
         }
@@ -88,7 +86,4 @@ def erase_image_with_oss(base_dir: Path,
     image_url = upload_to_oss(base_dir, local_image_path)
     mask_url = upload_to_oss(base_dir, local_mask_path)
     foreground_url = upload_to_oss(base_dir, local_foreground_path)
-    print(f'{image_url=}')
-    print(f'{mask_url=}')
-    print(f'{foreground_url=}')
     return erase_image(image_url, mask_url, foreground_url)

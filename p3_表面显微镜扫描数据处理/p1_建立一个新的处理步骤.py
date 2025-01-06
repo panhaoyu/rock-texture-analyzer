@@ -55,7 +55,7 @@ class Processor:
             self.s18_需要补全的区域,
             self.s19_识别黑色水平线区域,
             self.s20_翻转黑白区域,
-            self.s21_调用_erase_image_with_oss,
+            self.s21_补全黑线,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -419,7 +419,7 @@ class Processor:
             Image.fromarray(inverted, mode='L').save(output_path)
         self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
-    def s21_调用_erase_image_with_oss(self, output_path: Path) -> None:
+    def s21_补全黑线(self, output_path: Path) -> None:
         """调用erase_image_with_oss并下载结果"""
         base_dir = self.base_dir
         local_image_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
