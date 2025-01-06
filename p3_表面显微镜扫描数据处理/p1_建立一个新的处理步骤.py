@@ -26,7 +26,7 @@ class Processor:
     s14_亮度最小值: float = 10
     s14_亮度最大值: float = 125
     s16_直方图平滑窗口半径_像素: int = 10
-    s17_缩放图像大小: tuple[int, int] = (5000, 5000)
+    s17_缩放图像大小: tuple[int, int] = (4000, 4000)
 
     print_lock: threading.Lock = threading.Lock()
 
