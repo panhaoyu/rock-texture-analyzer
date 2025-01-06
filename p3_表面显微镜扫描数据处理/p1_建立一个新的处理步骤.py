@@ -394,7 +394,7 @@ class Processor:
 
             # 从中间位置查找连续的黑色区域
             indices = np.where(high_black)[0]
-            expand = 10
+            expand = 30
             closest_idx = int(indices[np.argmin(np.abs(indices - mid_y))])
             # 找到连续区域的起始和结束，并扩展10像素
             start = max(closest_idx, 0)
@@ -408,7 +408,8 @@ class Processor:
             mask = np.zeros_like(pixels, dtype=np.uint8)
             mask[start:end + 1, :] = 255
             center_pixels = pixels[start:end + 1, :]
-            center_pixels = np.where(center_pixels < threshold, 255, 0)
+            # 增加黑色的识别区域。
+            center_pixels = np.where(center_pixels < threshold * 1.2, 255, 0)
             mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
