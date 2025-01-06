@@ -410,7 +410,7 @@ class Processor:
             mask[start:end + 1, :] = 255
             center_pixels = pixels[start:end + 1, :]
             # 增加黑色的识别区域。
-            center_pixels = np.where(center_pixels < threshold, 255, 0)
+            center_pixels = np.where(center_pixels < threshold * 1.2, 255, 0)
             mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
