@@ -92,7 +92,7 @@ class Processor:
                 output_path: Path = self.get_file_path(func, stem)
                 if output_path.exists():
                     continue
-                func_index, func_name = re.match(r'^s(\d+)_(.*?)$', func.__name__).groups()
+                func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.__name__).groups()
                 func(output_path)
                 func_index = int(func_index)
                 self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
