@@ -31,6 +31,7 @@ class Processor:
     s14_亮度最大值: float = 125
     s16_直方图平滑窗口半径_像素: int = 10
     s17_缩放图像大小: tuple[int, int] = (4000, 4000)
+    s18_补全时的上下裁剪范围_像素: int = 1200
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -377,7 +378,7 @@ class Processor:
     def s18_需要补全的区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.s17_缩放图像, output_path.stem)
         with Image.open(input_path) as image:
-            image = np.asarray(image)[1500:-1500, :, :]
+            image = np.asarray(image)[self.s18_补全时的上下裁剪范围_像素:-self.s18_补全时的上下裁剪范围_像素, :, :]
             Image.fromarray(image).save(output_path)
 
     def s19_识别黑色水平线区域(self, output_path: Path) -> None:
