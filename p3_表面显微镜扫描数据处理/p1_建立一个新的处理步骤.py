@@ -410,7 +410,7 @@ class Processor:
             mask[start:end + 1, :] = 255
             center_pixels = pixels[start:end + 1, :]
             # 增加黑色的识别区域。
-            center_pixels = np.where(center_pixels < threshold * 1.2, 255, 0)
+            center_pixels = np.where(center_pixels < threshold, 255, 0)
             mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
@@ -420,7 +420,7 @@ class Processor:
         """对s19处理结果中的白色部分进行膨胀，膨胀5个像素"""
         input_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
         with Image.open(input_path) as image:
-            dilated_image = image.filter(ImageFilter.MaxFilter(11))  # 膨胀5像素
+            dilated_image = image.filter(ImageFilter.MaxFilter(11))
             dilated_image.save(output_path)
         self.print_safe(f"{output_path.stem} 白色部分已膨胀并保存。")
 
