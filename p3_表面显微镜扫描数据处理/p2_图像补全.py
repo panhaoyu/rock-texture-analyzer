@@ -10,7 +10,6 @@ from p3_表面显微镜扫描数据处理.config import raw_image_url, mask_imag
 def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
     """图像擦除补全函数"""
     api_key = os.getenv('DASHSCOPE_API_KEY')
-    print(f'{api_key=}')
     headers = {
         "Authorization": f"Bearer {api_key}",
         "X-DashScope-Async": "enable",
@@ -46,9 +45,9 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
             case "SUCCEEDED":
                 return status_response.json()['output']['output_image_url']
             case "FAILED":
-                raise Exception("任务执行失败")
+                message = status_response.json()['output'].get('message', '未知错误')
+                raise Exception(f"任务执行失败: {message}")
             case _:
                 time.sleep(5)
-
 
 output_image_url = erase_image(raw_image_url, mask_image_url, keep_image_url)
