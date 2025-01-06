@@ -16,7 +16,7 @@ from p3_表面显微镜扫描数据处理.p2_图像补全_阿里云 import erase
 
 
 class Processor:
-    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
+    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010601-砾岩的侧面光学扫描的预处理')
 
     s3_左侧裁剪区域_像素: int = 1400
     s3_右侧裁剪区域_像素: int = 1000
