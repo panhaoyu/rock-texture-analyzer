@@ -66,6 +66,7 @@ class Processor:
             self.f21_翻转黑白区域,
             self.f22_补全黑线,
             self.f23_合并补全图像,
+            self.f24_人工补全黑边,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -438,6 +439,8 @@ class Processor:
         original_image[self.p18_补全时的上下裁剪范围_像素:-self.p18_补全时的上下裁剪范围_像素, :, :] = patched_image
         Image.fromarray(original_image).save(output_path)
 
+    def f24_人工补全黑边(self, output_path: Path) -> None:
+        raise ValueError(output_path)
 
     @classmethod
     def main(cls) -> None:
