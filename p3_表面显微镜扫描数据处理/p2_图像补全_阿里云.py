@@ -3,12 +3,9 @@
 """
 
 import os
-import pprint
 import time
 
 import requests
-
-from p3_表面显微镜扫描数据处理.config import raw_image_url, mask_image_url, keep_image_url
 
 
 def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
@@ -24,8 +21,8 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
         "model": "image-erase-completion",
         "input": {
             "image_url": image_url,
-            "mask_url": foreground_url,
-            "foreground_url": mask_url
+            "mask_url": mask_url,
+            "foreground_url": foreground_url
         },
         "parameters": {
             "dilate_flag": False,
@@ -38,14 +35,12 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
         headers=headers,
         json=payload
     )
-    pprint.pprint(response.json())
     task_id = response.json()['output']['task_id']
     while True:
         status_response = requests.get(
             f'https://dashscope.aliyuncs.com/api/v1/tasks/{task_id}',
             headers={"Authorization": f"Bearer {api_key}"}
         )
-        pprint.pprint(status_response.json())
         status = status_response.json()['output']['task_status']
         match status:
             case "SUCCEEDED":
@@ -55,6 +50,3 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
                 raise Exception(f"任务执行失败: {message}")
             case _:
                 time.sleep(5)
-
-output_image_url = erase_image(raw_image_url, mask_image_url, keep_image_url)
-print(output_image_url)

@@ -375,7 +375,7 @@ class Processor:
             Image.fromarray(image).save(output_path)
 
     def s19_识别黑色水平线区域(self, output_path: Path) -> None:
-        """识别图像中的黑色水平线区域，并生成与原图同大小的mask"""
+        """识别图像中的黑色水平线区域，并生成与原图同大小的mask，扩展10像素"""
         input_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
         with Image.open(input_path) as image:
             gray = image.convert('L')
@@ -389,28 +389,28 @@ class Processor:
             # 从中间位置查找连续的黑色区域
             indices = np.where(high_black)[0]
             if indices.size == 0:
-                mask = np.ones_like(pixels, dtype=np.uint8) * 255
+                mask = np.zeros_like(pixels, dtype=np.uint8)
             else:
                 closest_idx = indices[np.argmin(np.abs(indices - mid_y))]
-                # 找到连续区域的起始和结束
-                start = closest_idx
-                end = closest_idx
+                # 找到连续区域的起始和结束，并扩展10像素
+                start = max(closest_idx - 10, 0)
+                end = min(closest_idx + 10, len(high_black) - 1)
                 while start > 0 and high_black[start - 1]:
-                    start -= 1
+                    start = max(start - 1, 0)
                 while end < len(high_black) - 1 and high_black[end + 1]:
-                    end += 1
-                mask = np.ones_like(pixels, dtype=np.uint8) * 255
-                mask[start:end + 1, :] = 0
-            mask_image = Image.fromarray(mask, mode='L')
-            mask_image.save(output_path)
+                    end = min(end + 1, len(high_black) - 1)
+                mask = np.zeros_like(pixels, dtype=np.uint8)
+                mask[start:end + 1, :] = 255
+        mask_image = Image.fromarray(mask, mode='L')
+        mask_image.save(output_path)
         self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
 
     def s20_翻转黑白区域(self, output_path: Path) -> None:
-        """翻转黑色与白色区域"""
+        """翻转黑色与白色区域，将mask与unmask互换"""
         input_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
         with Image.open(input_path) as image:
             binary = np.array(image)
-            inverted = np.where(binary == 0, 255, 0).astype(np.uint8)
+            inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
             Image.fromarray(inverted, mode='L').save(output_path)
         self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
