@@ -95,7 +95,6 @@ class Processor:
         input_path: Path = self.get_file_path(self.s1_原始数据, output_path.stem).with_suffix('.jpg')
         with Image.open(input_path) as image:
             image.save(output_path)
-        self.print_safe(f"{output_path.stem} 已转换并保存。")
 
     def s3_裁剪左右两侧(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s2_将jpg格式转换为png格式, output_path.stem)
@@ -109,7 +108,6 @@ class Processor:
                 return
             cropped_image: Image.Image = image.crop((left_crop, 0, width - right_crop, height))
             cropped_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 已裁剪并保存。")
 
     def s4_生成直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s3_裁剪左右两侧, output_path.stem)
@@ -134,7 +132,6 @@ class Processor:
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
-        self.print_safe(f"{output_path.stem} 直方图已生成并保存。")
 
     def s5_二值化(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s3_裁剪左右两侧, output_path.stem)
@@ -154,7 +151,6 @@ class Processor:
             binary_pixels: np.ndarray = np.where(distances <= threshold, 0, 255).astype(np.uint8)
             binary_image: Image.Image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
             binary_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 二值化图像已生成并保存。")
 
     def s6_降噪二值化(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s5_二值化, output_path.stem)
@@ -165,7 +161,6 @@ class Processor:
             binary_pixels = np.where(binary_pixels <= threshold, 0, 255).astype(np.uint8)
             denoised_image: Image.Image = Image.fromarray(binary_pixels.reshape(image.height, image.width), mode='L')
             denoised_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 降噪二值化图像已生成并保存。")
 
     def s7_绘制x方向白色点数量直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s5_二值化, output_path.stem)
@@ -181,7 +176,6 @@ class Processor:
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
-        self.print_safe(f"{output_path.stem} x方向白色点数量图已生成并保存。")
 
     def s8_边界裁剪图像(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s5_二值化, output_path.stem)
@@ -205,7 +199,6 @@ class Processor:
                 return
             cropped_image: Image.Image = image.crop((left_boundary, 0, right_boundary, height))
             cropped_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 边界裁剪图像已生成并保存。")
 
     def s9_进一步边界裁剪图像(self, output_path: Path) -> None:
         binary_input_path: Path = self.get_file_path(self.s5_二值化, output_path.stem)
@@ -236,7 +229,6 @@ class Processor:
         with Image.open(color_input_path) as color_image:
             cropped_image: Image.Image = color_image.crop((left_boundary, 0, right_boundary, height))
             cropped_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 进一步边界裁剪图像已生成并保存。")
 
     def s10_生成纵向有效点分布直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s8_边界裁剪图像, output_path.stem)
@@ -252,7 +244,6 @@ class Processor:
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
-        self.print_safe(f"{output_path.stem} 纵向有效点分布图已生成并保存。")
 
     def s11_纵向裁剪图像(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s8_边界裁剪图像, output_path.stem)
@@ -276,7 +267,6 @@ class Processor:
                 return
             cropped_image: Image.Image = image.crop((0, top_boundary, width, bottom_boundary))
             cropped_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 纵向裁剪图像已生成并保存。")
 
     def s12_进一步纵向裁剪图像(self, output_path: Path) -> None:
         binary_input_path: Path = self.get_file_path(self.s8_边界裁剪图像, output_path.stem)
@@ -307,7 +297,6 @@ class Processor:
         with Image.open(color_input_path) as color_image:
             cropped_image: Image.Image = color_image.crop((0, top_boundary, width, bottom_boundary))
             cropped_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 进一步纵向裁剪图像已生成并保存。")
 
     def s13_亮度直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s12_进一步纵向裁剪图像, output_path.stem)
@@ -323,10 +312,8 @@ class Processor:
         ax.set_xlim(0, 160)
         fig.savefig(output_path)
         plt.close(fig)
-        self.print_safe(f"{output_path.stem} 亮度直方图已生成并保存。")
 
     def s14_调整亮度(self, output_path: Path) -> None:
-        """调整图像的全局亮度"""
         input_path: Path = self.get_file_path(self.s12_进一步纵向裁剪图像, output_path.stem)
         with Image.open(input_path) as image:
             lab: Image.Image = image.convert('LAB')
@@ -338,18 +325,14 @@ class Processor:
             lab = Image.merge('LAB', (l, a, b))
             rgb: Image.Image = lab.convert('RGB')
             rgb.save(output_path)
-        self.print_safe(f"{output_path.stem} 亮度已调整并保存。")
 
     def s15_打包处理结果(self, s1_dir: Path) -> None:
-        """将步骤14的处理结果打包为zip文件"""
         zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
         step14_dir = self.get_file_path(self.s14_调整亮度, 'dummy').parent
         with zipfile.ZipFile(zip_path, 'w') as zipf:
             [zipf.write(file, file.name) for file in step14_dir.glob('*.png')]
-        self.print_safe(f"处理结果已打包并保存到 {zip_path}")
 
     def s16_绘制RGB的KDE(self, output_path: Path) -> None:
-        """绘制RGB通道的核密度估计曲线"""
         input_path: Path = self.get_file_path(self.s14_调整亮度, output_path.stem)
         with Image.open(input_path) as image:
             rgb_array: np.ndarray = np.array(image)
@@ -357,7 +340,7 @@ class Processor:
         ax: plt.Axes = fig.add_subplot(111)
         colors = ['red', 'green', 'blue']
         size = self.s16_直方图平滑窗口半径_像素 * 2 - 1
-        kernel = np.ones(size) / size  # 平滑核
+        kernel = np.ones(size) / size
         for channel, color in zip(rgb_array.reshape(-1, 3).T, colors):
             counts, bin_edges = np.histogram(channel, bins=256, density=True)
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -369,15 +352,12 @@ class Processor:
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
-        self.print_safe(f"{output_path.stem} RGB KDE曲线已生成并保存。")
 
     def s17_缩放图像(self, output_path: Path) -> None:
-        """将图像的大小缩放为指定大小"""
         input_path: Path = self.get_file_path(self.s14_调整亮度, output_path.stem)
         with Image.open(input_path) as image:
             resized_image: Image.Image = image.resize(self.s17_缩放图像大小)
             resized_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 已缩放为{self.s17_缩放图像大小}并保存。")
 
     def s18_需要补全的区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.s17_缩放图像, output_path.stem)
@@ -386,7 +366,6 @@ class Processor:
             Image.fromarray(image).save(output_path)
 
     def s19_识别黑色水平线区域(self, output_path: Path) -> None:
-        """识别图像中的黑色水平线区域，并生成与原图同大小的mask，扩展10像素"""
         input_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
         with Image.open(input_path) as image:
             gray = image.convert('L')
@@ -397,11 +376,9 @@ class Processor:
             mid_y = pixels.shape[0] // 2
             high_black = black_counts > (0.5 * pixels.shape[1])
 
-            # 从中间位置查找连续的黑色区域
             indices = np.where(high_black)[0]
             expand = 30
             closest_idx = int(indices[np.argmin(np.abs(indices - mid_y))])
-            # 找到连续区域的起始和结束，并扩展10像素
             start = max(closest_idx, 0)
             end = min(closest_idx, len(high_black) - 1)
             while start > 0 and high_black[start - 1]:
@@ -413,32 +390,25 @@ class Processor:
             mask = np.zeros_like(pixels, dtype=np.uint8)
             mask[start:end + 1, :] = 255
             center_pixels = pixels[start:end + 1, :]
-            # 增加黑色的识别区域。
             center_pixels = np.where(center_pixels < threshold * 1.2, 255, 0)
             mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
 
     def s20_膨胀白色部分(self, output_path: Path) -> None:
-        """对s19处理结果中的白色部分进行膨胀，膨胀5个像素"""
         input_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
         with Image.open(input_path) as image:
             dilated_image = image.filter(ImageFilter.MaxFilter(11))
             dilated_image.save(output_path)
-        self.print_safe(f"{output_path.stem} 白色部分已膨胀并保存。")
 
     def s21_翻转黑白区域(self, output_path: Path) -> None:
-        """翻转黑色与白色区域，将mask与unmask互换"""
         input_path = self.get_file_path(self.s20_膨胀白色部分, output_path.stem)
         with Image.open(input_path) as image:
             binary = np.array(image)
             inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
             Image.fromarray(inverted, mode='L').save(output_path)
-        self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
     def s22_补全黑线(self, output_path: Path) -> None:
-        """调用erase_image_with_oss并下载结果"""
         base_dir = self.base_dir
         local_image_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
         local_mask_path = self.get_file_path(self.s20_膨胀白色部分, output_path.stem)
@@ -450,8 +420,6 @@ class Processor:
 
         foreground_image = Image.open(BytesIO(response.content))
         foreground_image.save(output_path)
-
-        self.print_safe(f"{output_path.stem} 已调用erase_image_with_oss并下载结果。")
 
     @classmethod
     def main(cls) -> None:
