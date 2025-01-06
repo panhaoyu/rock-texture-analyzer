@@ -24,11 +24,13 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
         "model": "image-erase-completion",
         "input": {
             "image_url": image_url,
-            "mask_url": mask_url,
-            "foreground_url": foreground_url
+            "mask_url": foreground_url,
+            "foreground_url": mask_url
         },
         "parameters": {
-            "dilate_flag": True
+            "dilate_flag": False,
+            'fast_mode': False,
+            'add_watermark': False,
         }
     }
     response = requests.post(
