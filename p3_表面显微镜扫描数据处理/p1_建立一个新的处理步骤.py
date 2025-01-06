@@ -36,6 +36,9 @@ class Processor:
     p17_缩放图像大小: tuple[int, int] = (4000, 4000)
     # p18_补全时的上下裁剪范围_像素: int = 1200  # 花岗岩
     p18_补全时的上下裁剪范围_像素: int = 1300  # 砾岩
+    v19_识别黑线时的范围扩大像素数量: float = 30
+    v19_识别黑线时的阈值扩大系数: float = 1.4
+    v20_识别黑线时的掩膜膨胀半径: int = 5
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -380,7 +383,7 @@ class Processor:
             high_black = black_counts > (0.5 * pixels.shape[1])
 
             indices = np.where(high_black)[0]
-            expand = 30
+            expand = self.v19_识别黑线时的范围扩大像素数量
             closest_idx = int(indices[np.argmin(np.abs(indices - mid_y))])
             start = max(closest_idx, 0)
             end = min(closest_idx, len(high_black) - 1)
@@ -393,15 +396,16 @@ class Processor:
             mask = np.zeros_like(pixels, dtype=np.uint8)
             mask[start:end + 1, :] = 255
             center_pixels = pixels[start:end + 1, :]
-            center_pixels = np.where(center_pixels < threshold * 1.2, 255, 0)
+            center_pixels = np.where(center_pixels < threshold * self.v19_识别黑线时的阈值扩大系数, 255, 0)
             mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
 
     def f20_膨胀白色部分(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.f19_识别黑色水平线区域, output_path.stem)
+        size = self.v20_识别黑线时的掩膜膨胀半径
         with Image.open(input_path) as image:
-            dilated_image = image.filter(ImageFilter.MaxFilter(11))
+            dilated_image = image.filter(ImageFilter.MaxFilter(size * 2 - 1))
             dilated_image.save(output_path)
 
     def f21_翻转黑白区域(self, output_path: Path) -> None:
