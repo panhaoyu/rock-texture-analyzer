@@ -26,7 +26,7 @@ class Processor:
     s14_亮度最小值: float = 10
     s14_亮度最大值: float = 125
     s16_直方图平滑窗口半径_像素: int = 10
-    s17_缩放图像大小: tuple[int, int] = (4000, 4000)
+    s17_缩放图像大小: tuple[int, int] = (5000, 5000)
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -48,7 +48,9 @@ class Processor:
             self.s14_调整亮度,
             self.s16_绘制RGB的KDE,
             self.s17_缩放图像,
-            self.s18_识别黑色水平线区域,
+            self.s18_需要补全的区域,
+            self.s19_识别黑色水平线区域,
+            self.s20_翻转黑白区域,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -366,9 +368,15 @@ class Processor:
             with self.print_lock:
                 traceback.print_exc()
 
-    def s18_识别黑色水平线区域(self, output_path: Path) -> None:
-        """识别图像中的黑色水平线区域，并生成与原图同大小的mask"""
+    def s18_需要补全的区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.s17_缩放图像, output_path.stem)
+        with Image.open(input_path) as image:
+            image = np.asarray(image)[2000:-2000, :, :]
+            Image.fromarray(image).save(output_path)
+
+    def s19_识别黑色水平线区域(self, output_path: Path) -> None:
+        """识别图像中的黑色水平线区域，并生成与原图同大小的mask"""
+        input_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
         with Image.open(input_path) as image:
             gray = image.convert('L')
             pixels = np.array(gray)
@@ -396,6 +404,15 @@ class Processor:
             mask_image = Image.fromarray(mask, mode='L')
             mask_image.save(output_path)
         self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
+
+    def s20_翻转黑白区域(self, output_path: Path) -> None:
+        """翻转黑色与白色区域"""
+        input_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
+        with Image.open(input_path) as image:
+            binary = np.array(image)
+            inverted = np.where(binary == 0, 255, 0).astype(np.uint8)
+            Image.fromarray(inverted, mode='L').save(output_path)
+        self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
     @classmethod
     def main(cls) -> None:
