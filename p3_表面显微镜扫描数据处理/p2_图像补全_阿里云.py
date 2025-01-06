@@ -1,7 +1,12 @@
+
 import os
+import subprocess
 import time
+from pathlib import Path
 
 import requests
+
+from p3_表面显微镜扫描数据处理.config import endpoint, bucket_name
 
 
 def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
@@ -47,11 +52,6 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
             case _:
                 time.sleep(5)
 
-
-from pathlib import Path
-import subprocess
-
-from p3_表面显微镜扫描数据处理.config import endpoint, bucket_name
 
 
 def upload_to_oss(base_dir: Path, file_path: Path) -> str:
