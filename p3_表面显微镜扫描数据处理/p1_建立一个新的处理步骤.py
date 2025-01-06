@@ -59,6 +59,7 @@ class Processor:
             self.s20_膨胀白色部分,
             self.s21_翻转黑白区域,
             self.s22_补全黑线,
+            self.s23_合并补全图像,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -72,7 +73,12 @@ class Processor:
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
-        return dir_path / f'{stem}.png'
+        match func:
+            case self.s1_原始数据:
+                suffix = '.jpg'
+            case _:
+                suffix = '.png'
+        return dir_path / f'{stem}{suffix}'
 
     def process_stem(self, stem: str) -> None:
         try:
@@ -92,7 +98,7 @@ class Processor:
         pass
 
     def s2_将jpg格式转换为png格式(self, output_path: Path) -> None:
-        input_path: Path = self.get_file_path(self.s1_原始数据, output_path.stem).with_suffix('.jpg')
+        input_path: Path = self.get_file_path(self.s1_原始数据, output_path.stem)
         with Image.open(input_path) as image:
             image.save(output_path)
 
@@ -326,11 +332,6 @@ class Processor:
             rgb: Image.Image = lab.convert('RGB')
             rgb.save(output_path)
 
-    def s15_打包处理结果(self, s1_dir: Path) -> None:
-        zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
-        step14_dir = self.get_file_path(self.s14_调整亮度, 'dummy').parent
-        with zipfile.ZipFile(zip_path, 'w') as zipf:
-            [zipf.write(file, file.name) for file in step14_dir.glob('*.png')]
 
     def s16_绘制RGB的KDE(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s14_调整亮度, output_path.stem)
@@ -421,6 +422,21 @@ class Processor:
         foreground_image = Image.open(BytesIO(response.content))
         foreground_image.save(output_path)
 
+    def s23_合并补全图像(self, output_path: Path) -> None:
+        """将补全后的图像合并回原图像，替换到s14的调整亮度结果中。"""
+        original_image = self.get_file_path(self.s17_缩放图像, output_path.stem)
+        patched_image = self.get_file_path(self.s22_补全黑线, output_path.stem)
+        with Image.open(original_image) as original_image, Image.open(patched_image) as patched_image:
+            original_image = np.asarray(original_image, copy=True)
+            patched_image = np.asarray(patched_image, copy=True)
+        original_image[self.s18_补全时的上下裁剪范围_像素:-self.s18_补全时的上下裁剪范围_像素, :, :] = patched_image
+        Image.fromarray(original_image).save(output_path)
+
+    def s99_打包处理结果(self, s1_dir: Path) -> None:
+        zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
+        source_dir = self.get_file_path(self.s23_合并补全图像, 'dummy').parent
+        with zipfile.ZipFile(zip_path, 'w') as file:
+            [file.write(file, file.name) for file in source_dir.glob('*.png')]
     @classmethod
     def main(cls) -> None:
         obj: Processor = cls()
@@ -428,7 +444,7 @@ class Processor:
         stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
-        obj.s15_打包处理结果(s1_dir)
+        obj.s99_打包处理结果(s1_dir)
 
 
 if __name__ == '__main__':
