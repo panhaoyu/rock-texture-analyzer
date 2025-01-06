@@ -26,7 +26,7 @@ class Processor:
     s14_亮度最小值: float = 10
     s14_亮度最大值: float = 125
     s16_直方图平滑窗口半径_像素: int = 10
-    s17_缩放图像大小: tuple[int, int] = (5000, 5000)  # 缩放图像的目标大小
+    s17_缩放图像大小: tuple[int, int] = (4000, 4000)
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -48,6 +48,7 @@ class Processor:
             self.s14_调整亮度,
             self.s16_绘制RGB的KDE,
             self.s17_缩放图像,
+            self.s18_识别黑色水平线区域,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -364,6 +365,37 @@ class Processor:
         except Exception:
             with self.print_lock:
                 traceback.print_exc()
+
+    def s18_识别黑色水平线区域(self, output_path: Path) -> None:
+        """识别图像中的黑色水平线区域，并生成与原图同大小的mask"""
+        input_path = self.get_file_path(self.s17_缩放图像, output_path.stem)
+        with Image.open(input_path) as image:
+            gray = image.convert('L')
+            pixels = np.array(gray)
+            threshold = np.percentile(pixels, 30)
+            binary = pixels <= threshold
+            black_counts = binary.sum(axis=1)
+            mid_y = pixels.shape[0] // 2
+            high_black = black_counts > (0.5 * pixels.shape[1])
+
+            # 从中间位置查找连续的黑色区域
+            indices = np.where(high_black)[0]
+            if indices.size == 0:
+                mask = np.ones_like(pixels, dtype=np.uint8) * 255
+            else:
+                closest_idx = indices[np.argmin(np.abs(indices - mid_y))]
+                # 找到连续区域的起始和结束
+                start = closest_idx
+                end = closest_idx
+                while start > 0 and high_black[start - 1]:
+                    start -= 1
+                while end < len(high_black) - 1 and high_black[end + 1]:
+                    end += 1
+                mask = np.ones_like(pixels, dtype=np.uint8) * 255
+                mask[start:end + 1, :] = 0
+            mask_image = Image.fromarray(mask, mode='L')
+            mask_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
 
     @classmethod
     def main(cls) -> None:
