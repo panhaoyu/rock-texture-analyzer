@@ -332,7 +332,6 @@ class Processor:
             rgb: Image.Image = lab.convert('RGB')
             rgb.save(output_path)
 
-
     def s16_绘制RGB的KDE(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.s14_调整亮度, output_path.stem)
         with Image.open(input_path) as image:
@@ -437,6 +436,7 @@ class Processor:
         source_dir = self.get_file_path(self.s23_合并补全图像, 'dummy').parent
         with zipfile.ZipFile(zip_path, 'w') as file:
             [file.write(file, file.name) for file in source_dir.glob('*.png')]
+
     @classmethod
     def main(cls) -> None:
         obj: Processor = cls()
