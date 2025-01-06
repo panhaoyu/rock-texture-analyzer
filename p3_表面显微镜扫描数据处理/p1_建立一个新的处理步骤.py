@@ -2,12 +2,16 @@ import threading
 import traceback
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
 from pathlib import Path
 from typing import Callable, List
 
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 from PIL import Image, ImageFilter
+
+from p3_表面显微镜扫描数据处理.p2_图像补全_阿里云 import erase_image_with_oss
 
 
 class Processor:
@@ -51,6 +55,7 @@ class Processor:
             self.s18_需要补全的区域,
             self.s19_识别黑色水平线区域,
             self.s20_翻转黑白区域,
+            self.s21_调用_erase_image_with_oss,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -414,13 +419,29 @@ class Processor:
             Image.fromarray(inverted, mode='L').save(output_path)
         self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
+    def s21_调用_erase_image_with_oss(self, output_path: Path) -> None:
+        """调用erase_image_with_oss并下载结果"""
+        base_dir = self.base_dir
+        local_image_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
+        local_mask_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
+        local_foreground_path = self.get_file_path(self.s20_翻转黑白区域, output_path.stem)
+
+        url: str = erase_image_with_oss(base_dir, local_image_path, local_mask_path, local_foreground_path)
+        response = requests.get(url)
+        response.raise_for_status()
+
+        foreground_image = Image.open(BytesIO(response.content))
+        foreground_image.save(output_path)
+
+        self.print_safe(f"{output_path.stem} 已调用erase_image_with_oss并下载结果。")
+
     @classmethod
     def main(cls) -> None:
         obj: Processor = cls()
         s1_dir: Path = obj.get_file_path(obj.s1_原始数据, 'dummy').parent
         stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
-            executor.map(obj.process_stem, stems)
+            executor.map(obj.process_stem, stems[:1])
         obj.s15_打包处理结果(s1_dir)
 
 

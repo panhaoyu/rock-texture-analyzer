@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from pprint import pprint
 
 import requests
 
@@ -36,13 +37,23 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
         headers=headers,
         json=payload
     )
-    task_id = response.json()['output']['task_id']
+    data = response.json()
+    try:
+        task_id = data['output']['task_id']
+    except Exception:
+        pprint(data)
+        raise
     while True:
         status_response = requests.get(
             f'https://dashscope.aliyuncs.com/api/v1/tasks/{task_id}',
             headers={"Authorization": f"Bearer {api_key}"}
         )
-        status = status_response.json()['output']['task_status']
+        data = status_response.json()
+        try:
+            status = data['output']['task_status']
+        except Exception:
+            pprint(data)
+            raise
         match status:
             case "SUCCEEDED":
                 return status_response.json()['output']['output_image_url']
@@ -53,16 +64,15 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
                 time.sleep(5)
 
 
-
 def upload_to_oss(base_dir: Path, file_path: Path) -> str:
     """上传文件到OSS并返回访问路径"""
     relative_path = file_path.relative_to(base_dir)
-    oss_path = Path("temp") / relative_path
+    oss_path = (Path("temp") / relative_path).as_posix()
     cmd = [
         'ossutil64',
         f'--endpoint={endpoint}',
-        f'--include="{file_path.name}"',
         'cp',
+        '-f',
         str(file_path),
         f'oss://{bucket_name}/{oss_path}'
     ]
@@ -78,4 +88,7 @@ def erase_image_with_oss(base_dir: Path,
     image_url = upload_to_oss(base_dir, local_image_path)
     mask_url = upload_to_oss(base_dir, local_mask_path)
     foreground_url = upload_to_oss(base_dir, local_foreground_path)
+    print(f'{image_url=}')
+    print(f'{mask_url=}')
+    print(f'{foreground_url=}')
     return erase_image(image_url, mask_url, foreground_url)

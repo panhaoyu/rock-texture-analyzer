@@ -2,5 +2,5 @@ raw_image_url = 'https://zhaogroup.oss-cn-shanghai.aliyuncs.com/temp/18-需要�
 mask_image_url = 'https://zhaogroup.oss-cn-shanghai.aliyuncs.com/temp/19-识别黑色水平线区域/G-D-1-1.png'
 keep_image_url = 'https://zhaogroup.oss-cn-shanghai.aliyuncs.com/temp/20-翻转黑白区域/G-D-1-1.png'
 
-bucket_name = "zhaogroup-hk"
-endpoint = 'oss-cn-hongkong.aliyuncs.com'
+bucket_name = "panhaoyu-static"
+endpoint = 'oss-cn-shanghai.aliyuncs.com'
