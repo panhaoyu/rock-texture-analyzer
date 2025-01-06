@@ -407,7 +407,7 @@ class Processor:
             mask = np.zeros_like(pixels, dtype=np.uint8)
             mask[start:end + 1, :] = 255
             center_pixels = pixels[start:end + 1, :]
-            center_pixels = np.where(center_pixels > threshold, 255, 0)
+            center_pixels = np.where(center_pixels < threshold, 255, 0)
             mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)

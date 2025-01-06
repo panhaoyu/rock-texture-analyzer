@@ -22,7 +22,7 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
         "input": {
             "image_url": image_url,
             "mask_url": mask_url,
-            "foreground_url": foreground_url
+            # "foreground_url": foreground_url
         },
         "parameters": {
             "dilate_flag": False,
