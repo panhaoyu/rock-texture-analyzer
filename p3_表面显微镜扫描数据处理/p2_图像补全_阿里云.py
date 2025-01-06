@@ -25,7 +25,7 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
             "foreground_url": foreground_url
         },
         "parameters": {
-            "dilate_flag": True,
+            "dilate_flag": False,
             'fast_mode': False,
             'add_watermark': False,
         }
@@ -74,7 +74,7 @@ def upload_to_oss(base_dir: Path, file_path: Path) -> str:
         str(file_path),
         f'oss://{bucket_name}/{oss_path}'
     ]
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
     return f'https://{bucket_name}.{endpoint}/{oss_path}'
 
 

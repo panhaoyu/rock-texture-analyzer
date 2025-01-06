@@ -396,14 +396,17 @@ class Processor:
             if indices.size == 0:
                 mask = np.zeros_like(pixels, dtype=np.uint8)
             else:
-                closest_idx = indices[np.argmin(np.abs(indices - mid_y))]
+                expand = 10
+                closest_idx = int(indices[np.argmin(np.abs(indices - mid_y))])
                 # 找到连续区域的起始和结束，并扩展10像素
-                start = max(closest_idx - 10, 0)
-                end = min(closest_idx + 10, len(high_black) - 1)
+                start = max(closest_idx, 0)
+                end = min(closest_idx, len(high_black) - 1)
                 while start > 0 and high_black[start - 1]:
                     start = max(start - 1, 0)
                 while end < len(high_black) - 1 and high_black[end + 1]:
                     end = min(end + 1, len(high_black) - 1)
+                start -= expand
+                end += expand
                 mask = np.zeros_like(pixels, dtype=np.uint8)
                 mask[start:end + 1, :] = 255
         mask_image = Image.fromarray(mask, mode='L')
