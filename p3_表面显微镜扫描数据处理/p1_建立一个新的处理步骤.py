@@ -26,6 +26,7 @@ class Processor:
     s14_亮度最小值: float = 10
     s14_亮度最大值: float = 125
     s16_直方图平滑窗口半径_像素: int = 10
+    s17_缩放图像大小: tuple[int, int] = (5000, 5000)  # 缩放图像的目标大小
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -46,6 +47,7 @@ class Processor:
             self.s13_亮度直方图,
             self.s14_调整亮度,
             self.s16_绘制RGB的KDE,
+            self.s17_缩放图像,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -339,6 +341,14 @@ class Processor:
         fig.savefig(output_path)
         plt.close(fig)
         self.print_safe(f"{output_path.stem} RGB KDE曲线已生成并保存。")
+
+    def s17_缩放图像(self, output_path: Path) -> None:
+        """将图像的大小缩放为指定大小"""
+        input_path: Path = self.get_file_path(self.s14_调整亮度, output_path.stem)
+        with Image.open(input_path) as image:
+            resized_image: Image.Image = image.resize(self.s17_缩放图像大小)
+            resized_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 已缩放为{self.s17_缩放图像大小}并保存。")
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
