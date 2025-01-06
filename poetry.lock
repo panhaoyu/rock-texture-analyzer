@@ -2139,13 +2139,13 @@ reference = "panhaoyu"
 
 [[package]]
 name = "rock-grain-identifier"
-version = "0.1.6"
+version = "0.1.8"
 description = "Identify rock grain from rock image. Can be used in numerical simulation with GBM."
 optional = false
 python-versions = ">=3.10,<3.12"
 files = [
-    {file = "rock_grain_identifier-0.1.6-py3-none-any.whl", hash = "sha256:64b31e1839c318c6402b061069a6f1dd2046e1a45fcdab605597abc78660d998"},
-    {file = "rock_grain_identifier-0.1.6.tar.gz", hash = "sha256:6737c1a83a10083c0978ba50527ca6de4f2df7791a0209d3eeec8bc524ec3ee9"},
+    {file = "rock_grain_identifier-0.1.8-py3-none-any.whl", hash = "sha256:4717ea0620328856068edd0ebc48418cc340ac5410f684867309dbff0cb68be4"},
+    {file = "rock_grain_identifier-0.1.8.tar.gz", hash = "sha256:348670fb333d79232e7c9304e51cbfa71ba6d0422455a87e4c905c5da65814a0"},
 ]
 
 [package.dependencies]
@@ -2675,4 +2675,4 @@ reference = "panhaoyu"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "888d787f3725b474bf7577bac224466746b5486aed721072d330ae5bb62537cb"
+content-hash = "d9835308d942d55503008eb1a249575a3a6ff684a4de6e374ccaee7d556b65d3"
