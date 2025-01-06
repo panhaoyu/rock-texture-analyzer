@@ -16,7 +16,7 @@ from p3_表面显微镜扫描数据处理.p2_图像补全_阿里云 import erase
 
 
 class Processor:
-    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010601-砾岩的侧面光学扫描的预处理')
+    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
 
     p3_左侧裁剪区域_像素: int = 1400
     p3_右侧裁剪区域_像素: int = 1000
@@ -28,17 +28,20 @@ class Processor:
     p8_水平边界裁剪收缩_像素: int = 10
     p10_纵向裁剪过程的有效点阈值_比例: float = 0.6
     p10_纵向边界裁剪收缩_像素: int = 10
-    # p14_亮度最小值: float = 10  # 花岗岩
-    # p14_亮度最大值: float = 125  # 花岗岩
-    p14_亮度最小值: float = 20  # 砾岩
-    p14_亮度最大值: float = 120  # 砾岩
+    p14_亮度最小值: float = 10  # 花岗岩
+    p14_亮度最大值: float = 125  # 花岗岩
+    # p14_亮度最小值: float = 20  # 砾岩
+    # p14_亮度最大值: float = 120  # 砾岩
     p16_直方图平滑窗口半径_像素: int = 10
     p17_缩放图像大小: tuple[int, int] = (4000, 4000)
-    # p18_补全时的上下裁剪范围_像素: int = 1200  # 花岗岩
-    p18_补全时的上下裁剪范围_像素: int = 1300  # 砾岩
+    p18_补全时的上下裁剪范围_像素: int = 1200  # 花岗岩
+    # p18_补全时的上下裁剪范围_像素: int = 1300  # 砾岩
     v19_识别黑线时的范围扩大像素数量: float = 10
     v19_识别黑线时的阈值扩大系数: float = 1.5
     v20_识别黑线时的掩膜膨胀半径: int = 5
+    p24_取最左侧像素数量: int = 1000
+    p25_黑色像素比例: float = 0.3
+    p25_最多黑色像素数量: int = 20
 
     print_lock: threading.Lock = threading.Lock()
 
@@ -66,6 +69,11 @@ class Processor:
             self.f21_翻转黑白区域,
             self.f22_补全黑线,
             self.f23_合并补全图像,
+            self.f24_取最左侧像素作为新图像,
+            self.f25_生成黑色像素掩膜,
+            self.f26_膨胀掩膜,
+            self.f27_反色掩膜,
+            self.f28_补全黑边,
         ]
         directories: set[Path] = {
             self.get_file_path(func, 'dummy').parent for func in self.step_functions
@@ -437,6 +445,55 @@ class Processor:
             patched_image = np.asarray(patched_image, copy=True)
         original_image[self.p18_补全时的上下裁剪范围_像素:-self.p18_补全时的上下裁剪范围_像素, :, :] = patched_image
         Image.fromarray(original_image).save(output_path)
+
+    def f24_取最左侧像素作为新图像(self, output_path: Path) -> None:
+        input_path = self.get_file_path(self.f23_合并补全图像, output_path.stem)
+        with Image.open(input_path) as image:
+            cropped_image = image.crop((0, 0, self.p24_取最左侧像素数量, image.height))
+            cropped_image.save(output_path)
+
+    def f25_生成黑色像素掩膜(self, output_path: Path) -> None:
+        input_path = self.get_file_path(self.f24_取最左侧像素作为新图像, output_path.stem)
+        with Image.open(input_path) as image:
+            gray = image.convert('L')
+            pixels = np.array(gray)
+            threshold = np.percentile(pixels, 70)  # 取最黑的30%
+            black_pixels = pixels <= threshold
+            left_black = black_pixels[:, :20]
+            first_non_black = (~left_black).argmax(axis=1)
+            first_non_black = np.where(left_black.all(axis=1), 20, first_non_black)
+            mask = np.zeros_like(pixels, dtype=np.uint8)
+            rows = np.arange(pixels.shape[0])[:, None]
+            cols = np.arange(20)
+            mask[rows, cols] = 255 * (cols < first_non_black[:, None])
+            mask_image = Image.fromarray(mask, mode='L')
+            mask_image.save(output_path)
+
+    def f26_膨胀掩膜(self, output_path: Path) -> None:
+        input_path = self.get_file_path(self.f25_生成黑色像素掩膜, output_path.stem)
+        size = self.v20_识别黑线时的掩膜膨胀半径
+        with Image.open(input_path) as image:
+            dilated_image = image.filter(ImageFilter.MaxFilter(size * 2 - 1))
+            dilated_image.save(output_path)
+
+    def f27_反色掩膜(self, output_path: Path) -> None:
+        input_path = self.get_file_path(self.f26_膨胀掩膜, output_path.stem)
+        with Image.open(input_path) as image:
+            binary = np.array(image)
+            inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
+            Image.fromarray(inverted, mode='L').save(output_path)
+
+    def f28_补全黑边(self, output_path: Path) -> None:
+        image_path = self.get_file_path(self.f24_取最左侧像素作为新图像, output_path.stem)
+        mask_path = self.get_file_path(self.f26_膨胀掩膜, output_path.stem)
+        foreground_path = self.get_file_path(self.f27_反色掩膜, output_path.stem)
+
+        url: str = erase_image_with_oss(self.base_dir, image_path, mask_path, foreground_path)
+        response = requests.get(url)
+        response.raise_for_status()
+
+        completed_image = Image.open(BytesIO(response.content))
+        completed_image.save(output_path)
 
     @classmethod
     def main(cls) -> None:
