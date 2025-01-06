@@ -51,3 +51,4 @@ def erase_image(image_url: str, mask_url: str, foreground_url: str) -> str:
                 time.sleep(5)
 
 output_image_url = erase_image(raw_image_url, mask_image_url, keep_image_url)
+print(output_image_url)

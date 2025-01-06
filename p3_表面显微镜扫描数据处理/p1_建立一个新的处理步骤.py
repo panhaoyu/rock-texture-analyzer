@@ -371,7 +371,7 @@ class Processor:
     def s18_需要补全的区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.s17_缩放图像, output_path.stem)
         with Image.open(input_path) as image:
-            image = np.asarray(image)[2000:-2000, :, :]
+            image = np.asarray(image)[1500:-1500, :, :]
             Image.fromarray(image).save(output_path)
 
     def s19_识别黑色水平线区域(self, output_path: Path) -> None:
