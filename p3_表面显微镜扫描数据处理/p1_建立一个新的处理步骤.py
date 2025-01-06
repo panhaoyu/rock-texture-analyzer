@@ -406,6 +406,9 @@ class Processor:
             end += expand
             mask = np.zeros_like(pixels, dtype=np.uint8)
             mask[start:end + 1, :] = 255
+            center_pixels = pixels[start:end + 1, :]
+            center_pixels = np.where(center_pixels > threshold, 255, 0)
+            mask[start:end + 1, :] = center_pixels
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
         self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
@@ -417,7 +420,6 @@ class Processor:
             binary = np.array(image)
             inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
             Image.fromarray(inverted, mode='L').save(output_path)
-        raise
         self.print_safe(f"{output_path.stem} 黑白区域已翻转并保存。")
 
     def s21_补全黑线(self, output_path: Path) -> None:
