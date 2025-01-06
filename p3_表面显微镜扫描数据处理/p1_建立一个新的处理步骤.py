@@ -89,7 +89,7 @@ class Processor:
                 func_index, func_name = re.match(r'^s(\d+)_(.*?)$', func.__name__).groups()
                 func(output_path)
                 func_index = int(func_index)
-                self.print_safe(f'{func_index:02d} {stem} {func_name} 完成')
+                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
         except Exception:
             with self.print_lock:
                 traceback.print_exc()
