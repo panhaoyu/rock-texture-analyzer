@@ -54,6 +54,7 @@ class Processor:
             self.s17_缩放图像,
             self.s18_需要补全的区域,
             self.s19_识别黑色水平线区域,
+            self.s20_膨胀白色部分,
             self.s21_翻转黑白区域,
             self.s22_补全黑线,
         ]
@@ -413,9 +414,17 @@ class Processor:
         mask_image.save(output_path)
         self.print_safe(f"{output_path.stem} 黑色水平线mask已生成并保存。")
 
+    def s20_膨胀白色部分(self, output_path: Path) -> None:
+        """对s19处理结果中的白色部分进行膨胀，膨胀5个像素"""
+        input_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
+        with Image.open(input_path) as image:
+            dilated_image = image.filter(ImageFilter.MaxFilter(11))  # 膨胀5像素
+            dilated_image.save(output_path)
+        self.print_safe(f"{output_path.stem} 白色部分已膨胀并保存。")
+
     def s21_翻转黑白区域(self, output_path: Path) -> None:
         """翻转黑色与白色区域，将mask与unmask互换"""
-        input_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
+        input_path = self.get_file_path(self.s20_膨胀白色部分, output_path.stem)
         with Image.open(input_path) as image:
             binary = np.array(image)
             inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
@@ -426,7 +435,7 @@ class Processor:
         """调用erase_image_with_oss并下载结果"""
         base_dir = self.base_dir
         local_image_path = self.get_file_path(self.s18_需要补全的区域, output_path.stem)
-        local_mask_path = self.get_file_path(self.s19_识别黑色水平线区域, output_path.stem)
+        local_mask_path = self.get_file_path(self.s20_膨胀白色部分, output_path.stem)
         local_foreground_path = self.get_file_path(self.s21_翻转黑白区域, output_path.stem)
 
         url: str = erase_image_with_oss(base_dir, local_image_path, local_mask_path, local_foreground_path)
