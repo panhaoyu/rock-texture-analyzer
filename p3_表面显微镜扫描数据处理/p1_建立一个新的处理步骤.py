@@ -1,3 +1,4 @@
+import re
 import threading
 import traceback
 import zipfile
@@ -68,6 +69,24 @@ class Processor:
     def print_safe(self, message: str) -> None:
         with self.print_lock:
             print(message)
+
+    def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
+        dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
+        return dir_path / f'{stem}.png'
+
+    def process_stem(self, stem: str) -> None:
+        try:
+            for func in self.step_functions:
+                output_path: Path = self.get_file_path(func, stem)
+                if output_path.exists():
+                    continue
+                func_index, func_name = re.match(r'^s(\d+)_(.*?)$', func.__name__).groups()
+                func(output_path)
+                func_index = int(func_index)
+                self.print_safe(f'{func_index:02d} {stem} {func_name} 完成')
+        except Exception:
+            with self.print_lock:
+                traceback.print_exc()
 
     def s1_原始数据(self, output_path: Path) -> None:
         pass
@@ -359,21 +378,6 @@ class Processor:
             resized_image: Image.Image = image.resize(self.s17_缩放图像大小)
             resized_image.save(output_path)
         self.print_safe(f"{output_path.stem} 已缩放为{self.s17_缩放图像大小}并保存。")
-
-    def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
-        dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('s')
-        return dir_path / f'{stem}.png'
-
-    def process_stem(self, stem: str) -> None:
-        try:
-            for func in self.step_functions:
-                output_path: Path = self.get_file_path(func, stem)
-                if output_path.exists():
-                    continue
-                func(output_path)
-        except Exception:
-            with self.print_lock:
-                traceback.print_exc()
 
     def s18_需要补全的区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.s17_缩放图像, output_path.stem)
