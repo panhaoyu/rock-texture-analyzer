@@ -36,8 +36,8 @@ class Processor:
     p17_缩放图像大小: tuple[int, int] = (4000, 4000)
     # p18_补全时的上下裁剪范围_像素: int = 1200  # 花岗岩
     p18_补全时的上下裁剪范围_像素: int = 1300  # 砾岩
-    v19_识别黑线时的范围扩大像素数量: float = 30
-    v19_识别黑线时的阈值扩大系数: float = 1.4
+    v19_识别黑线时的范围扩大像素数量: float = 10
+    v19_识别黑线时的阈值扩大系数: float = 1.5
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
     print_lock: threading.Lock = threading.Lock()
@@ -376,7 +376,7 @@ class Processor:
         with Image.open(input_path) as image:
             gray = image.convert('L')
             pixels = np.array(gray)
-            threshold = np.percentile(pixels, 30)
+            threshold = np.percentile(pixels, 40)
             binary = pixels <= threshold
             black_counts = binary.sum(axis=1)
             mid_y = pixels.shape[0] // 2
