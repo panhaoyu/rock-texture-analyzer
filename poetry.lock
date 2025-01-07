@@ -435,6 +435,41 @@ url = "https://pypi.panhaoyu.com/simple"
 reference = "panhaoyu"
 
 [[package]]
+name = "cupy-cuda11x"
+version = "13.3.0"
+description = "CuPy: NumPy & SciPy for GPU"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "cupy_cuda11x-13.3.0-cp310-cp310-manylinux2014_aarch64.whl", hash = "sha256:ef854f0c63525d8163ab7af19f503d964de9dde0dd1cf9ea806a6ecb302cdce3"},
+    {file = "cupy_cuda11x-13.3.0-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:54bf12a6663d0471e3e37e62972add348c5263ce803688f48bbfab1b20ebdb02"},
+    {file = "cupy_cuda11x-13.3.0-cp310-cp310-win_amd64.whl", hash = "sha256:972d133efa2af80bb8ef321858ffe7cabc3abf8f58bcc4f13541dd497c05077d"},
+    {file = "cupy_cuda11x-13.3.0-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:766ef1558a3ed967d5f092829bfb99edbcfaf75224925e1fb1a9f531e1e79f36"},
+    {file = "cupy_cuda11x-13.3.0-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:77a81fa48d1a392b731885555a53cf2febde39cc33db55f2d78ba64b5ef4689b"},
+    {file = "cupy_cuda11x-13.3.0-cp311-cp311-win_amd64.whl", hash = "sha256:a8e8b7f7f73677afe2f70c38562f01f82688e43147550b3e192a5a2206e17fe1"},
+    {file = "cupy_cuda11x-13.3.0-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:199f1b24bcd568b41705cb46870ee7086088932c78d46037fdf05d195636ab70"},
+    {file = "cupy_cuda11x-13.3.0-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:ffe153d5c32bc033c1cd94460c04d90219367d7283fcaefa9f1cf7b461fbdd7d"},
+    {file = "cupy_cuda11x-13.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:85df9054ed023adb5db04c4e9138cf4eff99746e7f3fb47479232da009ef8839"},
+    {file = "cupy_cuda11x-13.3.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:72136c4cbd17adc665fd0831c1b8805ed3d61b643ba6d587344c62466c072d91"},
+    {file = "cupy_cuda11x-13.3.0-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:e0b4434c36658c7a40754bd90d372bfe21f2a38ee703f9a412eca6e8709bef3f"},
+    {file = "cupy_cuda11x-13.3.0-cp39-cp39-win_amd64.whl", hash = "sha256:969e1d7af1f506e1f439b70385df0ffc4a8c75dcbbddace4b1aa203bffcfc1c8"},
+]
+
+[package.dependencies]
+fastrlock = ">=0.5"
+numpy = ">=1.22,<2.3"
+
+[package.extras]
+all = ["Cython (>=0.29.22,<3)", "optuna (>=2.0)", "scipy (>=1.7,<1.14)"]
+stylecheck = ["autopep8 (==1.5.5)", "flake8 (==3.8.4)", "mypy (==1.4.1)", "pbr (==5.5.1)", "pycodestyle (==2.6.0)", "types-setuptools (==57.4.14)"]
+test = ["hypothesis (>=6.37.2,<6.55.0)", "mpmath", "packaging", "pytest (>=7.2)"]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.panhaoyu.com/simple"
+reference = "panhaoyu"
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 description = "Composable style cycles"
@@ -2139,13 +2174,13 @@ reference = "panhaoyu"
 
 [[package]]
 name = "rock-grain-identifier"
-version = "0.1.11"
+version = "0.1.14"
 description = "Identify rock grain from rock image. Can be used in numerical simulation with GBM."
 optional = false
 python-versions = ">=3.10,<3.12"
 files = [
-    {file = "rock_grain_identifier-0.1.11-py3-none-any.whl", hash = "sha256:f648ec3079f5211d7a0a8e9e95657a240813f773f341adef4a7c332e9fe5f99f"},
-    {file = "rock_grain_identifier-0.1.11.tar.gz", hash = "sha256:95534630d9053b2645d0025fe48ec0863df2a5b7934c5d9756b924b60d66f383"},
+    {file = "rock_grain_identifier-0.1.14-py3-none-any.whl", hash = "sha256:66dba59fa501a5388b75de12e9011ed99d3858e8b949e47e13254c1241754d9f"},
+    {file = "rock_grain_identifier-0.1.14.tar.gz", hash = "sha256:a4f619ac5b0ec57c8b46192026f73170810f8fed139f39032dc29aa46624064c"},
 ]
 
 [package.dependencies]
@@ -2675,4 +2710,4 @@ reference = "panhaoyu"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "7560a8bacb087ea722fe05a7e3033732fef6d28b4eca7b47cac804e5fe6663a3"
+content-hash = "061bd7cbc5a390feec9524b48caa3edaa29686b636bcfda8772941cf3629ffb8"

@@ -14,7 +14,7 @@ class GraniteIdentifier(RockGrainIdentifier):
 
 
 def main():
-    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
+    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010701-花岗岩的细观结构识别')
     identifier = GraniteIdentifier(*base_dir.glob('1-*/*.png'))
     identifier.generate_predict_results()
     # identifier.kmeans_evaluate()
