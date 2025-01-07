@@ -20,8 +20,8 @@ def main():
     identifier = GraniteIdentifier(sorted(base_dir.glob('1-*/*.png')))
     # identifier.generate_predict_results()
     # identifier.kmeans_evaluate()
-    identifier.fix_noizy_pixels()  # 噪声处理
-    # identifier.predict_all(base_dir / '2-细观结构识别效果')
+    # identifier.fix_noizy_pixels()
+    identifier.predict_all(base_dir / '2-细观结构识别效果')
 
 
 if __name__ == '__main__':
