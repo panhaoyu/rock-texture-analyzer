@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
@@ -11,4 +13,13 @@ class GraniteIdentifier(RockGrainIdentifier):
     ]
 
 
-identifier = GraniteIdentifier()
+def main():
+    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
+    identifier = GraniteIdentifier(*base_dir.glob('1-*/*.png'))
+    identifier.generate_predict_results()
+    # identifier.kmeans_evaluate()
+    # identifier.fix_noizy_pixels(pixel_count=1250)  # 噪声处理
+
+
+if __name__ == '__main__':
+    main()
