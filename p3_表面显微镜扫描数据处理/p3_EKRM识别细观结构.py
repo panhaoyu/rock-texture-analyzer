@@ -5,6 +5,7 @@ from rock_grain_identifier.group import RgiGroup
 
 
 class GraniteIdentifier(RockGrainIdentifier):
+    fix_noize_convolve_radius = 1000
     groups = [
         RgiGroup(name='other', index=1, color='#00FF00'),
         RgiGroup(name='feldspar', index=2, color='#FF0000'),
@@ -16,9 +17,10 @@ class GraniteIdentifier(RockGrainIdentifier):
 def main():
     base_dir: Path = Path(r'F:\data\laser-scanner\others\25010701-花岗岩的细观结构识别')
     identifier = GraniteIdentifier(sorted(base_dir.glob('1-*/*.png')))
-    identifier.generate_predict_results()
+    # identifier.generate_predict_results()
     # identifier.kmeans_evaluate()
-    # identifier.fix_noizy_pixels(pixel_count=1250)  # 噪声处理
+    identifier.fix_noizy_pixels()  # 噪声处理
+    # identifier.predict_all(base_dir / '2-细观结构识别效果')
 
 
 if __name__ == '__main__':
