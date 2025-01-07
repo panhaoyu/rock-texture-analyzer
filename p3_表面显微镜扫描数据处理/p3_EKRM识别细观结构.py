@@ -6,6 +6,7 @@ from rock_grain_identifier.group import RgiGroup
 
 class GraniteIdentifier(RockGrainIdentifier):
     fix_noize_pixel_count = 1000
+    fix_noize_convolve_radius = 10
     groups = [
         RgiGroup(name='other', index=1, color='#00FF00'),
         RgiGroup(name='feldspar', index=2, color='#FF0000'),
