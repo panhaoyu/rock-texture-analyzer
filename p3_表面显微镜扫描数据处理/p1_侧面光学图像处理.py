@@ -15,7 +15,7 @@ class Processor(BaseProcessor):
     p3_右侧裁剪区域_像素: int = 1000
     p4_左右边界裁剪宽度_像素: int = 100
     p4_根据左右区域识别背景颜色时的上下裁剪区域_比例: float = 0.1
-    p5_二值化阈值_比例: float = 0.7
+    p5_二值化阈值_比例: float = 0.8
     p6_高斯模糊半径_像素: int = 10
     p8_水平裁剪过程的有效点阈值_比例: float = 0.5
     p8_水平边界裁剪收缩_像素: int = 10
@@ -34,7 +34,7 @@ class Processor(BaseProcessor):
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
     def __init__(self) -> None:
-        self.base_dir = Path(r'F:\data\laser-scanner\25010502-花岗岩的侧面光学扫描的预处理')
+        self.base_dir = Path(r'F:\data\laser-scanner\25010901-花岗岩的光学扫描的预处理-补充试样')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f24_人工补全黑边
         self.step_functions = [

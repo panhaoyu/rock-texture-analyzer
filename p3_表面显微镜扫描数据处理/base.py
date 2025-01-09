@@ -26,12 +26,12 @@ class BaseProcessor:
                 if output_path.exists():
                     continue
                 func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.__name__).groups()
+                func_index = int(func_index)
                 try:
                     func(output_path)
                 except ManuallyProcessRequiredException:
                     self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理')
                     break
-                func_index = int(func_index)
                 self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
         except Exception:
             with self._print_lock:
@@ -39,7 +39,7 @@ class BaseProcessor:
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('f')
-        extensions: set[str] = {p.suffix for p in dir_path.iterdir() if p.is_file()}
+        extensions: set[str] = {p.suffix for p in dir_path.glob('*') if p.is_file()}
         suffix: str = next(iter(extensions), '.png')
         return dir_path / f'{stem}{suffix}'
 
