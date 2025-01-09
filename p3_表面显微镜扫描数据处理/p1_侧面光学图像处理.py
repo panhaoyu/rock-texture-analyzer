@@ -43,6 +43,8 @@ class Processor:
     print_lock: threading.Lock = threading.Lock()
 
     def __init__(self) -> None:
+        self.source_file_function = self.f1_原始数据
+        self.final_file_function = self.f24_人工补全黑边
         self.step_functions: List[Callable[[Path], None]] = [
             self.f1_原始数据,
             self.f2_将jpg格式转换为png格式,
@@ -445,12 +447,12 @@ class Processor:
     @classmethod
     def main(cls) -> None:
         obj: Processor = cls()
-        s1_dir: Path = obj.get_file_path(obj.f1_原始数据, 'dummy').parent
-        stems: List[str] = [file.stem for file in s1_dir.glob('*.jpg')]
+        source_dir: Path = obj.get_file_path(obj.source_file_function, 'dummy').parent
+        stems: List[str] = [file.stem for file in source_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:
             executor.map(obj.process_stem, stems)
-        zip_path = s1_dir.parent / f"{s1_dir.parent.name}.zip"
-        final_dir = obj.get_file_path(obj.f23_合并补全图像, 'dummy').parent
+        zip_path = source_dir.parent / f"{source_dir.parent.name}.zip"
+        final_dir = obj.get_file_path(obj.final_file_function, 'dummy').parent
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
             [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
 
