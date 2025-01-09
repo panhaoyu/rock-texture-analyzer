@@ -1,23 +1,16 @@
-import re
-import threading
-import traceback
-import zipfile
-from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from pathlib import Path
-from typing import Callable, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
 from PIL import Image, ImageFilter
 
+from p3_表面显微镜扫描数据处理.base import BaseProcessor
 from p3_表面显微镜扫描数据处理.p2_图像补全_阿里云 import erase_image_with_oss
 
 
-class Processor:
-    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
-
+class Processor(BaseProcessor):
     p3_左侧裁剪区域_像素: int = 1400
     p3_右侧裁剪区域_像素: int = 1000
     p4_左右边界裁剪宽度_像素: int = 100
@@ -39,13 +32,11 @@ class Processor:
     v19_识别黑线时的范围扩大像素数量: float = 10
     v19_识别黑线时的阈值扩大系数: float = 1.5
     v20_识别黑线时的掩膜膨胀半径: int = 5
-
-    _print_lock: threading.Lock = threading.Lock()
-
     def __init__(self) -> None:
+        self.base_dir = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f24_人工补全黑边
-        self.step_functions: List[Callable[[Path], None]] = [
+        self.step_functions = [
             self.f1_原始数据,
             self.f2_将jpg格式转换为png格式,
             self.f3_裁剪左右两侧,
@@ -72,33 +63,6 @@ class Processor:
         ]
         [self.get_file_path(func, 'dummy').parent.mkdir(parents=True, exist_ok=True)
          for func in self.step_functions]
-
-    def print_safe(self, message: str) -> None:
-        with self._print_lock:
-            print(message)
-
-    def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
-        dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('f')
-        match func:
-            case self.f1_原始数据:
-                suffix = '.jpg'
-            case _:
-                suffix = '.png'
-        return dir_path / f'{stem}{suffix}'
-
-    def process_stem(self, stem: str) -> None:
-        try:
-            for func in self.step_functions:
-                output_path: Path = self.get_file_path(func, stem)
-                if output_path.exists():
-                    continue
-                func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.__name__).groups()
-                func(output_path)
-                func_index = int(func_index)
-                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
-        except Exception:
-            with self._print_lock:
-                traceback.print_exc()
 
     def f1_原始数据(self, output_path: Path) -> None:
         pass
@@ -440,18 +404,6 @@ class Processor:
 
     def f24_人工补全黑边(self, output_path: Path) -> None:
         raise ValueError(output_path)
-
-    @classmethod
-    def main(cls) -> None:
-        obj: Processor = cls()
-        source_dir: Path = obj.get_file_path(obj.source_file_function, 'dummy').parent
-        stems: List[str] = [file.stem for file in source_dir.glob('*.jpg')]
-        with ThreadPoolExecutor() as executor:
-            executor.map(obj.process_stem, stems)
-        zip_path = source_dir.parent / f"{source_dir.parent.name}.zip"
-        final_dir = obj.get_file_path(obj.final_file_function, 'dummy').parent
-        with zipfile.ZipFile(zip_path, 'w') as zip_file:
-            [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
 
 
 if __name__ == '__main__':
