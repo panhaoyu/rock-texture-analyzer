@@ -1,6 +1,6 @@
 import shutil
 
-from scripts.config import base_dir
+from p2_点云数据处理.config import base_dir
 
 
 def main():
