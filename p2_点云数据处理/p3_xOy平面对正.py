@@ -5,8 +5,8 @@ import numpy as np
 import open3d
 from sci_cache import sci_method_cache
 
-from scripts.config import base_dir, project_name
-from scripts.p2_调整为主平面 import PointCloudProcessorP2
+from p2_点云数据处理.config import project_name, base_dir
+from p2_点云数据处理.p2_调整为主平面 import PointCloudProcessorP2
 
 
 class PointCloudProcessorP3(PointCloudProcessorP2):

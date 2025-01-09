@@ -5,8 +5,8 @@ import open3d
 from sci_cache import sci_method_cache
 from sklearn.cluster import KMeans
 
-from scripts.config import base_dir, project_name
-from scripts.p3_xOy平面对正 import PointCloudProcessorP3
+from p2_点云数据处理.config import base_dir, project_name
+from p2_点云数据处理.p3_xOy平面对正 import PointCloudProcessorP3
 
 
 class PointCloudProcessorP4(PointCloudProcessorP3):

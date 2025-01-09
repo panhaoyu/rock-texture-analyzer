@@ -4,8 +4,8 @@ import numpy as np
 from open3d.cpu.pybind.utility import Vector3dVector
 from sci_cache import sci_method_cache
 
-from scripts.config import base_dir, project_name
-from scripts.p1_读取点云数据 import PointCloudProcessor
+from p2_点云数据处理.config import project_name, base_dir
+from p2_点云数据处理.p1_读取点云数据 import PointCloudProcessor
 
 
 class PointCloudProcessorP2(PointCloudProcessor):

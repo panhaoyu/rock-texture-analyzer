@@ -6,8 +6,8 @@ from matplotlib import pyplot as plt, cm
 from sci_cache import sci_method_cache
 from scipy.interpolate import griddata
 
-from scripts.config import base_dir, project_name
-from scripts.p6_仅保留顶面 import PointCloudProcessorP6
+from p2_点云数据处理.config import base_dir, project_name
+from p2_点云数据处理.p6_仅保留顶面 import PointCloudProcessorP6
 
 
 class PointCloudProcessorP7(PointCloudProcessorP6):

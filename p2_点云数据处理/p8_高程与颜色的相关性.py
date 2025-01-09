@@ -2,8 +2,8 @@ import numpy as np
 from sci_cache import sci_method_cache
 from scipy.ndimage import gaussian_filter
 
-from scripts.config import project_name, base_dir
-from scripts.p7_表面二维重建 import PointCloudProcessorP7
+from p2_点云数据处理.config import base_dir, project_name
+from p2_点云数据处理.p7_表面二维重建 import PointCloudProcessorP7
 
 
 class PointCloudProcessorP8(PointCloudProcessorP7):

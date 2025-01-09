@@ -7,7 +7,7 @@ import open3d
 from open3d.cpu.pybind.geometry import PointCloud
 from sci_cache import MethodDiskCache, sci_method_cache
 
-from scripts.config import base_dir, project_name
+from p2_点云数据处理.config import project_name, base_dir
 
 
 class PointCloudProcessor(MethodDiskCache):

@@ -9,6 +9,8 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 class Processor(BaseProcessor):
     p2_左侧裁剪像素数量 = 2060
     p2_右侧裁剪像素数量 = 1370
+    p2_上方裁剪像素数量 = 1000
+    p2_下方裁剪像素数量 = 1
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
@@ -28,7 +30,8 @@ class Processor(BaseProcessor):
         with  Image.open(input_path) as image:
             image = image.copy()
         image = np.asarray(image)
-        image = image[:, self.p2_左侧裁剪像素数量:-self.p2_右侧裁剪像素数量]
+        image = image[self.p2_上方裁剪像素数量:-self.p2_下方裁剪像素数量,
+                self.p2_左侧裁剪像素数量:-self.p2_右侧裁剪像素数量]
         image = Image.fromarray(image)
         image.save(output_path)
 
