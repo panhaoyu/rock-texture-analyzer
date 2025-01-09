@@ -34,7 +34,7 @@ class Processor(BaseProcessor):
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
     def __init__(self) -> None:
-        self.base_dir = Path(r'F:\data\laser-scanner\25010901-花岗岩的光学扫描的预处理-补充试样')
+        self.base_dir = Path(r'F:\data\laser-scanner\砾岩临时处理文件夹')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f24_人工补全黑边
         self.step_functions = [
@@ -103,9 +103,9 @@ class Processor(BaseProcessor):
         fig: plt.Figure = plt.Figure()
         ax: plt.Axes = fig.add_subplot(111)
         ax.hist(distances, bins=100, color='gray')
-        ax.set_title(f'{output_path.stem} 距离直方图')
-        ax.set_xlabel('距离')
-        ax.set_ylabel('像素数量')
+        ax.set_title(f'{output_path.stem} distance histogram')
+        ax.set_xlabel('distance')
+        ax.set_ylabel('number of pixels')
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
@@ -147,9 +147,9 @@ class Processor(BaseProcessor):
         fig: plt.Figure = plt.Figure()
         ax: plt.Axes = fig.add_subplot(111)
         ax.plot(range(len(white_counts)), white_counts, color='blue')
-        ax.set_title(f'{output_path.stem} x方向白色点数量')
-        ax.set_xlabel('X 坐标')
-        ax.set_ylabel('白色点数量')
+        ax.set_title(f'{output_path.stem} x-direction white pixel count')
+        ax.set_xlabel('X coordinate')
+        ax.set_ylabel('number of white pixels')
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
@@ -215,9 +215,9 @@ class Processor(BaseProcessor):
         fig: plt.Figure = plt.Figure()
         ax: plt.Axes = fig.add_subplot(111)
         ax.plot(range(len(white_counts)), white_counts, color='green')
-        ax.set_title(f'{output_path.stem} 纵向有效点分布')
-        ax.set_xlabel('Y 坐标')
-        ax.set_ylabel('有效点数量')
+        ax.set_title(f'{output_path.stem} vertical distribution of effective points')
+        ax.set_xlabel('Y coordinate')
+        ax.set_ylabel('number of effective points')
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
@@ -318,8 +318,8 @@ class Processor(BaseProcessor):
             smoothed_counts = np.convolve(counts, kernel, mode='same')
             ax.plot(bin_centers, smoothed_counts, color=color)
         ax.set_title(f'{output_path.stem} RGB KDE')
-        ax.set_xlabel('像素值')
-        ax.set_ylabel('密度')
+        ax.set_xlabel('pixel value')
+        ax.set_ylabel('density')
         fig.tight_layout()
         fig.savefig(output_path)
         plt.close(fig)
