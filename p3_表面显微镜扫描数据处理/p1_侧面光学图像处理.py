@@ -40,7 +40,7 @@ class Processor:
     v19_识别黑线时的阈值扩大系数: float = 1.5
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
-    print_lock: threading.Lock = threading.Lock()
+    _print_lock: threading.Lock = threading.Lock()
 
     def __init__(self) -> None:
         self.source_file_function = self.f1_原始数据
@@ -70,14 +70,11 @@ class Processor:
             self.f23_合并补全图像,
             self.f24_人工补全黑边,
         ]
-        directories: set[Path] = {
-            self.get_file_path(func, 'dummy').parent for func in self.step_functions
-        }
-        for directory in directories:
-            directory.mkdir(parents=True, exist_ok=True)
+        [self.get_file_path(func, 'dummy').parent.mkdir(parents=True, exist_ok=True)
+         for func in self.step_functions]
 
     def print_safe(self, message: str) -> None:
-        with self.print_lock:
+        with self._print_lock:
             print(message)
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
@@ -100,7 +97,7 @@ class Processor:
                 func_index = int(func_index)
                 self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
         except Exception:
-            with self.print_lock:
+            with self._print_lock:
                 traceback.print_exc()
 
     def f1_原始数据(self, output_path: Path) -> None:
