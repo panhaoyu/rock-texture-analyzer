@@ -66,7 +66,7 @@ class Processor(BaseProcessor):
          for func in self.step_functions]
 
     def f1_原始数据(self, output_path: Path) -> None:
-        pass
+        raise ValueError
 
     def f2_将jpg格式转换为png格式(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f1_原始数据, output_path.stem)
