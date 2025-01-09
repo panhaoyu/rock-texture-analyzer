@@ -9,6 +9,7 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 class Processor(BaseProcessor):
     p2_左侧裁剪像素数量 = 2060
     p2_右侧裁剪像素数量 = 1370
+
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
         self.source_file_function = self.f1_原始数据
