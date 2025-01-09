@@ -7,7 +7,7 @@ import requests
 from PIL import Image, ImageFilter
 
 from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
-from p3_表面显微镜扫描数据处理.p2_图像补全_阿里云 import erase_image_with_oss
+from p3_表面显微镜扫描数据处理.s2_图像补全_阿里云 import erase_image_with_oss
 
 
 class Processor(BaseProcessor):
