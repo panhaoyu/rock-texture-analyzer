@@ -26,7 +26,11 @@ class BaseProcessor:
                 if output_path.exists():
                     continue
                 func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.__name__).groups()
-                func(output_path)
+                try:
+                    func(output_path)
+                except ManuallyProcessRequiredException:
+                    self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理')
+                    break
                 func_index = int(func_index)
                 self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
         except Exception:
@@ -35,11 +39,8 @@ class BaseProcessor:
 
     def get_file_path(self, func: Callable[[Path], None], stem: str) -> Path:
         dir_path: Path = self.base_dir / func.__name__.replace('_', '-').lstrip('f')
-        match func:
-            case self.source_file_function:
-                suffix = '.jpg'
-            case _:
-                suffix = '.png'
+        extensions: set[str] = {p.suffix for p in dir_path.iterdir() if p.is_file()}
+        suffix: str = next(iter(extensions), '.png')
         return dir_path / f'{stem}{suffix}'
 
     @classmethod
@@ -53,3 +54,7 @@ class BaseProcessor:
         final_dir = obj.get_file_path(obj.final_file_function, 'dummy').parent
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
             [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
+
+
+class ManuallyProcessRequiredException(Exception):
+    pass

@@ -6,7 +6,7 @@ import numpy as np
 import requests
 from PIL import Image, ImageFilter
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
 from p3_表面显微镜扫描数据处理.p2_图像补全_阿里云 import erase_image_with_oss
 
 
@@ -34,7 +34,7 @@ class Processor(BaseProcessor):
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
     def __init__(self) -> None:
-        self.base_dir = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
+        self.base_dir = Path(r'F:\data\laser-scanner\25010502-花岗岩的侧面光学扫描的预处理')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f24_人工补全黑边
         self.step_functions = [
@@ -66,7 +66,7 @@ class Processor(BaseProcessor):
          for func in self.step_functions]
 
     def f1_原始数据(self, output_path: Path) -> None:
-        raise ValueError
+        raise ManuallyProcessRequiredException
 
     def f2_将jpg格式转换为png格式(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f1_原始数据, output_path.stem)
@@ -404,7 +404,7 @@ class Processor(BaseProcessor):
         Image.fromarray(original_image).save(output_path)
 
     def f24_人工补全黑边(self, output_path: Path) -> None:
-        raise ValueError(output_path)
+        raise ManuallyProcessRequiredException
 
 
 if __name__ == '__main__':
