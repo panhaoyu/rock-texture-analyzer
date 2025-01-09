@@ -46,6 +46,10 @@ class BaseProcessor:
     @classmethod
     def main(cls) -> None:
         obj = cls()
+
+        [obj.get_file_path(func, 'dummy').parent.mkdir(parents=True, exist_ok=True)
+         for func in obj.step_functions]
+
         source_dir: Path = obj.get_file_path(obj.source_file_function, 'dummy').parent
         stems = [file.stem for file in source_dir.glob('*.jpg')]
         with ThreadPoolExecutor() as executor:

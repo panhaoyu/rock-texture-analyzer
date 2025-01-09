@@ -63,8 +63,6 @@ class Processor(BaseProcessor):
             self.f23_合并补全图像,
             self.f24_人工补全黑边,
         ]
-        [self.get_file_path(func, 'dummy').parent.mkdir(parents=True, exist_ok=True)
-         for func in self.step_functions]
 
     def f1_原始数据(self, output_path: Path) -> None:
         raise ManuallyProcessRequiredException
