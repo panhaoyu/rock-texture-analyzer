@@ -32,6 +32,7 @@ class Processor(BaseProcessor):
     v19_识别黑线时的范围扩大像素数量: float = 10
     v19_识别黑线时的阈值扩大系数: float = 1.5
     v20_识别黑线时的掩膜膨胀半径: int = 5
+
     def __init__(self) -> None:
         self.base_dir = Path(r'F:\data\laser-scanner\others\25010502-花岗岩的侧面光学扫描的预处理')
         self.source_file_function = self.f1_原始数据
