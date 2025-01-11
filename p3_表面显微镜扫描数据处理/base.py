@@ -6,6 +6,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
+from PIL import Image
+
 
 class BaseProcessor:
     base_dir: Path
@@ -42,6 +45,18 @@ class BaseProcessor:
         extensions: set[str] = {p.suffix for p in dir_path.glob('*') if p.is_file()}
         suffix: str = next(iter(extensions), '.png')
         return dir_path / f'{stem}{suffix}'
+
+    def get_input_path(self, func: Callable[[Path], None], output_path: Path) -> Path:
+        return self.get_file_path(func, output_path.stem)
+
+    def get_input_image(self, func: Callable[[Path], None], output_path: Path):
+        input_path = self.get_input_path(func, output_path)
+        with Image.open(input_path) as img:
+            return img.copy()
+
+    def get_input_array(self, func: Callable[[Path], None], output_path: Path):
+        image = self.get_input_image(func, output_path)
+        return np.asarray(image)
 
     @classmethod
     def main(cls) -> None:
