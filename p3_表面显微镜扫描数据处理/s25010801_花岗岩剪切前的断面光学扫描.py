@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 from more_itertools import only
@@ -10,6 +11,8 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 
 class Processor(BaseProcessor):
     v6_转换为凸多边形的检测长度_像素 = 100
+    v9_目标长度_像素 = 4000
+    v9_目标宽度_像素 = 4000
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
@@ -24,6 +27,7 @@ class Processor(BaseProcessor):
             self.f6_转换为凸多边形,
             self.f7_显示识别效果,
             self.f8_仅保留遮罩里面的区域,
+            self.f9_水平拉伸图像的系数,
             self.f99_处理结果,
         ]
 
@@ -64,7 +68,6 @@ class Processor(BaseProcessor):
             window_with_center = np.concatenate([window, center])
             hull = cv2.convexHull(window_with_center.reshape(-1, 1, 2))
             cv2.drawContours(convex, [hull], -1, (255,), thickness=cv2.FILLED)
-        convex = cv2.erode(convex, cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10)))
         Image.fromarray(convex, 'L').save(output_path)
 
     def f7_显示识别效果(self, output_path: Path):
@@ -84,6 +87,25 @@ class Processor(BaseProcessor):
         y_max, x_max = coords.max(axis=0) + 1
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
+
+    def f9_水平拉伸图像的系数(self, output_path: Path):
+        array = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
+        alpha = array[..., 3]
+        x_min = np.where(alpha.any(axis=1), alpha.argmax(axis=1), 0)
+        x_max = np.where(alpha.any(axis=1), array.shape[1] - 1 - alpha[:, ::-1].argmax(axis=1), 0)
+        widths = x_max - x_min
+        coefficients = np.where(widths > 0, self.v9_目标长度_像素 / widths, 1.0)
+
+        border = 100
+        coefficients[:border] = coefficients[border]
+        coefficients[-border:] = coefficients[-border]
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(coefficients)
+        ax.set_xlabel('row')
+        ax.set_ylabel('coefficient')
+        fig.savefig(output_path)
+        plt.close(fig)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
