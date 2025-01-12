@@ -27,7 +27,8 @@ class Processor(BaseProcessor):
             self.f6_转换为凸多边形,
             self.f7_显示识别效果,
             self.f8_仅保留遮罩里面的区域,
-            self.f9_水平拉伸图像的系数,
+            self.f9_水平拉伸图像的系数_计算,
+            self.f10_水平拉伸图像的系数_显示,
             self.f99_处理结果,
         ]
 
@@ -88,7 +89,7 @@ class Processor(BaseProcessor):
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
 
-    def f9_水平拉伸图像的系数(self, output_path: Path):
+    def f9_水平拉伸图像的系数_计算(self, output_path: Path):
         array = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
         alpha = array[..., 3]
         x_min = np.where(alpha.any(axis=1), alpha.argmax(axis=1), 0)
@@ -103,6 +104,10 @@ class Processor(BaseProcessor):
         smoothed = np.convolve(coefficients, np.ones(border * 2) / border / 2, mode='same')
         coefficients[border:-border] = smoothed[border:-border]
 
+        np.save(output_path.with_suffix('.npy'), coefficients)
+
+    def f10_水平拉伸图像的系数_显示(self, output_path: Path):
+        coefficients = np.load(self.get_input_path(self.f9_水平拉伸图像的系数_计算, output_path))
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(coefficients)
         ax.set_xlabel('row')
