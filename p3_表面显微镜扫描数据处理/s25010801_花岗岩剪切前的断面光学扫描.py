@@ -12,6 +12,7 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 class Processor(BaseProcessor):
     v6_转换为凸多边形的检测长度_像素 = 100
     v9_不参与拉伸系数计算的边界宽度_像素 = 100
+    v12_不参与垂直拉伸系数计算的边界高度_像素 = 100
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
@@ -29,6 +30,9 @@ class Processor(BaseProcessor):
             self.f9_水平拉伸图像的系数_计算,
             self.f10_水平拉伸图像的系数_显示,
             self.f11_水平拉伸,
+            self.f12_垂直拉伸图像的系数_计算,
+            self.f13_垂直拉伸图像的系数_显示,
+            self.f14_垂直拉伸,
             self.f99_处理结果,
         ]
 
@@ -140,6 +144,69 @@ class Processor(BaseProcessor):
 
         x_map = x_new
         y_map = y_original
+
+        stretched_image = cv2.remap(image, x_map.astype(np.float32), y_map.astype(np.float32),
+                                    interpolation=cv2.INTER_LINEAR)
+
+        Image.fromarray(stretched_image).save(output_path)
+
+    @recreate
+    def f12_垂直拉伸图像的系数_计算(self, output_path: Path):
+        """计算图像垂直拉伸的系数并保存"""
+        array = self.get_input_array(self.f11_水平拉伸, output_path)
+        alpha = array[..., 3]
+        y_min = np.where(alpha.any(axis=0), alpha.argmax(axis=0), 0)
+        y_max = np.where(alpha.any(axis=0), array.shape[0] - 1 - alpha[:, ::-1].argmax(axis=0), 0)
+        heights = y_max - y_min
+        target = array.shape[0]
+        coefficients = np.where(heights > 0, heights / target, 1.0)
+
+        border = self.v12_不参与垂直拉伸系数计算的边界高度_像素
+        coefficients[:border] = coefficients[border]
+        coefficients[-border:] = coefficients[-border]
+
+        smoothed = np.convolve(coefficients, np.ones(border * 2) / border / 2, mode='same')
+        coefficients[border:-border] = smoothed[border:-border]
+
+        np.save(output_path.with_suffix('.npy'), coefficients)
+
+    @recreate
+    def f13_垂直拉伸图像的系数_显示(self, output_path: Path):
+        """显示垂直拉伸系数的图像"""
+        coefficients = self.get_input_array(self.f12_垂直拉伸图像的系数_计算, output_path)
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(coefficients)
+        ax.set_xlabel('column')
+        ax.set_ylabel('coefficient')
+        fig.savefig(output_path)
+        plt.close(fig)
+
+    @recreate
+    def f14_垂直拉伸(self, output_path: Path):
+        """应用垂直拉伸系数进行图像拉伸"""
+        coefficient = self.get_input_array(self.f12_垂直拉伸图像的系数_计算, output_path)
+        image = self.get_input_array(self.f11_水平拉伸, output_path)
+        border = self.v12_不参与垂直拉伸系数计算的边界高度_像素
+        r, g, b, a = image[..., 0], image[..., 1], image[..., 2], image[..., 3]
+
+        # 计算原始图像的坐标
+        x_original, y_original = np.meshgrid(np.arange(a.shape[1]), np.arange(a.shape[0]))
+
+        # 取透明度通道里面的第一个非空的值与最后一个非空的值作为边界，并计算每列的中心位置
+        y_min = np.array([next((idx for idx, val in enumerate(col) if val > 0), 0) for col in a.T])
+        y_max = np.array([len(col) - 1 - next((idx for idx, val in enumerate(col[::-1]) if val > 0), 0) for col in a.T])
+        y_center = (y_min + y_max) / 2
+        y_center[:border] = y_center[border]
+        y_center[-border:] = y_center[-border]
+
+        # 以每列的中心为标准进行放缩
+        target_center = a.shape[0] / 2
+        y_relative = y_original - target_center
+        y_relative_new = y_relative * coefficient[np.newaxis, :]
+        y_new = y_relative_new + y_center[np.newaxis, :]
+
+        x_map = x_original
+        y_map = y_new
 
         stretched_image = cv2.remap(image, x_map.astype(np.float32), y_map.astype(np.float32),
                                     interpolation=cv2.INTER_LINEAR)
