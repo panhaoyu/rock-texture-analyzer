@@ -126,7 +126,7 @@ class Processor(BaseProcessor):
         r, g, b, a = image[..., 0], image[..., 1], image[..., 2], image[..., 3]
 
         # 计算原始图像的坐标
-        x, y = np.meshgrid(np.arange(a.shape[1]), np.arange(a.shape[0]))
+        x_original, y_original = np.meshgrid(np.arange(a.shape[1]), np.arange(a.shape[0]))
 
         # 取透明度通道里面的第一个非空的值与最后一个非空的值作为边界，并计算每行的中心位置
         x_min = np.array([next((idx for idx, val in enumerate(row) if val > 0), 0) for row in a])
@@ -136,11 +136,11 @@ class Processor(BaseProcessor):
         x_center[-border:] = x_center[-border]
 
         # 以每行的中心为标准进行放缩
-        x_relative = x - x_center[:, np.newaxis]
+        x_relative = x_original - x_center[:, np.newaxis]
         x_relative_new = x_relative * coefficient[:, np.newaxis]
         x_new = x_relative_new + a.shape[1] / 2
 
-        stretched_image = cv2.remap(image, x_new, y, interpolation=cv2.INTER_LINEAR)
+        stretched_image = cv2.remap(image, x_new, y_original, interpolation=cv2.INTER_LINEAR)
 
         Image.fromarray(stretched_image).save(output_path)
 
