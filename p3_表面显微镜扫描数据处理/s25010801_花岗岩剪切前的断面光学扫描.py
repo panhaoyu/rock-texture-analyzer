@@ -3,11 +3,14 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
+from more_itertools import only
 
 from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
 
 
 class Processor(BaseProcessor):
+    v6_转换为凸多边形的检测长度_像素 = 500
+
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
         self.source_file_function = self.f1_原始数据
@@ -17,7 +20,8 @@ class Processor(BaseProcessor):
             self.f2_上下扩展,
             self.f3_删除非主体的像素,
             self.f4_非透明部分的mask,
-            self.f5_转换为凸边界,
+            self.f5_提取最大的区域,
+            self.f6_转换为凸多边形,
             self.f99_处理结果,
         ]
 
@@ -38,7 +42,7 @@ class Processor(BaseProcessor):
         mask = (array[..., 3] > 0).astype(np.uint8) * 255
         Image.fromarray(mask, 'L').save(output_path)
 
-    def f5_转换为凸边界(self, output_path: Path):
+    def f5_提取最大的区域(self, output_path: Path):
         """识别最大区域并将其边界转换为凸多边形，最后保存为黑白图像"""
         array = self.get_input_array(self.f4_非透明部分的mask, output_path)
         contours = cv2.findContours(array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -46,6 +50,23 @@ class Processor(BaseProcessor):
         convex = np.zeros_like(array)
         cv2.drawContours(convex, [largest], -1, (255,), thickness=cv2.FILLED)
         Image.fromarray(convex, 'L').save(output_path)
+
+    def f6_转换为凸多边形(self, output_path: Path):
+        """平滑最大区域的边界，确保每200像素内边界为凸多边形"""
+        array = self.get_input_array(self.f5_提取最大的区域, output_path)
+        contour = only(cv2.findContours(array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0])
+        convex = np.zeros_like(array)
+        M = cv2.moments(contour)
+        window_size = self.v6_转换为凸多边形的检测长度_像素
+        center = np.array([[[int(M['m10'] / M['m00']), int(M['m01'] / M['m00'])]]])
+        contour = np.concatenate([contour, contour[:window_size]])
+        for i in range(len(contour) - window_size + 1):
+            window = contour[i:i + window_size]
+            window_with_center = np.concatenate([window, center])
+            hull = cv2.convexHull(window_with_center.reshape(-1, 1, 2))
+            cv2.drawContours(convex, [hull], -1, (255,), thickness=cv2.FILLED)
+        Image.fromarray(convex, 'L').save(output_path)
+
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
