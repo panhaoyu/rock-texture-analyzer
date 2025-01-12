@@ -100,6 +100,9 @@ class Processor(BaseProcessor):
         coefficients[:border] = coefficients[border]
         coefficients[-border:] = coefficients[-border]
 
+        smoothed = np.convolve(coefficients, np.ones(border * 2) / border / 2, mode='same')
+        coefficients[border:-border] = smoothed[border:-border]
+
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(coefficients)
         ax.set_xlabel('row')
