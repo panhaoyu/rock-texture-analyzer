@@ -210,9 +210,6 @@ class Processor(BaseProcessor):
 
         Image.fromarray(stretched_image).save(output_path)
 
-    enable_multithread = False
-    is_debug = True
-
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
 
