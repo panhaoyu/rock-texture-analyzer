@@ -22,6 +22,7 @@ class Processor(BaseProcessor):
             self.f4_非透明部分的mask,
             self.f5_提取最大的区域,
             self.f6_转换为凸多边形,
+            self.f7_显示识别效果,
             self.f99_处理结果,
         ]
 
@@ -67,6 +68,14 @@ class Processor(BaseProcessor):
             cv2.drawContours(convex, [hull], -1, (255,), thickness=cv2.FILLED)
         Image.fromarray(convex, 'L').save(output_path)
 
+    def f7_显示识别效果(self, output_path: Path):
+        """将f6识别出来的结果应用到f2上面，以f2为基础，将f6里面为白色的区域进行遮罩显示，使得其红色通道拉满。"""
+        f2_array, f6_array = (
+            self.get_input_array(func, output_path).copy()
+            for func in [self.f2_上下扩展, self.f6_转换为凸多边形]
+        )
+        f2_array[..., 0] = np.where(f6_array == 255, 255, f2_array[..., 0])
+        Image.fromarray(f2_array).save(output_path)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
