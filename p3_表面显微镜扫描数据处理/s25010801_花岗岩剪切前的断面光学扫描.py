@@ -9,7 +9,7 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 
 
 class Processor(BaseProcessor):
-    v6_转换为凸多边形的检测长度_像素 = 500
+    v6_转换为凸多边形的检测长度_像素 = 200
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
@@ -24,7 +24,6 @@ class Processor(BaseProcessor):
             self.f6_转换为凸多边形,
             self.f7_显示识别效果,
             self.f8_仅保留遮罩里面的区域,
-            self.f9_缩小遮罩,
             self.f99_处理结果,
         ]
 
@@ -65,6 +64,7 @@ class Processor(BaseProcessor):
             window_with_center = np.concatenate([window, center])
             hull = cv2.convexHull(window_with_center.reshape(-1, 1, 2))
             cv2.drawContours(convex, [hull], -1, (255,), thickness=cv2.FILLED)
+        convex = cv2.erode(convex, cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10)))
         Image.fromarray(convex, 'L').save(output_path)
 
     def f7_显示识别效果(self, output_path: Path):
@@ -84,13 +84,6 @@ class Processor(BaseProcessor):
         y_max, x_max = coords.max(axis=0) + 1
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
-
-    def f9_缩小遮罩(self, output_path: Path):
-        mask = self.get_input_array(self.f6_转换为凸多边形, output_path)
-        mask = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10)))
-        f2_array = self.get_input_array(self.f2_上下扩展, output_path)
-        f2_array = np.dstack((f2_array, mask))
-        Image.fromarray(f2_array).save(output_path)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
