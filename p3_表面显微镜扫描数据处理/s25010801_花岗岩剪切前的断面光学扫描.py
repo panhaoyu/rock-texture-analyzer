@@ -11,8 +11,7 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 
 class Processor(BaseProcessor):
     v6_转换为凸多边形的检测长度_像素 = 100
-    v9_目标长度_像素 = 4000
-    v9_目标宽度_像素 = 4000
+    v9_不参与拉伸系数计算的边界宽度_像素 = 100
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
@@ -29,7 +28,7 @@ class Processor(BaseProcessor):
             self.f8_仅保留遮罩里面的区域,
             self.f9_水平拉伸图像的系数_计算,
             self.f10_水平拉伸图像的系数_显示,
-            self.f11_应用水平拉伸,
+            self.f11_变形,
             self.f99_处理结果,
         ]
 
@@ -98,7 +97,7 @@ class Processor(BaseProcessor):
         widths = x_max - x_min
         coefficients = np.where(widths > 0, widths / self.v9_目标长度_像素, 1.0)
 
-        border = 100
+        border = self.v9_不参与拉伸系数计算的边界宽度_像素
         coefficients[:border] = coefficients[border]
         coefficients[-border:] = coefficients[-border]
 
@@ -108,13 +107,18 @@ class Processor(BaseProcessor):
         np.save(output_path.with_suffix('.npy'), coefficients)
 
     def f10_水平拉伸图像的系数_显示(self, output_path: Path):
-        coefficients = np.load(self.get_input_path(self.f9_水平拉伸图像的系数_计算, output_path))
+        coefficients = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.plot(coefficients)
         ax.set_xlabel('row')
         ax.set_ylabel('coefficient')
         fig.savefig(output_path)
         plt.close(fig)
+
+    def f11_变形(self, output_path: Path):
+        image = self.get_input_image(self.f8_仅保留遮罩里面的区域, output_path)
+        image.save(output_path)
+        raise ManuallyProcessRequiredException('使用PS进行变形处理')
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException

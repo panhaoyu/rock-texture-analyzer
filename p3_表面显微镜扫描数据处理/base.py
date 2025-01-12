@@ -32,8 +32,10 @@ class BaseProcessor:
                 func_index = int(func_index)
                 try:
                     func(output_path)
-                except ManuallyProcessRequiredException:
-                    self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理')
+                except ManuallyProcessRequiredException as exception:
+                    message = exception.args or ()
+                    message = ''.join(message)
+                    self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
                     break
                 self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
         except Exception:
@@ -55,8 +57,17 @@ class BaseProcessor:
             return img.copy()
 
     def get_input_array(self, func: Callable[[Path], None], output_path: Path):
-        image = self.get_input_image(func, output_path)
-        return np.asarray(image).copy()
+        path = self.get_input_path(func, output_path)
+        match path.suffix:
+            case '.png' | '.jpg':
+                image = self.get_input_image(func, output_path)
+                array = np.asarray(image).copy()
+            case '.npy':
+                array = np.load(path)
+            case other:
+                raise NotImplementedError(other)
+        return array
+
 
     @classmethod
     def main(cls) -> None:
