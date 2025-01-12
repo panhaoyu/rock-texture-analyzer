@@ -95,7 +95,8 @@ class Processor(BaseProcessor):
         x_min = np.where(alpha.any(axis=1), alpha.argmax(axis=1), 0)
         x_max = np.where(alpha.any(axis=1), array.shape[1] - 1 - alpha[:, ::-1].argmax(axis=1), 0)
         widths = x_max - x_min
-        coefficients = np.where(widths > 0, widths / self.v9_目标长度_像素, 1.0)
+        target = array.shape[1]
+        coefficients = np.where(widths > 0, widths / target, 1.0)
 
         border = self.v9_不参与拉伸系数计算的边界宽度_像素
         coefficients[:border] = coefficients[border]
@@ -115,8 +116,38 @@ class Processor(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    enable_multithread = False
+    is_debug = True
+
     def f11_水平拉伸(self, output_path: Path):
-        raise NotImplementedError
+        coefficient = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
+        image = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
+        border = self.v9_不参与拉伸系数计算的边界宽度_像素
+        r, g, b, a = image[..., 0], image[..., 1], image[..., 2], image[..., 3]
+
+        # 计算原始图像的坐标
+        x, y = np.meshgrid(np.arange(a.shape[1]), np.arange(a.shape[0]))
+
+        # 取透明度通道里面的第一个非空的值与最后一个非空的值作为边界，并计算每行的中心位置
+        x_min = [next((idx for idx, val in enumerate(row) if val > 0), 0) for row in a]
+        x_max = [len(row) - 1 - next((idx for idx, val in enumerate(row[::-1]) if val > 0), 0) for row in a]
+        x_center = (np.array(x_min) + np.array(x_max)) / 2
+        x_center[:border] = x_center[border]
+        x_center[-border:] = x_center[-border]
+        x_center = x_center
+
+        # 以每行的中心为标准进行放缩
+        delta_x = x - x_center[:, np.newaxis]
+        x_new = delta_x * coefficient[:, np.newaxis] + a.shape[1] / 2
+
+        # 创建映射坐标
+        map_x = x_new.astype(np.float32)
+        map_y = y.astype(np.float32)
+
+        # 对图像进行重映射
+        stretched_image = cv2.remap(image, map_x, map_y, interpolation=cv2.INTER_LINEAR)
+
+        Image.fromarray(stretched_image).save(output_path)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException

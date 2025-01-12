@@ -68,6 +68,8 @@ class BaseProcessor:
                 raise NotImplementedError(other)
         return array
 
+    enable_multithread: bool = True
+    is_debug: bool = False
 
     @classmethod
     def main(cls) -> None:
@@ -78,8 +80,14 @@ class BaseProcessor:
 
         source_dir: Path = obj.get_file_path(obj.source_file_function, 'dummy').parent
         stems = [file.stem for file in source_dir.glob('*.jpg')]
-        with ThreadPoolExecutor() as executor:
-            executor.map(obj.process_stem, stems)
+        if cls.is_debug:
+            stems = stems[:2]
+        if cls.enable_multithread:
+            with ThreadPoolExecutor() as executor:
+                executor.map(obj.process_stem, stems)
+        else:
+            for stem in stems:
+                obj.process_stem(stem)
         zip_path = source_dir.parent / f"{source_dir.parent.name}.zip"
         final_dir = obj.get_file_path(obj.final_file_function, 'dummy').parent
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
