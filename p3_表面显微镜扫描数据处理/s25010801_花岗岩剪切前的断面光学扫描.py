@@ -94,7 +94,7 @@ class Processor(BaseProcessor):
         x_min = np.where(alpha.any(axis=1), alpha.argmax(axis=1), 0)
         x_max = np.where(alpha.any(axis=1), array.shape[1] - 1 - alpha[:, ::-1].argmax(axis=1), 0)
         widths = x_max - x_min
-        coefficients = np.where(widths > 0, self.v9_目标长度_像素 / widths, 1.0)
+        coefficients = np.where(widths > 0, widths / self.v9_目标长度_像素, 1.0)
 
         border = 100
         coefficients[:border] = coefficients[border]
