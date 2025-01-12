@@ -6,18 +6,22 @@ import numpy as np
 from PIL import Image
 from more_itertools import only
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, recreate
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
 
 
 class Processor(BaseProcessor):
     v6_转换为凸多边形的检测长度_像素 = 100
     v9_不参与拉伸系数计算的边界宽度_像素 = 100
     v12_不参与垂直拉伸系数计算的边界高度_像素 = 100
+    v15_图像黑边 = 10
+    v15_最终图像宽度_像素 = 4000
+    v15_最终图像高度_像素 = 4000
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f99_处理结果
+
         self.step_functions = [
             self.f1_原始数据,
             self.f2_上下扩展,
@@ -33,6 +37,8 @@ class Processor(BaseProcessor):
             self.f12_垂直拉伸图像的系数_计算,
             self.f13_垂直拉伸图像的系数_显示,
             self.f14_垂直拉伸,
+            self.f15_调整尺寸和裁剪,
+            self.f16_补全边角,
             self.f99_处理结果,
         ]
 
@@ -210,8 +216,22 @@ class Processor(BaseProcessor):
 
         Image.fromarray(stretched_image).save(output_path)
 
+    def f15_调整尺寸和裁剪(self, output_path: Path):
+        image = self.get_input_array(self.f14_垂直拉伸, output_path)
+        border = self.v15_图像黑边
+        resized = cv2.resize(image, (self.v15_最终图像宽度_像素 + border * 2, self.v15_最终图像高度_像素 + border * 2),
+                             interpolation=cv2.INTER_AREA)
+        cropped = resized[border:-border, border:-border]
+        Image.fromarray(cropped).save(output_path)
+
+    def f16_补全边角(self, output_path: Path):
+        image = self.get_input_image(self.f15_调整尺寸和裁剪, output_path)
+        image = image.convert('RGB')
+        image.save(output_path)
+        raise ManuallyProcessRequiredException('使用PS补全边角')
+
     def f99_处理结果(self, output_path: Path):
-        raise ManuallyProcessRequiredException
+        self.get_input_image(self.f16_补全边角, output_path).save(output_path)
 
 
 if __name__ == '__main__':
