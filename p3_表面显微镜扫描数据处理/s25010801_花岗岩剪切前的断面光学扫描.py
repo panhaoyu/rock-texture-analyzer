@@ -140,12 +140,7 @@ class Processor(BaseProcessor):
         x_relative_new = x_relative * coefficient[:, np.newaxis]
         x_new = x_relative_new + a.shape[1] / 2
 
-        # 创建映射坐标
-        map_x = x_new.astype(np.float32)
-        map_y = y.astype(np.float32)
-
-        # 对图像进行重映射
-        stretched_image = cv2.remap(image, map_x, map_y, interpolation=cv2.INTER_LINEAR)
+        stretched_image = cv2.remap(image, x_new, y, interpolation=cv2.INTER_LINEAR)
 
         Image.fromarray(stretched_image).save(output_path)
 
