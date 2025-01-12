@@ -56,7 +56,7 @@ class BaseProcessor:
 
     def get_input_array(self, func: Callable[[Path], None], output_path: Path):
         image = self.get_input_image(func, output_path)
-        return np.asarray(image)
+        return np.asarray(image).copy()
 
     @classmethod
     def main(cls) -> None:
