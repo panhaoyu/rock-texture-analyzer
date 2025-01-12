@@ -28,7 +28,7 @@ class Processor(BaseProcessor):
             self.f8_仅保留遮罩里面的区域,
             self.f9_水平拉伸图像的系数_计算,
             self.f10_水平拉伸图像的系数_显示,
-            self.f11_变形,
+            self.f11_水平拉伸,
             self.f99_处理结果,
         ]
 
@@ -115,9 +115,8 @@ class Processor(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
-    def f11_变形(self, output_path: Path):
-        self.get_input_image(self.f8_仅保留遮罩里面的区域, output_path).save(output_path)
-        raise ManuallyProcessRequiredException('使用PS进行变形处理')
+    def f11_水平拉伸(self, output_path: Path):
+        raise NotImplementedError
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
