@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from more_itertools import only
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, recreate
 
 
 class Processor(BaseProcessor):
@@ -89,6 +89,7 @@ class Processor(BaseProcessor):
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
 
+    @recreate
     def f9_水平拉伸图像的系数_计算(self, output_path: Path):
         array = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
         alpha = array[..., 3]
@@ -107,6 +108,7 @@ class Processor(BaseProcessor):
 
         np.save(output_path.with_suffix('.npy'), coefficients)
 
+    @recreate
     def f10_水平拉伸图像的系数_显示(self, output_path: Path):
         coefficients = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         fig, ax = plt.subplots(figsize=(10, 5))
@@ -119,6 +121,7 @@ class Processor(BaseProcessor):
     enable_multithread = False
     is_debug = True
 
+    @recreate
     def f11_水平拉伸(self, output_path: Path):
         coefficient = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         image = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
@@ -140,7 +143,11 @@ class Processor(BaseProcessor):
         x_relative_new = x_relative * coefficient[:, np.newaxis]
         x_new = x_relative_new + a.shape[1] / 2
 
-        stretched_image = cv2.remap(image, x_new, y_original, interpolation=cv2.INTER_LINEAR)
+        x_map = x_new
+        y_map = y_original
+
+        stretched_image = cv2.remap(image, x_map.astype(np.float32), y_map.astype(np.float32),
+                                    interpolation=cv2.INTER_LINEAR)
 
         Image.fromarray(stretched_image).save(output_path)
 

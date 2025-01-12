@@ -27,7 +27,9 @@ class BaseProcessor:
             for func in self.step_functions:
                 output_path: Path = self.get_file_path(func, stem)
                 if output_path.exists():
-                    continue
+                    recreate_require = getattr(func, 'recreate_required', False)
+                    if not recreate_require:
+                        continue
                 func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.__name__).groups()
                 func_index = int(func_index)
                 try:
@@ -96,3 +98,8 @@ class BaseProcessor:
 
 class ManuallyProcessRequiredException(Exception):
     pass
+
+
+def recreate(func: Callable):
+    func.recreate_required = True
+    return func
