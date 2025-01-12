@@ -23,6 +23,7 @@ class Processor(BaseProcessor):
             self.f5_提取最大的区域,
             self.f6_转换为凸多边形,
             self.f7_显示识别效果,
+            self.f8_仅保留遮罩里面的区域,
             self.f99_处理结果,
         ]
 
@@ -38,13 +39,11 @@ class Processor(BaseProcessor):
         raise ManuallyProcessRequiredException
 
     def f4_非透明部分的mask(self, output_path: Path):
-        """将非透明部分设置为白色，透明部分设置为黑色"""
         array = self.get_input_array(self.f3_删除非主体的像素, output_path)
         mask = (array[..., 3] > 0).astype(np.uint8) * 255
         Image.fromarray(mask, 'L').save(output_path)
 
     def f5_提取最大的区域(self, output_path: Path):
-        """识别最大区域并将其边界转换为凸多边形，最后保存为黑白图像"""
         array = self.get_input_array(self.f4_非透明部分的mask, output_path)
         contours = cv2.findContours(array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
         largest = max(contours, key=cv2.contourArea)
@@ -53,7 +52,6 @@ class Processor(BaseProcessor):
         Image.fromarray(convex, 'L').save(output_path)
 
     def f6_转换为凸多边形(self, output_path: Path):
-        """平滑最大区域的边界，确保每200像素内边界为凸多边形"""
         array = self.get_input_array(self.f5_提取最大的区域, output_path)
         contour = only(cv2.findContours(array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0])
         convex = np.zeros_like(array)
@@ -69,13 +67,22 @@ class Processor(BaseProcessor):
         Image.fromarray(convex, 'L').save(output_path)
 
     def f7_显示识别效果(self, output_path: Path):
-        """将f6识别出来的结果应用到f2上面，以f2为基础，将f6里面为白色的区域进行遮罩显示，使得其红色通道拉满。"""
-        f2_array, f6_array = (
-            self.get_input_array(func, output_path).copy()
-            for func in [self.f2_上下扩展, self.f6_转换为凸多边形]
-        )
+        f2_array = self.get_input_array(self.f2_上下扩展, output_path)
+        f6_array = self.get_input_array(self.f6_转换为凸多边形, output_path)
         f2_array[..., 0] = np.where(f6_array == 255, 255, f2_array[..., 0])
         Image.fromarray(f2_array).save(output_path)
+
+    def f8_仅保留遮罩里面的区域(self, output_path: Path):
+        f2_array = self.get_input_array(self.f2_上下扩展, output_path).copy()
+        mask = self.get_input_array(self.f6_转换为凸多边形, output_path)
+        f2_array = np.dstack([f2_array, np.ones(f2_array.shape[:2], dtype=np.uint8) * 255]) \
+            if f2_array.shape[2] == 3 else f2_array
+        f2_array[..., 3] = np.where(mask == 255, f2_array[..., 3], 0)
+        coords = np.column_stack(np.where(f2_array[..., 3] > 0))
+        y_min, x_min = coords.min(axis=0)
+        y_max, x_max = coords.max(axis=0) + 1
+        cropped = f2_array[y_min:y_max, x_min:x_max]
+        Image.fromarray(cropped).save(output_path)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
