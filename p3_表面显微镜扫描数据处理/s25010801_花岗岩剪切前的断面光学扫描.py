@@ -9,7 +9,7 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 
 
 class Processor(BaseProcessor):
-    v6_转换为凸多边形的检测长度_像素 = 200
+    v6_转换为凸多边形的检测长度_像素 = 100
 
     def __init__(self):
         self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
