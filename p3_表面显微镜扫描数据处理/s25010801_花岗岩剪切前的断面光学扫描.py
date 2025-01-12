@@ -116,8 +116,7 @@ class Processor(BaseProcessor):
         plt.close(fig)
 
     def f11_变形(self, output_path: Path):
-        image = self.get_input_image(self.f8_仅保留遮罩里面的区域, output_path)
-        image.save(output_path)
+        self.get_input_image(self.f8_仅保留遮罩里面的区域, output_path).save(output_path)
         raise ManuallyProcessRequiredException('使用PS进行变形处理')
 
     def f99_处理结果(self, output_path: Path):
