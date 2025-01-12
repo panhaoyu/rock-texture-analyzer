@@ -150,7 +150,6 @@ class Processor(BaseProcessor):
 
         Image.fromarray(stretched_image).save(output_path)
 
-    @recreate
     def f12_垂直拉伸图像的系数_计算(self, output_path: Path):
         """计算图像垂直拉伸的系数并保存"""
         array = self.get_input_array(self.f11_水平拉伸, output_path)
@@ -170,7 +169,6 @@ class Processor(BaseProcessor):
 
         np.save(output_path.with_suffix('.npy'), coefficients)
 
-    @recreate
     def f13_垂直拉伸图像的系数_显示(self, output_path: Path):
         """显示垂直拉伸系数的图像"""
         coefficients = self.get_input_array(self.f12_垂直拉伸图像的系数_计算, output_path)
@@ -181,7 +179,6 @@ class Processor(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
-    @recreate
     def f14_垂直拉伸(self, output_path: Path):
         """应用垂直拉伸系数进行图像拉伸"""
         coefficient = self.get_input_array(self.f12_垂直拉伸图像的系数_计算, output_path)
