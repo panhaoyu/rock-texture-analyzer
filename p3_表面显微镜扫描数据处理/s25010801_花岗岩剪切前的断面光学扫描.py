@@ -24,6 +24,7 @@ class Processor(BaseProcessor):
             self.f6_转换为凸多边形,
             self.f7_显示识别效果,
             self.f8_仅保留遮罩里面的区域,
+            self.f9_缩小遮罩,
             self.f99_处理结果,
         ]
 
@@ -73,7 +74,7 @@ class Processor(BaseProcessor):
         Image.fromarray(f2_array).save(output_path)
 
     def f8_仅保留遮罩里面的区域(self, output_path: Path):
-        f2_array = self.get_input_array(self.f2_上下扩展, output_path).copy()
+        f2_array = self.get_input_array(self.f2_上下扩展, output_path)
         mask = self.get_input_array(self.f6_转换为凸多边形, output_path)
         f2_array = np.dstack([f2_array, np.ones(f2_array.shape[:2], dtype=np.uint8) * 255]) \
             if f2_array.shape[2] == 3 else f2_array
@@ -83,6 +84,13 @@ class Processor(BaseProcessor):
         y_max, x_max = coords.max(axis=0) + 1
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
+
+    def f9_缩小遮罩(self, output_path: Path):
+        mask = self.get_input_array(self.f6_转换为凸多边形, output_path)
+        mask = cv2.erode(mask, cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10)))
+        f2_array = self.get_input_array(self.f2_上下扩展, output_path)
+        f2_array = np.dstack((f2_array, mask))
+        Image.fromarray(f2_array).save(output_path)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
