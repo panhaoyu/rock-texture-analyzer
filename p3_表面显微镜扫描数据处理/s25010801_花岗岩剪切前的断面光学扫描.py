@@ -89,7 +89,6 @@ class Processor(BaseProcessor):
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
 
-    @recreate
     def f9_水平拉伸图像的系数_计算(self, output_path: Path):
         array = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
         alpha = array[..., 3]
@@ -108,7 +107,6 @@ class Processor(BaseProcessor):
 
         np.save(output_path.with_suffix('.npy'), coefficients)
 
-    @recreate
     def f10_水平拉伸图像的系数_显示(self, output_path: Path):
         coefficients = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         fig, ax = plt.subplots(figsize=(10, 5))
@@ -118,10 +116,6 @@ class Processor(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
-    enable_multithread = False
-    is_debug = True
-
-    @recreate
     def f11_水平拉伸(self, output_path: Path):
         coefficient = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         image = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
@@ -139,9 +133,10 @@ class Processor(BaseProcessor):
         x_center[-border:] = x_center[-border]
 
         # 以每行的中心为标准进行放缩
-        x_relative = x_original - x_center[:, np.newaxis]
+        target_center = a.shape[1] / 2
+        x_relative = x_original - target_center
         x_relative_new = x_relative * coefficient[:, np.newaxis]
-        x_new = x_relative_new + a.shape[1] / 2
+        x_new = x_relative_new + x_center[:, np.newaxis]
 
         x_map = x_new
         y_map = y_original
@@ -150,6 +145,9 @@ class Processor(BaseProcessor):
                                     interpolation=cv2.INTER_LINEAR)
 
         Image.fromarray(stretched_image).save(output_path)
+
+    enable_multithread = False
+    is_debug = True
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
