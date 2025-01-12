@@ -29,6 +29,7 @@ class Processor(BaseProcessor):
             self.f8_仅保留遮罩里面的区域,
             self.f9_水平拉伸图像的系数_计算,
             self.f10_水平拉伸图像的系数_显示,
+            self.f11_应用水平拉伸,
             self.f99_处理结果,
         ]
 
@@ -114,6 +115,20 @@ class Processor(BaseProcessor):
         ax.set_ylabel('coefficient')
         fig.savefig(output_path)
         plt.close(fig)
+
+    def f11_应用水平拉伸(self, output_path: Path):
+        coefficients = np.load(self.get_input_path(self.f9_水平拉伸图像的系数_计算, output_path).with_suffix('.npy'))
+        image = Image.open(self.get_input_path(self.f8_仅保留遮罩里面的区域, output_path)).convert('RGBA')
+        width, height = image.size
+        max_new_width = int(width * coefficients.max())
+        new_image = Image.new('RGBA', (max_new_width, height), (0, 0, 0, 0))
+        for y, coefficient in enumerate(coefficients):
+            row = image.crop((0, y, width, y + 1))
+            new_width = max(int(width * coefficient), 1)
+            stretched_row = row.resize((new_width, 1), Image.Resampling.LANCZOS)
+            x_offset = (max_new_width - new_width) // 2
+            new_image.paste(stretched_row, (x_offset, y))
+        new_image.save(output_path)
 
     def f99_处理结果(self, output_path: Path):
         raise ManuallyProcessRequiredException
