@@ -129,9 +129,9 @@ class Processor(BaseProcessor):
         x, y = np.meshgrid(np.arange(a.shape[1]), np.arange(a.shape[0]))
 
         # 取透明度通道里面的第一个非空的值与最后一个非空的值作为边界，并计算每行的中心位置
-        x_min = [next((idx for idx, val in enumerate(row) if val > 0), 0) for row in a]
-        x_max = [len(row) - 1 - next((idx for idx, val in enumerate(row[::-1]) if val > 0), 0) for row in a]
-        x_center = (np.array(x_min) + np.array(x_max)) / 2
+        x_min = np.array([next((idx for idx, val in enumerate(row) if val > 0), 0) for row in a])
+        x_max = np.array([len(row) - 1 - next((idx for idx, val in enumerate(row[::-1]) if val > 0), 0) for row in a])
+        x_center = (x_min + x_max) / 2
         x_center[:border] = x_center[border]
         x_center[-border:] = x_center[-border]
 
