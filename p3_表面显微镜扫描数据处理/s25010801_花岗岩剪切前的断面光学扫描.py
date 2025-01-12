@@ -134,11 +134,11 @@ class Processor(BaseProcessor):
         x_center = (np.array(x_min) + np.array(x_max)) / 2
         x_center[:border] = x_center[border]
         x_center[-border:] = x_center[-border]
-        x_center = x_center
 
         # 以每行的中心为标准进行放缩
-        delta_x = x - x_center[:, np.newaxis]
-        x_new = delta_x * coefficient[:, np.newaxis] + a.shape[1] / 2
+        x_relative = x - x_center[:, np.newaxis]
+        x_relative_new = x_relative * coefficient[:, np.newaxis]
+        x_new = x_relative_new + a.shape[1] / 2
 
         # 创建映射坐标
         map_x = x_new.astype(np.float32)
