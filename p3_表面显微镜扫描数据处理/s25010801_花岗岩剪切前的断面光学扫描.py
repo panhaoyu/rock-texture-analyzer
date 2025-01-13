@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from more_itertools import only
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, recreate
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_method
 
 
 class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
@@ -17,47 +17,27 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
     v15_最终图像宽度_像素 = 4000
     v15_最终图像高度_像素 = 4000
 
-    def __init__(self):
-        self.source_file_function = self.f1_原始数据
-        self.final_file_function = self.f99_处理结果
-
-        self.step_functions = [
-            self.f1_原始数据,
-            self.f2_上下扩展,
-            self.f3_删除非主体的像素,
-            self.f4_非透明部分的mask,
-            self.f5_提取最大的区域,
-            self.f6_转换为凸多边形,
-            self.f7_显示识别效果,
-            self.f8_仅保留遮罩里面的区域,
-            self.f9_水平拉伸图像的系数_计算,
-            self.f10_水平拉伸图像的系数_显示,
-            self.f11_水平拉伸,
-            self.f12_垂直拉伸图像的系数_计算,
-            self.f13_垂直拉伸图像的系数_显示,
-            self.f14_垂直拉伸,
-            self.f15_调整尺寸和裁剪,
-            self.f16_补全边角,
-            self.f17_根据文件名处理,
-            self.f99_处理结果,
-        ]
-
+    @mark_as_method
     def f1_原始数据(self, output_path: Path):
         raise ManuallyProcessRequiredException
 
+    @mark_as_method
     def f2_上下扩展(self, output_path: Path):
         array = self.get_input_array(self.f1_原始数据, output_path)
         extended_array = np.pad(array, ((1000, 1000), (0, 0), (0, 0)), mode='edge')
         Image.fromarray(extended_array).save(output_path)
 
+    @mark_as_method
     def f3_删除非主体的像素(self, output_path: Path):
         raise ManuallyProcessRequiredException
 
+    @mark_as_method
     def f4_非透明部分的mask(self, output_path: Path):
         array = self.get_input_array(self.f3_删除非主体的像素, output_path)
         mask = (array[..., 3] > 0).astype(np.uint8) * 255
         Image.fromarray(mask, 'L').save(output_path)
 
+    @mark_as_method
     def f5_提取最大的区域(self, output_path: Path):
         array = self.get_input_array(self.f4_非透明部分的mask, output_path)
         contours = cv2.findContours(array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -66,6 +46,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         cv2.drawContours(convex, [largest], -1, (255,), thickness=cv2.FILLED)
         Image.fromarray(convex, 'L').save(output_path)
 
+    @mark_as_method
     def f6_转换为凸多边形(self, output_path: Path):
         array = self.get_input_array(self.f5_提取最大的区域, output_path)
         contour = only(cv2.findContours(array, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0])
@@ -81,12 +62,14 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
             cv2.drawContours(convex, [hull], -1, (255,), thickness=cv2.FILLED)
         Image.fromarray(convex, 'L').save(output_path)
 
+    @mark_as_method
     def f7_显示识别效果(self, output_path: Path):
         f2_array = self.get_input_array(self.f2_上下扩展, output_path)
         f6_array = self.get_input_array(self.f6_转换为凸多边形, output_path)
         f2_array[..., 0] = np.where(f6_array == 255, 255, f2_array[..., 0])
         Image.fromarray(f2_array).save(output_path)
 
+    @mark_as_method
     def f8_仅保留遮罩里面的区域(self, output_path: Path):
         f2_array = self.get_input_array(self.f2_上下扩展, output_path)
         mask = self.get_input_array(self.f6_转换为凸多边形, output_path)
@@ -99,6 +82,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         cropped = f2_array[y_min:y_max, x_min:x_max]
         Image.fromarray(cropped).save(output_path)
 
+    @mark_as_method
     def f9_水平拉伸图像的系数_计算(self, output_path: Path):
         array = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
         alpha = array[..., 3]
@@ -117,6 +101,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
 
         np.save(output_path.with_suffix('.npy'), coefficients)
 
+    @mark_as_method
     def f10_水平拉伸图像的系数_显示(self, output_path: Path):
         coefficients = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         fig, ax = plt.subplots(figsize=(10, 5))
@@ -126,6 +111,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f11_水平拉伸(self, output_path: Path):
         coefficient = self.get_input_array(self.f9_水平拉伸图像的系数_计算, output_path)
         image = self.get_input_array(self.f8_仅保留遮罩里面的区域, output_path)
@@ -156,6 +142,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
 
         Image.fromarray(stretched_image).save(output_path)
 
+    @mark_as_method
     def f12_垂直拉伸图像的系数_计算(self, output_path: Path):
         """计算图像垂直拉伸的系数并保存"""
         array = self.get_input_array(self.f11_水平拉伸, output_path)
@@ -175,6 +162,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
 
         np.save(output_path.with_suffix('.npy'), coefficients)
 
+    @mark_as_method
     def f13_垂直拉伸图像的系数_显示(self, output_path: Path):
         """显示垂直拉伸系数的图像"""
         coefficients = self.get_input_array(self.f12_垂直拉伸图像的系数_计算, output_path)
@@ -185,6 +173,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f14_垂直拉伸(self, output_path: Path):
         """应用垂直拉伸系数进行图像拉伸"""
         coefficient = self.get_input_array(self.f12_垂直拉伸图像的系数_计算, output_path)
@@ -216,6 +205,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
 
         Image.fromarray(stretched_image).save(output_path)
 
+    @mark_as_method
     def f15_调整尺寸和裁剪(self, output_path: Path):
         image = self.get_input_array(self.f14_垂直拉伸, output_path)
         border = self.v15_图像黑边
@@ -224,12 +214,14 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         cropped = resized[border:-border, border:-border]
         Image.fromarray(cropped).save(output_path)
 
+    @mark_as_method
     def f16_补全边角(self, output_path: Path):
         image = self.get_input_image(self.f15_调整尺寸和裁剪, output_path)
         image = image.convert('RGB')
         image.save(output_path)
         raise ManuallyProcessRequiredException('使用PS补全边角')
 
+    @mark_as_method
     def f17_根据文件名处理(self, output_path: Path):
         image = self.get_input_array(self.f16_补全边角, output_path)
         match output_path.stem[-1]:
@@ -241,7 +233,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
                 raise ValueError("文件名stem必须以'U'或'D'结尾")
         Image.fromarray(image).save(output_path)
 
-    @recreate
+    @mark_as_method
     def f99_处理结果(self, output_path: Path):
         self.get_input_image(self.f17_根据文件名处理, output_path).save(output_path)
 

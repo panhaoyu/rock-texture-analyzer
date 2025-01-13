@@ -6,7 +6,7 @@ import numpy as np
 import requests
 from PIL import Image, ImageFilter
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_method
 from p3_表面显微镜扫描数据处理.utils.s1_图像补全_阿里云 import erase_image_with_oss
 
 
@@ -34,43 +34,17 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
     v19_识别黑线时的阈值扩大系数: float = 1.5
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
-    def __init__(self) -> None:
-        self.source_file_function = self.f1_原始数据
-        self.final_file_function = self.f24_人工补全黑边
-        self.step_functions = [
-            self.f1_原始数据,
-            self.f2_将jpg格式转换为png格式,
-            self.f3_裁剪左右两侧,
-            self.f4_生成直方图,
-            self.f5_二值化,
-            self.f6_降噪二值化,
-            self.f7_绘制x方向白色点数量直方图,
-            self.f8_边界裁剪图像,
-            self.f9_进一步边界裁剪图像,
-            self.f10_生成纵向有效点分布直方图,
-            self.f11_纵向裁剪图像,
-            self.f12_进一步纵向裁剪图像,
-            self.f13_亮度直方图,
-            self.f14_调整亮度,
-            self.f16_绘制RGB的KDE,
-            self.f17_缩放图像,
-            self.f18_需要补全的区域,
-            self.f19_识别黑色水平线区域,
-            self.f20_膨胀白色部分,
-            self.f21_翻转黑白区域,
-            self.f22_补全黑线,
-            self.f23_合并补全图像,
-            self.f24_人工补全黑边,
-        ]
-
+    @mark_as_method
     def f1_原始数据(self, output_path: Path) -> None:
         raise ManuallyProcessRequiredException
 
+    @mark_as_method
     def f2_将jpg格式转换为png格式(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f1_原始数据, output_path.stem)
         with Image.open(input_path) as image:
             image.save(output_path)
 
+    @mark_as_method
     def f3_裁剪左右两侧(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f2_将jpg格式转换为png格式, output_path.stem)
         with Image.open(input_path) as image:
@@ -84,6 +58,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             cropped_image: Image.Image = image.crop((left_crop, 0, width - right_crop, height))
             cropped_image.save(output_path)
 
+    @mark_as_method
     def f4_生成直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f3_裁剪左右两侧, output_path.stem)
         with Image.open(input_path) as image:
@@ -108,6 +83,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f5_二值化(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f3_裁剪左右两侧, output_path.stem)
         with Image.open(input_path) as image:
@@ -127,6 +103,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             binary_image: Image.Image = Image.fromarray(binary_pixels.reshape(image.size[1], image.size[0]), mode='L')
             binary_image.save(output_path)
 
+    @mark_as_method
     def f6_降噪二值化(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f5_二值化, output_path.stem)
         with Image.open(input_path) as image:
@@ -137,6 +114,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             denoised_image: Image.Image = Image.fromarray(binary_pixels.reshape(image.height, image.width), mode='L')
             denoised_image.save(output_path)
 
+    @mark_as_method
     def f7_绘制x方向白色点数量直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f5_二值化, output_path.stem)
         with Image.open(input_path) as image:
@@ -152,6 +130,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f8_边界裁剪图像(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f5_二值化, output_path.stem)
         with Image.open(input_path) as image:
@@ -175,6 +154,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             cropped_image: Image.Image = image.crop((left_boundary, 0, right_boundary, height))
             cropped_image.save(output_path)
 
+    @mark_as_method
     def f9_进一步边界裁剪图像(self, output_path: Path) -> None:
         binary_input_path: Path = self.get_file_path(self.f5_二值化, output_path.stem)
         color_input_path: Path = self.get_file_path(self.f3_裁剪左右两侧, output_path.stem)
@@ -205,6 +185,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             cropped_image: Image.Image = color_image.crop((left_boundary, 0, right_boundary, height))
             cropped_image.save(output_path)
 
+    @mark_as_method
     def f10_生成纵向有效点分布直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f8_边界裁剪图像, output_path.stem)
         with Image.open(input_path) as image:
@@ -220,6 +201,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f11_纵向裁剪图像(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f8_边界裁剪图像, output_path.stem)
         with Image.open(input_path) as image:
@@ -243,6 +225,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             cropped_image: Image.Image = image.crop((0, top_boundary, width, bottom_boundary))
             cropped_image.save(output_path)
 
+    @mark_as_method
     def f12_进一步纵向裁剪图像(self, output_path: Path) -> None:
         binary_input_path: Path = self.get_file_path(self.f8_边界裁剪图像, output_path.stem)
         color_input_path: Path = self.get_file_path(self.f9_进一步边界裁剪图像, output_path.stem)
@@ -273,6 +256,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             cropped_image: Image.Image = color_image.crop((0, top_boundary, width, bottom_boundary))
             cropped_image.save(output_path)
 
+    @mark_as_method
     def f13_亮度直方图(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f12_进一步纵向裁剪图像, output_path.stem)
         with Image.open(input_path) as image:
@@ -288,6 +272,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f14_调整亮度(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f12_进一步纵向裁剪图像, output_path.stem)
         with Image.open(input_path) as image:
@@ -301,6 +286,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             rgb: Image.Image = lab.convert('RGB')
             rgb.save(output_path)
 
+    @mark_as_method
     def f16_绘制RGB的KDE(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f14_调整亮度, output_path.stem)
         with Image.open(input_path) as image:
@@ -322,18 +308,21 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         fig.savefig(output_path)
         plt.close(fig)
 
+    @mark_as_method
     def f17_缩放图像(self, output_path: Path) -> None:
         input_path: Path = self.get_file_path(self.f14_调整亮度, output_path.stem)
         with Image.open(input_path) as image:
             resized_image: Image.Image = image.resize(self.p17_缩放图像大小)
             resized_image.save(output_path)
 
+    @mark_as_method
     def f18_需要补全的区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.f17_缩放图像, output_path.stem)
         with Image.open(input_path) as image:
             image = np.asarray(image)[self.p18_补全时的上下裁剪范围_像素:-self.p18_补全时的上下裁剪范围_像素, :, :]
             Image.fromarray(image).save(output_path)
 
+    @mark_as_method
     def f19_识别黑色水平线区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.f18_需要补全的区域, output_path.stem)
         with Image.open(input_path) as image:
@@ -364,6 +353,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         mask_image = Image.fromarray(mask, mode='L')
         mask_image.save(output_path)
 
+    @mark_as_method
     def f20_膨胀白色部分(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.f19_识别黑色水平线区域, output_path.stem)
         size = self.v20_识别黑线时的掩膜膨胀半径
@@ -371,6 +361,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             dilated_image = image.filter(ImageFilter.MaxFilter(size * 2 - 1))
             dilated_image.save(output_path)
 
+    @mark_as_method
     def f21_翻转黑白区域(self, output_path: Path) -> None:
         input_path = self.get_file_path(self.f20_膨胀白色部分, output_path.stem)
         with Image.open(input_path) as image:
@@ -378,6 +369,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
             inverted = np.where(binary == 255, 0, 255).astype(np.uint8)
             Image.fromarray(inverted, mode='L').save(output_path)
 
+    @mark_as_method
     def f22_补全黑线(self, output_path: Path) -> None:
         base_dir = self.base_dir
         local_image_path = self.get_file_path(self.f18_需要补全的区域, output_path.stem)
@@ -391,6 +383,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         foreground_image = Image.open(BytesIO(response.content))
         foreground_image.save(output_path)
 
+    @mark_as_method
     def f23_合并补全图像(self, output_path: Path) -> None:
         """将补全后的图像合并回原图像，替换到s14的调整亮度结果中。"""
         original_image = self.get_file_path(self.f17_缩放图像, output_path.stem)
@@ -401,6 +394,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
         original_image[self.p18_补全时的上下裁剪范围_像素:-self.p18_补全时的上下裁剪范围_像素, :, :] = patched_image
         Image.fromarray(original_image).save(output_path)
 
+    @mark_as_method
     def f24_人工补全黑边(self, output_path: Path) -> None:
         self.get_input_image(self.f23_合并补全图像, output_path).save(output_path)
         raise ManuallyProcessRequiredException
