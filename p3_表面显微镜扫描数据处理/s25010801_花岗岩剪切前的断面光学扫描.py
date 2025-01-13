@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from more_itertools import only
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, recreate
 
 
 class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
@@ -39,6 +39,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
             self.f14_垂直拉伸,
             self.f15_调整尺寸和裁剪,
             self.f16_补全边角,
+            self.f17_根据文件名处理,
             self.f99_处理结果,
         ]
 
@@ -230,8 +231,20 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         image.save(output_path)
         raise ManuallyProcessRequiredException('使用PS补全边角')
 
+    def f17_根据文件名处理(self, output_path: Path):
+        image = self.get_input_array(self.f16_补全边角, output_path)
+        match output_path.stem[-1]:
+            case 'U':
+                image = image[:, ::-1]
+            case 'D':
+                image = image.copy()
+            case _:
+                raise ValueError("文件名stem必须以'U'或'D'结尾")
+        Image.fromarray(image).save(output_path)
+
+    @recreate
     def f99_处理结果(self, output_path: Path):
-        self.get_input_image(self.f16_补全边角, output_path).save(output_path)
+        self.get_input_image(self.f17_根据文件名处理, output_path).save(output_path)
 
 
 if __name__ == '__main__':
