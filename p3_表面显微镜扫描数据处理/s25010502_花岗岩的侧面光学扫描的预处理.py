@@ -10,7 +10,7 @@ from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyPro
 from p3_表面显微镜扫描数据处理.utils.s1_图像补全_阿里云 import erase_image_with_oss
 
 
-class Processor(BaseProcessor):
+class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
     p3_左侧裁剪区域_像素: int = 1400
     p3_右侧裁剪区域_像素: int = 1000
     p4_左右边界裁剪宽度_像素: int = 100
@@ -403,8 +403,9 @@ class Processor(BaseProcessor):
         Image.fromarray(original_image).save(output_path)
 
     def f24_人工补全黑边(self, output_path: Path) -> None:
+        self.get_input_image(self.f23_合并补全图像, output_path).save(output_path)
         raise ManuallyProcessRequiredException
 
 
 if __name__ == '__main__':
-    Processor.main()
+    s25010502_花岗岩的侧面光学扫描的预处理.main()
