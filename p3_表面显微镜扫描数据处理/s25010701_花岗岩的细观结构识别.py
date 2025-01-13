@@ -3,8 +3,18 @@ from pathlib import Path
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException
 
+
+class s25010701_花岗岩的细观结构识别(BaseProcessor):
+    @mark_as_method
+    def f1_原始图像(self, output_path: Path):
+        raise ManuallyProcessRequiredException
+
+    @mark_as_method
+    def f2_处理效果(self, output_path: Path):
+        input_path = output_path.parent.joinpath(f'output/{output_path.stem}-3-fixed.png')
+        output_path.hardlink_to(input_path)
 
 class GraniteIdentifier(RockGrainIdentifier):
     fix_noize_pixel_count = 1000
@@ -18,18 +28,15 @@ class GraniteIdentifier(RockGrainIdentifier):
 
 
 def main():
-    base_dir: Path = Path(r'F:\data\laser-scanner\others\25010701-花岗岩的细观结构识别')
-    identifier = GraniteIdentifier(sorted(base_dir.glob('1-*/*.png')))
+    obj = s25010701_花岗岩的细观结构识别()
+    identifier = GraniteIdentifier(sorted(obj.base_dir.glob('1-*/*.png')))
     # identifier.generate_predict_results()
     # identifier.kmeans_evaluate()
     # identifier.fix_noizy_pixels()
-    identifier.predict_all(base_dir / '2-细观结构识别效果')
+    # with identifier.skip_saving_numpy(), identifier.skip_saving_thumbnail():
+    #     identifier.predict_all(obj.base_dir / '2-处理效果/output')
 
-
-class s25010701_花岗岩的细观结构识别(BaseProcessor):
-    def __init__(self):
-        pass
-
+    s25010701_花岗岩的细观结构识别.main()
 
 if __name__ == '__main__':
     main()

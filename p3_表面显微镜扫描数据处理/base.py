@@ -44,9 +44,6 @@ class ProcessMethod(typing.Callable):
 
 
 class BaseProcessor:
-    base_dir: Path
-    step_functions: list[ProcessMethod]
-
     _print_lock: threading.Lock = threading.Lock()
 
     def print_safe(self, message: str) -> None:
@@ -141,8 +138,9 @@ class BaseProcessor:
         for func in functions:
             obj.get_file_path(func, 'dummy').parent.mkdir(parents=True, exist_ok=True)
 
-        source_dir: Path = obj.get_file_path(source_function, 'dummy').parent
-        stems = [file.stem for file in source_dir.glob('*.jpg')]
+        source_file = obj.get_file_path(source_function, 'dummy')
+        source_dir: Path = source_file.parent
+        stems = [file.stem for file in source_dir.glob(f'*{source_file.suffix}')]
         if cls.is_debug:
             stems = stems[:2]
         if cls.enable_multithread:
