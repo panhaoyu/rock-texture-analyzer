@@ -35,7 +35,6 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
     v20_识别黑线时的掩膜膨胀半径: int = 5
 
     def __init__(self) -> None:
-        self.base_dir = Path(r'F:\data\laser-scanner\砾岩临时处理文件夹')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f24_人工补全黑边
         self.step_functions = [

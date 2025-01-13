@@ -3,6 +3,8 @@ from pathlib import Path
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
+from p3_表面显微镜扫描数据处理.base import BaseProcessor
+
 
 class GraniteIdentifier(RockGrainIdentifier):
     fix_noize_pixel_count = 1000
@@ -22,6 +24,11 @@ def main():
     # identifier.kmeans_evaluate()
     # identifier.fix_noizy_pixels()
     identifier.predict_all(base_dir / '2-细观结构识别效果')
+
+
+class s25010701_花岗岩的细观结构识别(BaseProcessor):
+    def __init__(self):
+        pass
 
 
 if __name__ == '__main__':

@@ -3,11 +3,14 @@ import threading
 import traceback
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
+from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
 import numpy as np
 from PIL import Image
+
+from p3_表面显微镜扫描数据处理.config import base_dir
 
 
 class BaseProcessor:
@@ -21,6 +24,18 @@ class BaseProcessor:
     def print_safe(self, message: str) -> None:
         with self._print_lock:
             print(message)
+
+    @cached_property
+    def base_dir(self) -> Path:
+        class_name = self.__class__.__name__
+        # s25010701_花岗岩的细观结构识别 类名
+        # 25010701-花岗岩的细观结构识别 文件夹名
+        match = re.fullmatch(r's(\d{8})_(.+)', class_name)
+        if not match:
+            raise ValueError(f"无效的类名: {class_name}")
+        code, name = match.groups()
+        dir_name = f"{code}-{name}"
+        return base_dir.joinpath(dir_name)
 
     def process_stem(self, stem: str) -> None:
         try:

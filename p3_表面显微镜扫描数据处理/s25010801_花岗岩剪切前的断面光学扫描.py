@@ -18,7 +18,6 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
     v15_最终图像高度_像素 = 4000
 
     def __init__(self):
-        self.base_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描')
         self.source_file_function = self.f1_原始数据
         self.final_file_function = self.f99_处理结果
 
