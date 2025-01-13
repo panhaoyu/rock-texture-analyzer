@@ -9,7 +9,7 @@ from more_itertools import only
 from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException
 
 
-class Processor(BaseProcessor):
+class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
     v6_转换为凸多边形的检测长度_像素 = 100
     v9_不参与拉伸系数计算的边界宽度_像素 = 100
     v12_不参与垂直拉伸系数计算的边界高度_像素 = 100
@@ -235,4 +235,4 @@ class Processor(BaseProcessor):
 
 
 if __name__ == '__main__':
-    Processor.main()
+    s25010801_花岗岩剪切前的断面光学扫描.main()
