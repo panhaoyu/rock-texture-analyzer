@@ -1,20 +1,13 @@
+from functools import cached_property
 from pathlib import Path
+from typing import Type
 
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException
+from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
+    mark_as_single_thread
 
-
-class s25010701_花岗岩的细观结构识别(BaseProcessor):
-    @mark_as_method
-    def f1_原始图像(self, output_path: Path):
-        raise ManuallyProcessRequiredException
-
-    @mark_as_method
-    def f2_处理效果(self, output_path: Path):
-        input_path = output_path.parent.joinpath(f'output/{output_path.stem}-3-fixed.png')
-        output_path.hardlink_to(input_path)
 
 class GraniteIdentifier(RockGrainIdentifier):
     fix_noize_pixel_count = 1000
@@ -27,16 +20,48 @@ class GraniteIdentifier(RockGrainIdentifier):
     ]
 
 
-def main():
-    obj = s25010701_花岗岩的细观结构识别()
-    identifier = GraniteIdentifier(sorted(obj.base_dir.glob('1-*/*.png')))
-    # identifier.generate_predict_results()
-    # identifier.kmeans_evaluate()
-    # identifier.fix_noizy_pixels()
-    # with identifier.skip_saving_numpy(), identifier.skip_saving_thumbnail():
-    #     identifier.predict_all(obj.base_dir / '2-处理效果/output')
+class s25010701_花岗岩的细观结构识别(BaseProcessor):
+    @mark_as_method
+    def f1_原始图像(self, output_path: Path):
+        raise ManuallyProcessRequiredException
 
-    s25010701_花岗岩的细观结构识别.main()
+    identifier_class: Type[GraniteIdentifier] = GraniteIdentifier
+
+    @cached_property
+    def identifier(self):
+        files = sorted(self.base_dir.glob('1-*/*.png'))
+        identifier = self.identifier_class(files)
+        return identifier
+
+    @mark_as_single_thread
+    def f2_聚类(self, output_path: Path):
+        output_path.touch()
+        if not list(output_path.parent.glob(f'*{output_path.suffix}')):
+            self.identifier.generate_predict_results()
+        raise ManuallyProcessRequiredException('需要人工完成聚类')
+
+    @mark_as_single_thread
+    def f3_评估(self, output_path: Path):
+        output_path.touch()
+        if not list(output_path.parent.glob(f'*{output_path.suffix}')):
+            self.identifier.kmeans_evaluate()
+        raise ManuallyProcessRequiredException('需要检查评估效果')
+
+    @mark_as_single_thread
+    def f4_噪声处理(self, output_path: Path):
+        output_path.touch()
+        if not list(output_path.parent.glob(f'*{output_path.suffix}')):
+            self.identifier.fix_noizy_pixels()
+        raise ManuallyProcessRequiredException('需要检查噪声处理效果')
+
+    @mark_as_single_thread
+    def f5_全部处理(self, output_path: Path):
+        if not list(output_path.parent.glob(f'*{output_path.suffix}')):
+            with self.identifier.skip_saving_numpy(), self.identifier.skip_saving_thumbnail():
+                self.identifier.predict_all(self.base_dir / '2-处理效果/output')
+        input_path = output_path.parent.joinpath(f'output/{output_path.stem}-3-fixed.png')
+        output_path.hardlink_to(input_path)
+
 
 if __name__ == '__main__':
-    main()
+    s25010701_花岗岩的细观结构识别.main()

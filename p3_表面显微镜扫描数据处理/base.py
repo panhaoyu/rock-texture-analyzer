@@ -20,6 +20,7 @@ class ProcessMethod(typing.Callable):
     is_recreate_required: bool = False
     is_source: bool = False
     is_final: bool = False
+    is_single_thread: bool = False
 
     def __init__(self, func: Callable[[Path], None]):
         self.func = func
@@ -45,6 +46,7 @@ class ProcessMethod(typing.Callable):
 
 class BaseProcessor:
     _print_lock: threading.Lock = threading.Lock()
+    _single_thread_lock: threading.Lock = threading.Lock()
 
     def print_safe(self, message: str) -> None:
         with self._print_lock:
@@ -76,27 +78,31 @@ class BaseProcessor:
         return base_dir.joinpath(dir_name)
 
     def process_stem(self, stem: str) -> None:
-        functions = [func for func in self.step_functions]
-        try:
-            for func in functions:
-                output_path: Path = self.get_file_path(func, stem)
-                if output_path.exists():
-                    recreate_require = func.is_recreate_required
-                    if not recreate_require:
-                        continue
-                func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.func_name).groups()
-                func_index = int(func_index)
-                try:
-                    func(self, output_path)
-                except ManuallyProcessRequiredException as exception:
-                    message = exception.args or ()
-                    message = ''.join(message)
-                    self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
-                    break
-                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
-        except Exception:
-            with self._print_lock:
-                traceback.print_exc()
+        for func in self.step_functions:
+            output_path: Path = self.get_file_path(func, stem)
+            if output_path.exists():
+                recreate_require = func.is_recreate_required
+                if not recreate_require:
+                    continue
+            func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.func_name).groups()
+            func_index = int(func_index)
+            if func.is_single_thread:
+                def inner_func(obj: BaseProcessor, output_path: Path) -> None:
+                    with obj._single_thread_lock:
+                        func(obj, output_path)
+
+                func = inner_func
+            try:
+                func(self, output_path)
+            except ManuallyProcessRequiredException as exception:
+                message = exception.args or ()
+                message = ''.join(message)
+                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
+                break
+            except Exception:
+                with self._print_lock:
+                    traceback.print_exc()
+            self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     def get_file_path(self, func: ProcessMethod, stem: str) -> Path:
         dir_path: Path = self.base_dir / func.func_name.replace('_', '-').lstrip('f')
@@ -179,4 +185,10 @@ def mark_as_method(func: Callable) -> ProcessMethod:
 def mark_as_final(func: Callable):
     func = ProcessMethod.of(func)
     func.is_final = True
+    return func
+
+
+def mark_as_single_thread(func: Callable):
+    func = ProcessMethod.of(func)
+    func.is_single_thread = True
     return func
