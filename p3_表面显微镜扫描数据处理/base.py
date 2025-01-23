@@ -86,12 +86,7 @@ class BaseProcessor:
                     continue
             func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.func_name).groups()
             func_index = int(func_index)
-            if func.is_single_thread:
-                def inner_func(obj: BaseProcessor, output_path: Path) -> None:
-                    with obj._single_thread_lock:
-                        func(obj, output_path)
-
-                func = inner_func
+            func.is_single_thread and self._single_thread_lock.acquire()
             try:
                 func(self, output_path)
             except ManuallyProcessRequiredException as exception:
@@ -102,6 +97,8 @@ class BaseProcessor:
             except Exception:
                 with self._print_lock:
                     traceback.print_exc()
+            finally:
+                func.is_single_thread and self._single_thread_lock.release_lock()
             self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     def get_file_path(self, func: ProcessMethod, stem: str) -> Path:

@@ -30,6 +30,7 @@ class s25010701_花岗岩的细观结构识别(BaseProcessor):
     @cached_property
     def identifier(self):
         files = sorted(self.base_dir.glob('1-*/*.png'))
+        raise
         identifier = self.identifier_class(files)
         return identifier
 
