@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import open3d
 from open3d.cpu.pybind.utility import Vector3dVector
+from sklearn.cluster import KMeans
 
 from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
@@ -123,6 +124,61 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud_path = self.get_file_path(self.f6_xOy平面对正, output_path.stem)
         draw_point_cloud(cloud_path, output_path)
 
+    @mark_as_method
+    def f8_调整地面在下(self, output_path: Path) -> None:
+        output_path = output_path.with_suffix('.ply')
+        cloud = read_point_cloud(self.get_input_path(self.f6_xOy平面对正, output_path))
+        points = np.asarray(cloud.points)
+        x = points[:, 0].reshape(-1, 1)
+        y = points[:, 1].reshape(-1, 1)
+
+        kmeans_x: KMeans = KMeans(n_clusters=2, random_state=0)
+        kmeans_x.fit(x)
+        centers_x = sorted(kmeans_x.cluster_centers_.flatten())
+        xmin, xmax = centers_x[0], centers_x[1]
+
+        kmeans_y: KMeans = KMeans(n_clusters=2, random_state=0)
+        kmeans_y.fit(y)
+        centers_y = sorted(kmeans_y.cluster_centers_.flatten())
+        ymin, ymax = centers_y[0], centers_y[1]
+
+        extend_x = 0.1 * (xmax - xmin)
+        extend_y = 0.1 * (ymax - ymin)
+
+        xmin_ext = xmin - extend_x
+        xmax_ext = xmax + extend_x
+        ymin_ext = ymin - extend_y
+        ymax_ext = ymax + extend_y
+
+        boundary_mask = (
+                (points[:, 0] >= xmin_ext) & (points[:, 0] <= xmax_ext) &
+                (points[:, 1] >= ymin_ext) & (points[:, 1] <= ymax_ext)
+        )
+
+        boundary_points = points[boundary_mask]
+        external_mask = (
+                ((points[:, 0] > xmax_ext) | (points[:, 1] > ymax_ext)) &
+                (points[:, 0] >= xmin_ext)
+        )
+        external_points = points[external_mask]
+
+        if len(boundary_points) == 0 or len(external_points) == 0:
+            return
+
+        median_z_inside = np.median(boundary_points[:, 2])
+        median_z_outside = np.median(external_points[:, 2])
+
+        if median_z_outside > median_z_inside:
+            flipped_points = points.copy()
+            flipped_points[:, 2] = -flipped_points[:, 2]
+            cloud.points = open3d.utility.Vector3dVector(flipped_points)
+        write_point_cloud(output_path, cloud)
+
+    @mark_as_method
+    @mark_as_single_thread
+    def f9_绘制点云(self, output_path: Path) -> None:
+        cloud_path = self.get_file_path(self.f8_调整地面在下, output_path.stem)
+        draw_point_cloud(cloud_path, output_path)
 
 if __name__ == '__main__':
     s25022602_劈裂面形貌扫描_花岗岩_低曝光度.main()
