@@ -101,6 +101,7 @@ class BaseProcessor:
             except Exception:
                 with self._print_lock:
                     traceback.print_exc()
+                break
             finally:
                 func.is_single_thread and self._single_thread_lock.release_lock()
             self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')

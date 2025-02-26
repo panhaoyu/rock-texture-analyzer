@@ -9,7 +9,7 @@ from sklearn.cluster import KMeans
 
 from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
-from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
+from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered, ValueDetectionError
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
@@ -370,8 +370,14 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
 
-        left_center, right_center = get_two_main_value_filtered(point_x)
-        front_center, back_center = get_two_main_value_filtered(point_y)
+        try:
+            left_center, right_center = get_two_main_value_filtered(point_x)
+        except ValueDetectionError:
+            left_center, right_center = get_two_main_value_filtered(point_x, 0.03)
+        try:
+            front_center, back_center = get_two_main_value_filtered(point_y)
+        except ValueDetectionError:
+            front_center, back_center = get_two_main_value_filtered(point_y, 0.03)
 
         print(f'{left_center=} {right_center=}')
         print(f'{front_center=} {back_center=}')
