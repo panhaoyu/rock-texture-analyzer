@@ -98,7 +98,8 @@ class BaseProcessor:
                 message = ''.join(message)
                 self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
                 break
-            except Exception:
+            except Exception as e:
+                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 异常：{e}')
                 with self._print_lock:
                     traceback.print_exc()
                 break
