@@ -105,7 +105,9 @@ class BaseProcessor:
                 func.is_single_thread and self._single_thread_lock.release_lock()
             self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
-    def get_file_path(self, func: ProcessMethod, stem: str) -> Path:
+    def get_file_path(self, func: ProcessMethod, stem: str | Path) -> Path:
+        if isinstance(stem, Path):
+            stem = stem.stem
         dir_path: Path = self.base_dir / func.func_name.replace('_', '-').lstrip('f')
         extensions: set[str] = {p.suffix for p in dir_path.glob('*') if p.is_file()}
         suffix: str = next(iter(extensions), '.png')
