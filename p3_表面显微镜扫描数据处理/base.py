@@ -74,8 +74,12 @@ class BaseProcessor:
         if not match:
             raise ValueError(f"无效的类名: {class_name}")
         code, name = match.groups()
-        dir_name = f"{code}-{name}"
-        return base_dir.joinpath(dir_name)
+        result = base_dir.joinpath(f"{code}-{name}")
+        if not result.exists():
+            name = name.replace('_', '-')
+            result = base_dir.joinpath(f"{code}-{name}")
+        assert result.exists(), result
+        return result
 
     def process_stem(self, stem: str) -> None:
         for func in self.step_functions:
