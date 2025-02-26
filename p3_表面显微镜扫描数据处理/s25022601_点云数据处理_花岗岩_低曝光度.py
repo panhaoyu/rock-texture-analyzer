@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import open3d
 from open3d.cpu.pybind.utility import Vector3dVector
+from scipy.interpolate import griddata
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
@@ -443,6 +444,68 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f13_绘制点云(self, output_path: Path) -> None:
         cloud_path = self.get_file_path(self.f12_仅保留顶面, output_path.stem)
         draw_point_cloud(cloud_path, output_path)
+
+    @mark_as_method
+    def f14_表面二维重建(self, output_path: Path) -> None:
+        """
+        使用指定的插值方法将点云数据插值到二维网格上。
+
+        Args:
+            method (str): 插值方法，例如 'nearest', 'linear', 'cubic'。
+
+        Returns:
+            np.ndarray: 插值后的 [z, r, g, b] 四层矩阵。
+        """
+        output_path = output_path.with_suffix('.npy')
+        cloud = read_point_cloud(self.get_input_path(self.f12_仅保留顶面, output_path))
+
+        resolution: float = 0.1
+        method = 'cubic'
+
+        points = np.asarray(cloud.points)
+
+        # 提取 x, y, z 数据
+        x, y, z = points.T
+
+        x_min = np.min(x) + 0.2
+        x_max = np.max(x) - 0.2
+        y_min = np.min(y) + 0.2
+        y_max = np.max(y) - 0.2
+
+        # 创建网格
+        x_edge = np.arange(x_min, x_max, resolution)
+        y_edge = np.arange(y_min, y_max, resolution)
+        x_grid, y_grid = np.meshgrid(x_edge, y_edge)
+
+        # 插值 z, r, g, b 数据
+        arrays = []
+        z_interp = griddata((x, y), z, (x_grid, y_grid), method=method)
+        arrays.append(z_interp)
+        colors = np.asarray(cloud.colors)
+        if colors.size:
+            r, g, b = colors.T
+            r_interp = griddata((x, y), r, (x_grid, y_grid), method=method)
+            g_interp = griddata((x, y), g, (x_grid, y_grid), method=method)
+            b_interp = griddata((x, y), b, (x_grid, y_grid), method=method)
+            arrays.extend([r_interp, g_interp, b_interp])
+
+        # 生成 [z, r, g, b] 四层矩阵
+        interpolated_matrix = np.stack(arrays, axis=-1)
+
+        layer_names = ['z', 'r', 'g', 'b']
+        num_layers = interpolated_matrix.shape[-1]
+        for i in range(num_layers):
+            layer = interpolated_matrix[:, :, i]
+            total = layer.size
+            nan_count = np.isnan(layer).sum()
+            nan_percentage = (nan_count / total) * 100
+            layer_name = layer_names[i] if i < len(layer_names) else f'layer_{i}'
+            print(f"Layer '{layer_name}':")
+            print(f"  总元素数量 (Total elements) = {total}")
+            print(f"  NaN 数量 (NaN count) = {nan_count}")
+            print(f"  NaN 占比 (NaN percentage) = {nan_percentage:.2f}%\n")
+
+        np.save(output_path, interpolated_matrix)
 
 
 if __name__ == '__main__':

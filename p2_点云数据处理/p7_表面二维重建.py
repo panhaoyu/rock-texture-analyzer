@@ -13,64 +13,6 @@ from p2_点云数据处理.p6_仅保留顶面 import PointCloudProcessorP6
 class PointCloudProcessorP7(PointCloudProcessorP6):
     grid_resolution = 0.1
 
-    def _interpolate_surface(self, method: str) -> np.ndarray:
-        """
-        使用指定的插值方法将点云数据插值到二维网格上。
-
-        Args:
-            method (str): 插值方法，例如 'nearest', 'linear', 'cubic'。
-
-        Returns:
-            np.ndarray: 插值后的 [z, r, g, b] 四层矩阵。
-        """
-        cloud = self.p6_仅保留顶面
-
-        resolution: float = self.grid_resolution
-
-        points = np.asarray(cloud.points)
-
-        # 提取 x, y, z 数据
-        x, y, z = points.T
-
-        x_min = np.min(x) + 0.2
-        x_max = np.max(x) - 0.2
-        y_min = np.min(y) + 0.2
-        y_max = np.max(y) - 0.2
-
-        # 创建网格
-        x_edge = np.arange(x_min, x_max, resolution)
-        y_edge = np.arange(y_min, y_max, resolution)
-        x_grid, y_grid = np.meshgrid(x_edge, y_edge)
-
-        # 插值 z, r, g, b 数据
-        arrays = []
-        z_interp = griddata((x, y), z, (x_grid, y_grid), method=method)
-        arrays.append(z_interp)
-        colors = np.asarray(cloud.colors)
-        if colors.size:
-            r, g, b = colors.T
-            r_interp = griddata((x, y), r, (x_grid, y_grid), method=method)
-            g_interp = griddata((x, y), g, (x_grid, y_grid), method=method)
-            b_interp = griddata((x, y), b, (x_grid, y_grid), method=method)
-            arrays.extend([r_interp, g_interp, b_interp])
-
-        # 生成 [z, r, g, b] 四层矩阵
-        interpolated_matrix = np.stack(arrays, axis=-1)
-
-        layer_names = ['z', 'r', 'g', 'b']
-        num_layers = interpolated_matrix.shape[-1]
-        for i in range(num_layers):
-            layer = interpolated_matrix[:, :, i]
-            total = layer.size
-            nan_count = np.isnan(layer).sum()
-            nan_percentage = (nan_count / total) * 100
-            layer_name = layer_names[i] if i < len(layer_names) else f'layer_{i}'
-            print(f"Layer '{layer_name}':")
-            print(f"  总元素数量 (Total elements) = {total}")
-            print(f"  NaN 数量 (NaN count) = {nan_count}")
-            print(f"  NaN 占比 (NaN percentage) = {nan_percentage:.2f}%\n")
-
-        return interpolated_matrix
 
     @property
     @sci_method_cache
@@ -96,7 +38,7 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
 
     @property
     @sci_method_cache
-    def p7_表面二维重建_三次插值(self) -> np.ndarray:
+    def p7_表面二维重建(self) -> np.ndarray:
         """
         使用三次插值方法进行表面二维重建。
 
@@ -104,17 +46,6 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
             np.ndarray: 插值后的矩阵。
         """
         return self._interpolate_surface(method='cubic')
-
-    @property
-    @sci_method_cache
-    def p7_表面二维重建(self) -> np.ndarray:
-        """
-        返回使用三次插值方法进行的表面二维重建结果。
-
-        Returns:
-            np.ndarray: 插值后的矩阵。
-        """
-        return self.p7_表面二维重建_三次插值
 
     def 绘制表面(self, interpolated_matrix: np.ndarray, name: str = 'output'):
         """
@@ -304,6 +235,7 @@ class PointCloudProcessorP7(PointCloudProcessorP6):
         obj.绘制表面(obj.p7_表面二维重建)
         # obj.绘制三维表面_matlab(obj.p7_表面二维重建)
         # obj.绘制表面_导出到AutoCAD(obj.p7_表面二维重建)
+
 
 if __name__ == '__main__':
     PointCloudProcessorP7.main()
