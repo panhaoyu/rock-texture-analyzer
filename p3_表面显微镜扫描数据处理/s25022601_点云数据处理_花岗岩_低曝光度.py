@@ -370,14 +370,17 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
 
-        try:
-            left_center, right_center = get_two_main_value_filtered(point_x)
-        except ValueDetectionError:
-            left_center, right_center = get_two_main_value_filtered(point_x, 0.03)
-        try:
-            front_center, back_center = get_two_main_value_filtered(point_y)
-        except ValueDetectionError:
-            front_center, back_center = get_two_main_value_filtered(point_y, 0.03)
+        # 尝试不同的阈值进行处理
+        thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
+        for threshold in thresholds:
+            try:
+                left_center, right_center = get_two_main_value_filtered(point_x, threshold)
+                front_center, back_center = get_two_main_value_filtered(point_y, threshold)
+                break
+            except ValueDetectionError:
+                continue
+        else:
+            raise ValueDetectionError(f"无法找到有效阈值，尝试了所有阈值: {thresholds}")
 
         print(f'{left_center=} {right_center=}')
         print(f'{front_center=} {back_center=}')
@@ -440,6 +443,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f13_绘制点云(self, output_path: Path) -> None:
         cloud_path = self.get_file_path(self.f12_仅保留顶面, output_path.stem)
         draw_point_cloud(cloud_path, output_path)
+
 
 if __name__ == '__main__':
     s25022602_劈裂面形貌扫描_花岗岩_低曝光度.main()
