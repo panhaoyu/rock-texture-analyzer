@@ -25,3 +25,19 @@ def write_point_cloud(
             output_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(temp_file, output_path)
         return success
+
+
+def draw_point_cloud(input_path: Path, output_path: Path) -> None:
+    """通过临时路径保存点云可视化截图（支持中文路径）"""
+    cloud = read_point_cloud(input_path)
+    vis = o3d.visualization.Visualizer()
+    vis.create_window(visible=False)
+    vis.add_geometry(cloud)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        temp_file = Path(tmpdir) / f"temp_{output_path.suffix}"
+        vis.capture_screen_image(temp_file.as_posix(), do_render=True)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(temp_file, output_path)
+
+    vis.destroy_window()
