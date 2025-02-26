@@ -3,6 +3,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 import open3d
+from PIL import Image
+from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 from scipy.interpolate import griddata
 from scipy.optimize import minimize
@@ -506,6 +508,79 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             print(f"  NaN 占比 (NaN percentage) = {nan_percentage:.2f}%\n")
 
         np.save(output_path, interpolated_matrix)
+
+    @mark_as_method
+    def f15_绘制高程(self, output_path: Path) -> None:
+        """
+        绘制表面高程图和颜色图，保存后根据是否存在颜色图像进行显示。
+        如果存在颜色图像，则将高程图和颜色图左右合并并显示。
+        如果不存在颜色图像，则仅显示高程图像。
+
+        Args:
+            interpolated_matrix (np.ndarray): 预先计算好的插值结果矩阵。
+            name (str): 名称的前缀。
+        """
+        interpolated_matrix = self.get_input_array(self.f14_表面二维重建, output_path)
+
+        # 绘制高程图
+        elevation = interpolated_matrix[:, :, 0]
+        norm = plt.Normalize(
+            vmin=float(np.nanquantile(elevation, 0.01)),
+            vmax=float(np.nanquantile(elevation, 0.99)),
+        )
+        scalar_map = cm.ScalarMappable(cmap='jet', norm=norm)
+        elevation_rgba = scalar_map.to_rgba(elevation)
+        elevation_rgb = (elevation_rgba[:, :, :3] * 255).astype(np.uint8)
+        elevation_image = Image.fromarray(elevation_rgb)
+        elevation_image.save(output_path)
+
+    @mark_as_method
+    def f16_绘制图像(self, output_path: Path) -> None:
+        interpolated_matrix = self.get_input_array(self.f14_表面二维重建, output_path)
+        if interpolated_matrix.shape[2] > 1:
+            # 处理颜色数据
+            color = interpolated_matrix[:, :, 1:].copy()
+            for i in range(3):
+                v = color[:, :, i]
+                v_min = np.nanquantile(v, 0.01)
+                v_max = np.nanquantile(v, 0.99)
+                if v_max - v_min == 0:
+                    normalized_v = np.zeros_like(v)
+                else:
+                    normalized_v = (v - v_min) / (v_max - v_min) * 255
+                color[:, :, i] = normalized_v
+
+            color_uint8 = np.clip(np.round(color), 0, 255).astype(np.uint8)
+            surface_image = Image.fromarray(color_uint8)
+            surface_image.save(output_path)
+
+    @mark_as_method
+    def f17_合并两张图(self, output_path: Path) -> None:
+        elevation_image = self.get_input_image(self.f15_绘制高程, output_path)
+        surface_image = self.get_input_image(self.f16_绘制图像, output_path)
+
+        if surface_image:
+            # 确保两张图像的尺寸相同
+            if elevation_image.size != surface_image.size:
+                raise ValueError("高程图和颜色图的尺寸不一致，无法合并显示。")
+
+            # 创建一个新的空白图像，宽度为两张图像的总和，高度相同
+            combined_width = elevation_image.width + surface_image.width
+            combined_height = elevation_image.height
+            combined_image = Image.new('RGB', (combined_width, combined_height))
+
+            # 将高程图粘贴到左侧
+            combined_image.paste(elevation_image, (0, 0))
+
+            # 将颜色图粘贴到右侧
+            combined_image.paste(surface_image, (elevation_image.width, 0))
+
+            # 显示合并后的图像
+            result = combined_image
+        else:
+            # 仅显示高程图像
+            result = elevation_image
+        result.save(output_path)
 
 
 if __name__ == '__main__':
