@@ -7,7 +7,7 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
+    mark_as_single_thread, mark_as_ply, mark_as_npy
 from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
     compute_statistical_boundaries, create_boundary_masks
 from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_peaks
@@ -92,7 +92,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_single_thread
     @mark_as_ply
-    @mark_as_recreate
     def f8_调整地面在下(self, output_path: Path) -> None:
         cloud = read_point_cloud(self.get_input_path(self.f6_xOy平面对正, output_path))
         points = np.asarray(cloud.points)
@@ -102,7 +101,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    @mark_as_recreate
     def f9_绘制点云(self, output_path: Path) -> None:
         draw_point_cloud(self.get_file_path(self.f8_调整地面在下, output_path.stem), output_path)
 
@@ -125,7 +123,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f12_仅保留顶面(self, output_path: Path) -> None:
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
@@ -163,7 +160,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_绘制点云(self, output_path: Path) -> None:
         draw_point_cloud(self.get_file_path(self.f12_仅保留顶面, output_path.stem), output_path)
 
@@ -193,17 +189,22 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
                     np.nanquantile(matrix[..., i], 0.99) - np.nanquantile(matrix[..., i], 0.01) + 1e-9) * 255 for i
                              in range(1, 4)], 0, 255)
             Image.fromarray(np.round(color).astype(np.uint8).transpose(1, 2, 0)).save(output_path)
-
     @mark_as_method
     def f17_合并两张图(self, output_path: Path) -> None:
-        elev_img = self.get_input_image(self.f15_绘制高程, output_path)
-        surf_img = self.get_input_image(self.f16_绘制图像, output_path)
-        if surf_img and (elev_img.size == surf_img.size):
-            (Image.new('RGB', (elev_img.width + surf_img.width, elev_img.height))
-             .paste(elev_img, (0, 0))
-             .paste(surf_img, (elev_img.width, 0)).save(output_path))
+        elevation_image = self.get_input_image(self.f15_绘制高程, output_path)
+        surface_image = self.get_input_image(self.f16_绘制图像, output_path)
+        if surface_image:
+            if elevation_image.size != surface_image.size:
+                raise ValueError("高程图和颜色图的尺寸不一致，无法合并显示。")
+            combined_width = elevation_image.width + surface_image.width
+            combined_height = elevation_image.height
+            combined_image = Image.new('RGB', (combined_width, combined_height))
+            combined_image.paste(elevation_image, (0, 0))
+            combined_image.paste(surface_image, (elevation_image.width, 0))
+            result = combined_image
         else:
-            elev_img.save(output_path)
+            result = elevation_image
+        result.save(output_path)
 
 
 if __name__ == '__main__':
