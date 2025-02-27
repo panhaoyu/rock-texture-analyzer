@@ -127,7 +127,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
-        bottom_center, top_center = find_two_peaks(point_z)
+        bottom_center, top_center = find_two_peaks(point_z, [0.05, 0.02, 0.01])
         range_z = top_center - bottom_center
         z_selector = (point_z > (bottom_center + range_z * 0.1)) & (point_z < (top_center - range_z * 0.4))
         boundary_points = points[z_selector]
