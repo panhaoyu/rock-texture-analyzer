@@ -63,13 +63,31 @@ def calculate_final_boundaries(left_points, right_points, front_points, back_poi
     )
 
 
+def process_clusters(
+        data: np.ndarray,
+        n_clusters: int = 2,
+        *,
+        extension_ratio: float | None = None
+) -> tuple[float, ...]:
+    """处理聚类操作并返回扩展范围或聚类中心"""
+    kmeans = KMeans(n_clusters=n_clusters, random_state=0)
+    kmeans.fit(data.reshape(-1, 1))
+    centers = sorted(c.item() for c in kmeans.cluster_centers_)
+
+    return (
+        (min(centers) - (max(centers) - min(centers)) * extension_ratio,
+         max(centers) + (max(centers) - min(centers)) * extension_ratio)
+        if extension_ratio is not None else tuple(centers)
+    )
+
+
 def create_boundary_masks(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """创建边界区域和外围区域的掩码"""
     x_coords = points[:, 0]
     y_coords = points[:, 1]
 
-    x_min_ext, x_max_ext = get_centers_with_extension(x_coords)
-    y_min_ext, y_max_ext = get_centers_with_extension(y_coords)
+    x_min_ext, x_max_ext = process_clusters(x_coords, extension_ratio=0.1)
+    y_min_ext, y_max_ext = process_clusters(y_coords, extension_ratio=0.1)
 
     boundary_mask = (
             (x_coords >= x_min_ext) & (x_coords <= x_max_ext) &
@@ -92,28 +110,6 @@ def should_flip_based_on_z(boundary_points: np.ndarray, external_points: np.ndar
     median_z_in = np.median(boundary_points[:, 2])
     median_z_out = np.median(external_points[:, 2])
     return median_z_out > median_z_in
-
-
-def get_centers_with_extension(
-        data: np.ndarray,
-        n_clusters: int = 2,
-        extension_ratio: float = 0.1
-) -> tuple[float, float]:
-    """获取数据聚类中心点并扩展范围"""
-    kmeans: KMeans = KMeans(n_clusters=n_clusters, random_state=0)
-    kmeans.fit(data.reshape(-1, 1))
-    centers = sorted(c for c in kmeans.cluster_centers_.flatten())
-    min_val, max_val = min(centers), max(centers)
-    extent = (max_val - min_val) * (1 + extension_ratio)
-    return min_val - extent, max_val + extent
-
-
-def cluster_axis(data: np.ndarray, axis: int) -> tuple:
-    """对指定轴进行K-Means聚类并返回排序后的聚类中心"""
-    kmeans = KMeans(n_clusters=2, random_state=0)
-    kmeans.fit(data[:, axis].reshape(-1, 1))
-    centers = sorted(kmeans.cluster_centers_.flatten())
-    return centers[0], centers[1]
 
 
 def generate_boundary_mask(data: np.ndarray, axis: int, center: float, extend: float) -> np.ndarray:
@@ -195,8 +191,8 @@ def optimize_angles(initial_angles: list, boundaries: list, bounds: tuple) -> di
 
 def least_squares_adjustment_direction(points: np.ndarray) -> np.ndarray:
     # 1. 对X/Y轴进行聚类
-    xmin, xmax = cluster_axis(points, 0)
-    ymin, ymax = cluster_axis(points, 1)
+    xmin, xmax = process_clusters(points[:, 0])
+    ymin, ymax = process_clusters(points[:, 1])
 
     # 2. 计算扩展范围
     extend_x = 0.1 * (xmax - xmin)
