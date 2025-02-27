@@ -186,7 +186,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         draw_point_cloud(cloud_path, output_path)
 
     @mark_as_method
-    @mark_as_recreate
     def f12_仅保留顶面(self, output_path: Path) -> None:
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
@@ -249,7 +248,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_绘制点云(self, output_path: Path) -> None:
         cloud_path = self.get_file_path(self.f12_仅保留顶面, output_path.stem)
         draw_point_cloud(cloud_path, output_path)
