@@ -6,7 +6,6 @@ import open3d
 from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
-from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
@@ -301,7 +300,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_recreate
     @mark_as_method
-    @mark_as_single_thread
     def f14_表面二维重建(self, output_path: Path) -> None:
         """
         使用指定的插值方法将点云数据插值到二维网格上。
