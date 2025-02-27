@@ -8,10 +8,10 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_recreate
+    mark_as_single_thread
+from rock_texture_analyzer.get_bottom import _should_flip_based_on_z, _are_points_empty, _create_boundary_masks
 from rock_texture_analyzer.get_top import _calculate_extended_bounds, _find_valid_clusters, _filter_side_points, \
     _calculate_final_boundaries
-from rock_texture_analyzer.k_means import get_centers_with_extension
 from rock_texture_analyzer.least_squares_adjustment_direction import least_squares_adjustment_direction
 from rock_texture_analyzer.surface import surface_interpolate_2d
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
@@ -136,23 +136,15 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         output_path = output_path.with_suffix('.ply')
         cloud = read_point_cloud(self.get_input_path(self.f6_xOy平面对正, output_path))
         points = np.asarray(cloud.points)
-        x_min_ext, x_max_ext = get_centers_with_extension(points[:, 0])
-        y_min_ext, y_max_ext = get_centers_with_extension(points[:, 1])
 
-        boundary_mask = (points[:, 0] >= x_min_ext) & (points[:, 0] <= x_max_ext) & \
-                        (points[:, 1] >= y_min_ext) & (points[:, 1] <= y_max_ext)
-        external_mask = ((points[:, 0] > x_max_ext) | (points[:, 1] > y_max_ext)) & (points[:, 0] >= x_min_ext)
-
+        boundary_mask, external_mask = _create_boundary_masks(points)
         boundary_points = points[boundary_mask]
         external_points = points[external_mask]
 
-        if len(boundary_points) * len(external_points) == 0:
+        if _are_points_empty(boundary_points, external_points):
             return
 
-        median_z_in = np.median(boundary_points[:, 2])
-        median_z_out = np.median(external_points[:, 2])
-
-        if median_z_out > median_z_in:
+        if _should_flip_based_on_z(boundary_points, external_points):
             cloud.points = open3d.utility.Vector3dVector(-points)
 
         write_point_cloud(output_path, cloud)
