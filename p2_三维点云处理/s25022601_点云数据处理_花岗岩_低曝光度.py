@@ -14,6 +14,7 @@ from rock_texture_analyzer.clustering import find_valid_clusters
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z
+from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
@@ -127,8 +128,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
-        bottom_center = np.min(point_z)
-        top_center = np.max(point_z)
+        bottom_center, top_center = get_two_main_value_filtered(point_z)
         range_z = top_center - bottom_center
         z_selector = (point_z > (bottom_center + range_z * 0.1)) & (point_z < (top_center - range_z * 0.4))
         boundary_points = points[z_selector]
