@@ -7,7 +7,7 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy
+    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
 from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
     compute_statistical_boundaries, create_boundary_masks
 from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_peaks
@@ -108,6 +108,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     @mark_as_ply
     def f10_精细化对正(self, output_path: Path) -> None:
+        raise
         cloud = read_point_cloud(self.get_input_path(self.f8_调整地面在下, output_path))
         points = np.asarray(cloud.points)
         best_rotation = least_squares_adjustment_direction(points)
@@ -123,17 +124,18 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f12_仅保留顶面(self, output_path: Path) -> None:
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
-        bottom, top = find_two_peaks(point_z, [0.05, 0.02, 0.01])
+        thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
+        bottom, top = find_two_peaks(point_z, thresholds)
         self.print_safe(f'{bottom=} {top=}')
         range_z = top - bottom
         z_selector = (point_z > (bottom + range_z * 0.1)) & (point_z < (top - range_z * 0.4))
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
-        thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
         left_center, right_center, front_center, back_center = find_peaks_on_both_sides(point_x, point_y, thresholds)
         self.print_safe(f'{left_center=} {right_center=}')
         self.print_safe(f'{front_center=} {back_center=}')
@@ -160,6 +162,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_绘制点云(self, output_path: Path) -> None:
         draw_point_cloud(self.get_file_path(self.f12_仅保留顶面, output_path.stem), output_path)
 
