@@ -1,3 +1,4 @@
+import pickle
 import re
 import threading
 import traceback
@@ -9,12 +10,13 @@ from pathlib import Path
 from typing import Callable
 
 import numpy as np
-import open3d.cpu.pybind.geometry
+import pandas as pd
 from PIL import Image
 from more_itertools import only
+from open3d.cpu.pybind.geometry import PointCloud
 
 from p3_表面显微镜扫描数据处理.config import base_dir
-from rock_texture_analyzer.point_cloud import read_point_cloud
+from rock_texture_analyzer.point_cloud import read_point_cloud, write_point_cloud, draw_point_cloud
 
 
 class ProcessMethod(typing.Callable):
@@ -25,7 +27,7 @@ class ProcessMethod(typing.Callable):
     is_single_thread: bool = False
     suffix: str = ".png"
 
-    def __init__(self, func: Callable[[Path], None]):
+    def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
         self.func_name = func.__name__
 
@@ -96,21 +98,32 @@ class BaseProcessor:
             func_index = int(func_index)
             func.is_single_thread and self._single_thread_lock.acquire()
             try:
-                # todo 读取返回值，并根据返回值的类型，来判断应当如何写入到相应的文件中
                 result = func(self, output_path)
-                match type(result):
-                    case open3d.cpu.pybind.geometry.PointCloud:
-                        raise NotImplementedError
-                    case np.ndarray:
-                        raise NotImplementedError
-                    case Image.Image:
-                        raise NotImplementedError
-                    case type(None):
-                        raise NotImplementedError
+                output_path = Path(output_path)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                match output_path.suffix:
+                    case '.ply':
+                        assert isinstance(result, PointCloud)
+                        write_point_cloud(output_path, result)
+                    case '.npy':
+                        assert isinstance(result, np.ndarray)
+                        np.save(output_path, result)
+                    case '.png':
+                        if isinstance(result, np.ndarray):
+                            result = Image.fromarray(result)
+                        if isinstance(result, Image.Image):
+                            result.save(output_path)
+                        elif isinstance(result, PointCloud):
+                            draw_point_cloud(result, output_path)
+                        else:
+                            raise NotImplementedError(f'Unknown png type: {type(result)}')
+                    case '.xlsx':
+                        assert isinstance(result, pd.DataFrame)
+                        result.toexcel(output_path)
+                    case '.pickle':
+                        output_path.write_bytes(pickle.dumps(result))
                     case other:
-                        raise NotImplementedError
-
-
+                        raise NotImplementedError(f'Unknown suffix: "{other}"')
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)

@@ -14,7 +14,7 @@ from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
-from rock_texture_analyzer.point_cloud import write_point_cloud, draw_point_cloud
+from rock_texture_analyzer.point_cloud import draw_point_cloud
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
@@ -28,7 +28,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_ply
     def f2_读取点云原始数据(self, output_path: Path) -> None:
         cloud = self.get_input_ply(self.f1_原始数据, output_path)
-        write_point_cloud(output_path, cloud)
+        return cloud
 
     @mark_as_method
     @mark_as_single_thread
@@ -45,7 +45,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         plane_normal /= np.linalg.norm(plane_normal)
 
         cloud.points = Vector3dVector(centered_points @ compute_rotation_matrix(plane_normal, [0, 0, 1]).T)
-        write_point_cloud(output_path, cloud)
+        return cloud
 
     @mark_as_method
     @mark_as_single_thread
@@ -71,12 +71,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             R_z = np.array([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
             cloud.points = Vector3dVector(points @ R_z.T)
 
-        write_point_cloud(output_path, cloud)
+        return cloud
 
     @mark_as_method
     @mark_as_single_thread
     def f7_绘制点云(self, output_path: Path) -> None:
-        draw_point_cloud(self.get_file_path(self.f6_xOy平面对正, output_path.stem), output_path)
+        return self.get_input_ply(self.f6_xOy平面对正, output_path)
 
     @mark_as_method
     @mark_as_single_thread
@@ -86,7 +86,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         points = np.asarray(cloud.points)
         if should_flip_based_on_z(*create_boundary_masks(points, extension_ratio=0.1)):
             cloud.points = Vector3dVector(-points)
-        write_point_cloud(output_path, cloud)
+        return cloud
 
     @mark_as_method
     @mark_as_single_thread
@@ -102,7 +102,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         best_rotation = least_squares_adjustment_direction(points)
         rotated_points = points.dot(best_rotation.T)
         cloud.points = Vector3dVector(rotated_points)
-        write_point_cloud(output_path, cloud)
+        return cloud
 
     @mark_as_method
     @mark_as_single_thread
@@ -145,7 +145,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         colors = np.asarray(cloud.colors)
         if colors.size:
             cloud.colors = Vector3dVector(colors[top_selector])
-        write_point_cloud(output_path, cloud)
+        return cloud
 
     @mark_as_method
     @mark_as_single_thread
