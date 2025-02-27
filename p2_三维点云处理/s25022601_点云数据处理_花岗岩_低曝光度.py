@@ -127,9 +127,10 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
-        bottom_center, top_center = find_two_peaks(point_z, [0.05, 0.02, 0.01])
-        range_z = top_center - bottom_center
-        z_selector = (point_z > (bottom_center + range_z * 0.1)) & (point_z < (top_center - range_z * 0.4))
+        bottom, top = find_two_peaks(point_z, [0.05, 0.02, 0.01])
+        self.print_safe(f'{bottom=} {top=}')
+        range_z = top - bottom
+        z_selector = (point_z > (bottom + range_z * 0.1)) & (point_z < (top - range_z * 0.4))
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
         thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
@@ -149,7 +150,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         top_selector = (
                 (point_x > left) & (point_x < right)
                 & (point_y > front) & (point_y < back)
-                & (point_z > bottom_center + range_z * 0.5)
+                & (point_z > (bottom + range_z * 0.5))
         )
         cloud.points = Vector3dVector(points[top_selector])
         colors = np.asarray(cloud.colors)
