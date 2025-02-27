@@ -4,31 +4,7 @@ from scipy.optimize import minimize
 from rock_texture_analyzer.base import BaseProcessor
 from rock_texture_analyzer.boundary_processing import generate_axis_boundary_mask, filter_vertical_outliers
 from rock_texture_analyzer.clustering import process_clusters
-
-
-def create_rotation_matrix(angles_deg: tuple) -> np.ndarray:
-    """根据给定的欧拉角创建旋转矩阵（XYZ顺序）"""
-    alpha, beta, gamma = np.radians(angles_deg)
-
-    R_x = np.array([
-        [1, 0, 0],
-        [0, np.cos(alpha), -np.sin(alpha)],
-        [0, np.sin(alpha), np.cos(alpha)]
-    ])
-
-    R_y = np.array([
-        [np.cos(beta), 0, np.sin(beta)],
-        [0, 1, 0],
-        [-np.sin(beta), 0, np.cos(beta)]
-    ])
-
-    R_z = np.array([
-        [np.cos(gamma), -np.sin(gamma), 0],
-        [np.sin(gamma), np.cos(gamma), 0],
-        [0, 0, 1]
-    ])
-
-    return R_z @ R_y @ R_x
+from rock_texture_analyzer.other_utils import create_rotation_matrix
 
 
 def compute_rotated_std(R: np.ndarray, boundaries: list) -> float:
