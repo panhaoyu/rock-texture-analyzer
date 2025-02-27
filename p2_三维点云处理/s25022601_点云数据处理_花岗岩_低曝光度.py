@@ -9,11 +9,9 @@ from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
-from rock_texture_analyzer.get_bottom import _should_flip_based_on_z, _are_points_empty, _create_boundary_masks
-from rock_texture_analyzer.get_top import _calculate_extended_bounds, _find_valid_clusters, _filter_side_points, \
-    _calculate_final_boundaries
-from rock_texture_analyzer.least_squares_adjustment_direction import least_squares_adjustment_direction
-from rock_texture_analyzer.surface import surface_interpolate_2d
+from rock_texture_analyzer.pc_utils import find_valid_clusters, calculate_extended_bounds, filter_side_points, \
+    calculate_final_boundaries, create_boundary_masks, are_points_empty, should_flip_based_on_z, \
+    least_squares_adjustment_direction, surface_interpolate_2d
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
@@ -137,14 +135,14 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = read_point_cloud(self.get_input_path(self.f6_xOy平面对正, output_path))
         points = np.asarray(cloud.points)
 
-        boundary_mask, external_mask = _create_boundary_masks(points)
+        boundary_mask, external_mask = create_boundary_masks(points)
         boundary_points = points[boundary_mask]
         external_points = points[external_mask]
 
-        if _are_points_empty(boundary_points, external_points):
+        if are_points_empty(boundary_points, external_points):
             return
 
-        if _should_flip_based_on_z(boundary_points, external_points):
+        if should_flip_based_on_z(boundary_points, external_points):
             cloud.points = open3d.utility.Vector3dVector(-points)
 
         write_point_cloud(output_path, cloud)
@@ -197,7 +195,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
         # 通过阈值尝试获取有效聚类中心
         thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
-        left_center, right_center, front_center, back_center = _find_valid_clusters(point_x, point_y, thresholds)
+        left_center, right_center, front_center, back_center = find_valid_clusters(point_x, point_y, thresholds)
 
         self.print_safe(f'{left_center=} {right_center=}')
         self.print_safe(f'{front_center=} {back_center=}')
@@ -206,19 +204,19 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         # 计算扩展边界范围
         (extend_x, extend_y,
          definite_left, definite_right,
-         definite_front, definite_back) = _calculate_extended_bounds(
+         definite_front, definite_back) = calculate_extended_bounds(
             left_center, right_center,
             front_center, back_center
         )
 
         # 筛选各边界点
-        left_points = _filter_side_points(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
-        right_points = _filter_side_points(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
-        front_points = _filter_side_points(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
-        back_points = _filter_side_points(boundary_points, 1, back_center, extend_y, definite_left, definite_right)
+        left_points = filter_side_points(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
+        right_points = filter_side_points(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
+        front_points = filter_side_points(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
+        back_points = filter_side_points(boundary_points, 1, back_center, extend_y, definite_left, definite_right)
 
         # 计算最终边界
-        left, right, front, back = _calculate_final_boundaries(left_points, right_points, front_points, back_points)
+        left, right, front, back = calculate_final_boundaries(left_points, right_points, front_points, back_points)
 
         self.print_safe(f'{left=} {right=} {front=} {back=}')
 
