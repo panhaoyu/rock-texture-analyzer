@@ -2,7 +2,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import open3d
 from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
@@ -10,12 +9,14 @@ from open3d.cpu.pybind.utility import Vector3dVector
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
 from rock_texture_analyzer.pc_utils import find_valid_clusters, calculate_extended_bounds, filter_side_points, \
-    calculate_final_boundaries, create_boundary_masks, are_points_empty, should_flip_based_on_z, \
+    calculate_final_boundaries, create_boundary_masks, should_flip_based_on_z, \
     least_squares_adjustment_direction, surface_interpolate_2d
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
+    is_debug = True
+
     @mark_as_method
     def f1_原始数据(self, output_path: Path) -> None:
         raise ManuallyProcessRequiredException
@@ -119,7 +120,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         ])
 
         rotated_points = points.dot(R_z.T)
-        cloud.points = open3d.utility.Vector3dVector(rotated_points)
+        cloud.points = Vector3dVector(rotated_points)
         write_point_cloud(output_path, cloud)
 
     @mark_as_method
@@ -139,11 +140,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         boundary_points = points[boundary_mask]
         external_points = points[external_mask]
 
-        if are_points_empty(boundary_points, external_points):
-            return
-
         if should_flip_based_on_z(boundary_points, external_points):
-            cloud.points = open3d.utility.Vector3dVector(-points)
+            cloud.points = Vector3dVector(-points)
 
         write_point_cloud(output_path, cloud)
 
@@ -167,7 +165,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
         # 8. 应用最佳旋转到整个点云
         rotated_points = points.dot(best_rotation.T)
-        cloud.points = open3d.utility.Vector3dVector(rotated_points)
+        cloud.points = Vector3dVector(rotated_points)
         write_point_cloud(output_path, cloud)
 
     @mark_as_method
@@ -227,12 +225,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
                 & (point_y > front) & (point_y < back)
                 & (point_z > bottom_center + range_z * 0.5)
         )
-        cloud.points = open3d.utility.Vector3dVector(points[top_selector])
+        cloud.points = Vector3dVector(points[top_selector])
 
         # 处理颜色数据
         colors = np.asarray(cloud.colors)
         if colors.size:
-            cloud.colors = open3d.utility.Vector3dVector(colors[top_selector])
+            cloud.colors = Vector3dVector(colors[top_selector])
 
         write_point_cloud(output_path, cloud)
 

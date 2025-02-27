@@ -21,7 +21,7 @@ def write_point_cloud(
     """通过临时路径写入点云（支持中文路径）"""
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_file = Path(tmpdir) / f"temp_{output_path.suffix}"
-        if (success := o3d.io.write_point_cloud(temp_file.as_posix(), point_cloud, **kwargs)):
+        if success := o3d.io.write_point_cloud(temp_file.as_posix(), point_cloud, **kwargs):
             output_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(temp_file, output_path)
         return success
