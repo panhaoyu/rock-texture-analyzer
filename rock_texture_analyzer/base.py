@@ -48,8 +48,9 @@ class BaseProcessor:
     _print_lock: threading.Lock = threading.Lock()
     _single_thread_lock: threading.Lock = threading.Lock()
 
-    def print_safe(self, message: str) -> None:
-        with self._print_lock:
+    @classmethod
+    def print_safe(cls, message: str) -> None:
+        with cls._print_lock:
             print(message)
 
     @cached_property
