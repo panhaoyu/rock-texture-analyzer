@@ -9,7 +9,7 @@ class ValueDetectionError(ValueError):
     pass
 
 
-def get_two_main_value_filtered(data: np.ndarray, prominence: float = 0.05) -> tuple[float, float]:
+def find_two_peaks(data: np.ndarray, prominence: float = 0.05) -> tuple[float, float]:
     """去除背景数据后提取双峰分布的两个主要峰值，基于KDE方法。
 
     Args:
@@ -42,7 +42,7 @@ def get_two_main_value_filtered(data: np.ndarray, prominence: float = 0.05) -> t
     return tuple(sorted(peak_centers.tolist()))
 
 
-def find_both_clusters(
+def find_peaks_on_both_sides(
         point_x: np.ndarray,
         point_y: np.ndarray,
         thresholds: list[float]
@@ -50,7 +50,7 @@ def find_both_clusters(
     """通过尝试不同阈值获取有效聚类中心"""
     for threshold in thresholds:
         try:
-            x1, x2 = get_two_main_value_filtered(point_x, threshold)
+            x1, x2 = find_two_peaks(point_x, threshold)
             break
         except ValueDetectionError:
             continue
@@ -58,7 +58,7 @@ def find_both_clusters(
         raise ValueDetectionError(f"无法找到有效阈值，尝试了所有阈值: {thresholds}")
     for threshold in thresholds:
         try:
-            y1, y2 = get_two_main_value_filtered(point_y, threshold)
+            y1, y2 = find_two_peaks(point_y, threshold)
             break
         except ValueDetectionError:
             continue
