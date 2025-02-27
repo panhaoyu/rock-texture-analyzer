@@ -13,9 +13,8 @@ from rock_texture_analyzer.boundary_processing import compute_extended_bounds, f
 from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_peaks
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
-from rock_texture_analyzer.other_utils import should_flip_based_on_z
-from rock_texture_analyzer.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud, \
-    compute_rotation_matrix
+from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
+from rock_texture_analyzer.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
