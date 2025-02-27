@@ -6,10 +6,10 @@ import open3d
 from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
-from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_recreate
+    mark_as_single_thread
+from rock_texture_analyzer.k_means import get_centers_with_extension
 from rock_texture_analyzer.least_squares_adjustment_direction import least_squares_adjustment_direction
 from rock_texture_analyzer.surface import surface_interpolate_2d
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered, ValueDetectionError
@@ -135,49 +135,25 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         output_path = output_path.with_suffix('.ply')
         cloud = read_point_cloud(self.get_input_path(self.f6_xOy平面对正, output_path))
         points = np.asarray(cloud.points)
-        x = points[:, 0].reshape(-1, 1)
-        y = points[:, 1].reshape(-1, 1)
+        x_min_ext, x_max_ext = get_centers_with_extension(points[:, 0])
+        y_min_ext, y_max_ext = get_centers_with_extension(points[:, 1])
 
-        kmeans_x: KMeans = KMeans(n_clusters=2, random_state=0)
-        kmeans_x.fit(x)
-        centers_x = sorted(kmeans_x.cluster_centers_.flatten())
-        xmin, xmax = centers_x[0], centers_x[1]
-
-        kmeans_y: KMeans = KMeans(n_clusters=2, random_state=0)
-        kmeans_y.fit(y)
-        centers_y = sorted(kmeans_y.cluster_centers_.flatten())
-        ymin, ymax = centers_y[0], centers_y[1]
-
-        extend_x = 0.1 * (xmax - xmin)
-        extend_y = 0.1 * (ymax - ymin)
-
-        xmin_ext = xmin - extend_x
-        xmax_ext = xmax + extend_x
-        ymin_ext = ymin - extend_y
-        ymax_ext = ymax + extend_y
-
-        boundary_mask = (
-                (points[:, 0] >= xmin_ext) & (points[:, 0] <= xmax_ext) &
-                (points[:, 1] >= ymin_ext) & (points[:, 1] <= ymax_ext)
-        )
+        boundary_mask = (points[:, 0] >= x_min_ext) & (points[:, 0] <= x_max_ext) & \
+                        (points[:, 1] >= y_min_ext) & (points[:, 1] <= y_max_ext)
+        external_mask = ((points[:, 0] > x_max_ext) | (points[:, 1] > y_max_ext)) & (points[:, 0] >= x_min_ext)
 
         boundary_points = points[boundary_mask]
-        external_mask = (
-                ((points[:, 0] > xmax_ext) | (points[:, 1] > ymax_ext)) &
-                (points[:, 0] >= xmin_ext)
-        )
         external_points = points[external_mask]
 
-        if len(boundary_points) == 0 or len(external_points) == 0:
+        if len(boundary_points) * len(external_points) == 0:
             return
 
-        median_z_inside = np.median(boundary_points[:, 2])
-        median_z_outside = np.median(external_points[:, 2])
+        median_z_in = np.median(boundary_points[:, 2])
+        median_z_out = np.median(external_points[:, 2])
 
-        if median_z_outside > median_z_inside:
-            flipped_points = points.copy()
-            flipped_points[:, 2] = -flipped_points[:, 2]
-            cloud.points = open3d.utility.Vector3dVector(flipped_points)
+        if median_z_out > median_z_in:
+            cloud.points = open3d.utility.Vector3dVector(-points)
+
         write_point_cloud(output_path, cloud)
 
     @mark_as_method
@@ -300,7 +276,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         draw_point_cloud(cloud_path, output_path)
 
     @mark_as_method
-    @mark_as_recreate
     def f14_表面二维重建(self, output_path: Path) -> None:
         """
         使用指定的插值方法将点云数据插值到二维网格上。
@@ -328,7 +303,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         np.save(output_path, interpolated_matrix)
 
     @mark_as_method
-    @mark_as_recreate
     def f15_绘制高程(self, output_path: Path) -> None:
         """
         绘制表面高程图和颜色图，保存后根据是否存在颜色图像进行显示。
@@ -400,6 +374,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             # 仅显示高程图像
             result = elevation_image
         result.save(output_path)
+
 
 if __name__ == '__main__':
     s25022602_劈裂面形貌扫描_花岗岩_低曝光度.main()
