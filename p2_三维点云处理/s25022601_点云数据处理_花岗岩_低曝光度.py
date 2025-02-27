@@ -14,18 +14,8 @@ from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z
-from rock_texture_analyzer.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
-
-
-def compute_rotation_matrix(plane_normal: np.ndarray, target_normal: np.ndarray) -> np.ndarray:
-    """计算将平面法向量旋转到目标法向量的旋转矩阵"""
-    v = np.cross(plane_normal, target_normal)
-    s, c = np.linalg.norm(v), np.dot(plane_normal, target_normal)
-    if s < 1e-6:
-        return np.eye(3)
-
-    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
-    return np.eye(3) + vx + (vx @ vx) * ((1 - c) / (s ** 2))
+from rock_texture_analyzer.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud, \
+    compute_rotation_matrix
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
@@ -208,6 +198,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         combined_img.paste(elevation_img, (0, 0))
         combined_img.paste(surface_img, (size[0], 0))
         combined_img.save(output_path)
+
 
 if __name__ == '__main__':
     s25022602_劈裂面形貌扫描_花岗岩_低曝光度.main()

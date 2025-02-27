@@ -2,6 +2,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import numpy as np
 import open3d as o3d
 
 
@@ -41,3 +42,14 @@ def draw_point_cloud(input_path: Path, output_path: Path) -> None:
         shutil.copy2(temp_file, output_path)
 
     vis.destroy_window()
+
+
+def compute_rotation_matrix(plane_normal: np.ndarray, target_normal: np.ndarray) -> np.ndarray:
+    """计算将平面法向量旋转到目标法向量的旋转矩阵"""
+    v = np.cross(plane_normal, target_normal)
+    s, c = np.linalg.norm(v), np.dot(plane_normal, target_normal)
+    if s < 1e-6:
+        return np.eye(3)
+
+    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + vx + (vx @ vx) * ((1 - c) / (s ** 2))
