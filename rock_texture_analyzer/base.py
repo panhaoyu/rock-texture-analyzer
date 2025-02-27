@@ -21,6 +21,7 @@ class ProcessMethod(typing.Callable):
     is_source: bool = False
     is_final: bool = False
     is_single_thread: bool = False
+    suffix: str = ".png"
 
     def __init__(self, func: Callable[[Path], None]):
         self.func = func
@@ -113,7 +114,7 @@ class BaseProcessor:
             stem = stem.stem
         dir_path: Path = self.base_dir / func.func_name.replace('_', '-').lstrip('f')
         extensions: set[str] = {p.suffix for p in dir_path.glob('*') if p.is_file()}
-        suffix: str = next(iter(extensions), '.png')
+        suffix: str = next(iter(extensions), func.suffix)
         return dir_path / f'{stem}{suffix}'
 
     def get_input_path(self, func: ProcessMethod, output_path: Path) -> Path:
@@ -197,4 +198,14 @@ def mark_as_final(func: Callable):
 def mark_as_single_thread(func: Callable):
     func = ProcessMethod.of(func)
     func.is_single_thread = True
+    return func
+
+
+def mark_as_ply(func: Callable):
+    func = ProcessMethod.of(func)
+    func.suffix = '.ply'
+    return func
+def mark_as_npy(func: Callable):
+    func = ProcessMethod.of(func)
+    func.suffix = '.npy'
     return func
