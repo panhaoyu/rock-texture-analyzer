@@ -34,12 +34,12 @@ def get_two_main_value_filtered(data: np.ndarray, prominence: float = 0.05) -> t
     peaks = find_peaks(density, prominence=prominence)[0]
 
     if len(peaks) < 2:
-        plt.figure()
-        plt.hist(data, bins=100)
-        plt.show()
-        plt.figure()
-        plt.plot(density)
-        plt.show()
+        # plt.figure()
+        # plt.hist(data, bins=100)
+        # plt.show()
+        # plt.figure()
+        # plt.plot(density)
+        # plt.show()
         raise ValueDetectionError(f"无法检测到两个明显的峰，找到的峰数量：{len(peaks)}")
 
     peak_centers = x_range[peaks - 1].flatten()

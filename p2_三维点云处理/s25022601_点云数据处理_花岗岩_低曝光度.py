@@ -138,12 +138,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         self.print_safe(f'{left_center=} {right_center=}')
         self.print_safe(f'{front_center=} {back_center=}')
         assert back_center > front_center and right_center > left_center
-        (extend_x, extend_y,
-         definite_left, definite_right,
-         definite_front, definite_back) = compute_extended_bounds(
-            left_center, right_center,
-            front_center, back_center
-        )
+        (extend_x, extend_y, definite_left, definite_right, definite_front, definite_back) = \
+            (compute_extended_bounds(left_center, right_center, front_center, back_center))
         left_points = filter_points_by_axis(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
         right_points = filter_points_by_axis(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
         front_points = filter_points_by_axis(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
