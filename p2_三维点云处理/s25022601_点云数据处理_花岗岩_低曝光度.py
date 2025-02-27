@@ -189,6 +189,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
                     np.nanquantile(matrix[..., i], 0.99) - np.nanquantile(matrix[..., i], 0.01) + 1e-9) * 255 for i
                              in range(1, 4)], 0, 255)
             Image.fromarray(np.round(color).astype(np.uint8).transpose(1, 2, 0)).save(output_path)
+
     @mark_as_method
     def f17_合并两张图(self, output_path: Path) -> None:
         elevation_image = self.get_input_image(self.f15_绘制高程, output_path)
