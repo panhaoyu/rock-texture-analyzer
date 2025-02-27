@@ -140,9 +140,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_single_thread
     def f10_精细化对正(self, output_path: Path) -> None:
-        """
-        细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
-        """
         output_path = output_path.with_suffix('.ply')
         cloud = read_point_cloud(self.get_input_path(self.f8_调整地面在下, output_path))
         points = np.asarray(cloud.points)
@@ -159,9 +156,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     def f12_仅保留顶面(self, output_path: Path) -> None:
-        """
-        细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
-        """
         output_path = output_path.with_suffix('.ply')
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
@@ -209,13 +203,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     def f14_表面二维重建(self, output_path: Path) -> None:
-        """
-        使用指定的插值方法将点云数据插值到二维网格上。
-        Args:
-            method (str): 插值方法，例如 'nearest', 'linear', 'cubic'。
-        Returns:
-            np.ndarray: 插值后的 [z, r, g, b] 四层矩阵。
-        """
         output_path = output_path.with_suffix('.npy')
         cloud = read_point_cloud(self.get_input_path(self.f12_仅保留顶面, output_path))
         interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
@@ -232,14 +219,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     def f15_绘制高程(self, output_path: Path) -> None:
-        """
-        绘制表面高程图和颜色图，保存后根据是否存在颜色图像进行显示。
-        如果存在颜色图像，则将高程图和颜色图左右合并并显示。
-        如果不存在颜色图像，则仅显示高程图像。
-        Args:
-            interpolated_matrix (np.ndarray): 预先计算好的插值结果矩阵。
-            name (str): 名称的前缀。
-        """
         interpolated_matrix = self.get_input_array(self.f14_表面二维重建, output_path)
         elevation = interpolated_matrix[:, :, 0]
         norm = plt.Normalize(
