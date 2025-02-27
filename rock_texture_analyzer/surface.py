@@ -2,13 +2,16 @@ import numpy as np
 import open3d
 from scipy.interpolate import griddata
 
-_debug = True
+from p3_表面显微镜扫描数据处理.config import debug
+
 _debug_ratio = 100
+
+
 def surface_interpolate_2d(cloud: open3d.geometry.PointCloud, resolution: float, method: str) -> np.ndarray:
     """执行二维插值运算，返回[z, r, g, b]四层矩阵"""
 
     points = np.asarray(cloud.points)
-    if _debug:
+    if debug:
         points = points[::_debug_ratio]
     x, y, z = points.T
     x_min, x_max = np.min(x) + 0.2, np.max(x) - 0.2
@@ -19,7 +22,7 @@ def surface_interpolate_2d(cloud: open3d.geometry.PointCloud, resolution: float,
     arrays = [griddata((x, y), z, (x_grid, y_grid), method=method)]
 
     if (colors := np.asarray(cloud.colors)).size:
-        if _debug:
+        if debug:
             colors = colors[::_debug_ratio]
         r, g, b = colors.T
         arrays.extend(griddata((x, y), c, (x_grid, y_grid), method=method)
