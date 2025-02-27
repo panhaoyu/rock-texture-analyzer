@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 from more_itertools import only
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_method
+from rock_texture_analyzer.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_method
 
 
 class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):

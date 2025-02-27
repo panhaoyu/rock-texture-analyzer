@@ -5,7 +5,7 @@ from typing import Type
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
+from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
 
 

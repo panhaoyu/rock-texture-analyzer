@@ -10,7 +10,7 @@ from scipy.interpolate import griddata
 from scipy.optimize import minimize
 from sklearn.cluster import KMeans
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
+from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered, ValueDetectionError
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud

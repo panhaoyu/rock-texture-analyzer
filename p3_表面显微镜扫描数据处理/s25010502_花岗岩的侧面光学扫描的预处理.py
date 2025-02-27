@@ -6,7 +6,7 @@ import numpy as np
 import requests
 from PIL import Image, ImageFilter
 
-from p3_表面显微镜扫描数据处理.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_method
+from rock_texture_analyzer.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_method
 from p3_表面显微镜扫描数据处理.utils.s1_图像补全_阿里云 import erase_image_with_oss
 
 
