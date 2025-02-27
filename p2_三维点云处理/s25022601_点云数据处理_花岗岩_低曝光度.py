@@ -7,7 +7,7 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy
+    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
 from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
     compute_statistical_boundaries, create_boundary_masks
 from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_peaks
@@ -191,22 +191,23 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             Image.fromarray(np.round(color).astype(np.uint8).transpose(1, 2, 0)).save(output_path)
 
     @mark_as_method
+    @mark_as_recreate
     def f17_合并两张图(self, output_path: Path) -> None:
-        elevation_image = self.get_input_image(self.f15_绘制高程, output_path)
-        surface_image = self.get_input_image(self.f16_绘制图像, output_path)
-        if surface_image:
-            if elevation_image.size != surface_image.size:
-                raise ValueError("高程图和颜色图的尺寸不一致，无法合并显示。")
-            combined_width = elevation_image.width + surface_image.width
-            combined_height = elevation_image.height
-            combined_image = Image.new('RGB', (combined_width, combined_height))
-            combined_image.paste(elevation_image, (0, 0))
-            combined_image.paste(surface_image, (elevation_image.width, 0))
-            result = combined_image
-        else:
-            result = elevation_image
-        result.save(output_path)
+        """将高程图与表面图合并为横向排列的图片"""
+        elevation_img = self.get_input_image(self.f15_绘制高程, output_path)
+        surface_img = self.get_input_image(self.f16_绘制图像, output_path)
 
+        if not surface_img:
+            elevation_img.save(output_path)
+            return
+
+        if (size := elevation_img.size) != surface_img.size:
+            raise ValueError("高程图与表面图尺寸不一致")
+
+        combined_img = Image.new('RGB', (size[0] * 2, size[1]))
+        combined_img.paste(elevation_img, (0, 0))
+        combined_img.paste(surface_img, (size[0], 0))
+        combined_img.save(output_path)
 
 if __name__ == '__main__':
     s25022602_劈裂面形貌扫描_花岗岩_低曝光度.main()
