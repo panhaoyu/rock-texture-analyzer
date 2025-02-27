@@ -10,12 +10,11 @@ from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyPr
     mark_as_single_thread, mark_as_ply, mark_as_npy
 from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
     compute_statistical_boundaries, create_boundary_masks
-from rock_texture_analyzer.clustering import find_valid_clusters
+from rock_texture_analyzer.clustering import find_valid_clusters, get_two_main_value_filtered
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z
-from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered
-from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
+from rock_texture_analyzer.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
 def compute_rotation_matrix(plane_normal: np.ndarray, target_normal: np.ndarray) -> np.ndarray:
