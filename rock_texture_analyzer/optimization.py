@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 from rock_texture_analyzer.base import BaseProcessor
-from rock_texture_analyzer.boundary_processing import generate_boundary_mask, filter_height
+from rock_texture_analyzer.boundary_processing import generate_axis_boundary_mask, filter_vertical_outliers
 from rock_texture_analyzer.clustering import process_clusters
 
 
@@ -76,14 +76,14 @@ def least_squares_adjustment_direction(points: np.ndarray) -> np.ndarray:
 
     # 3. 提取各边界点
     boundaries = [
-        points[generate_boundary_mask(points, 0, xmin, extend_x)],  # 左侧
-        points[generate_boundary_mask(points, 0, xmax, extend_x)],  # 右侧
-        points[generate_boundary_mask(points, 1, ymin, extend_y)],  # 前侧
-        points[generate_boundary_mask(points, 1, ymax, extend_y)]  # 后侧
+        points[generate_axis_boundary_mask(points, 0, xmin, extend_x)],  # 左侧
+        points[generate_axis_boundary_mask(points, 0, xmax, extend_x)],  # 右侧
+        points[generate_axis_boundary_mask(points, 1, ymin, extend_y)],  # 前侧
+        points[generate_axis_boundary_mask(points, 1, ymax, extend_y)]  # 后侧
     ]
 
     # 4. 高度过滤
-    boundaries = [filter_height(b) for b in boundaries]
+    boundaries = [filter_vertical_outliers(b) for b in boundaries]
     if any(len(b) == 0 for b in boundaries):
         BaseProcessor.print_safe("某些边界在高度过滤后没有剩余的点。")
         return

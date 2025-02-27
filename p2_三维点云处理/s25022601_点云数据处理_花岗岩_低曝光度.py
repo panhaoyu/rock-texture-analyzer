@@ -11,8 +11,8 @@ from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyPr
 from rock_texture_analyzer.other_utils import should_flip_based_on_z
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
-from rock_texture_analyzer.boundary_processing import calculate_extended_bounds, filter_side_points, \
-    calculate_final_boundaries, create_boundary_masks
+from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
+    compute_statistical_boundaries, create_boundary_masks
 from rock_texture_analyzer.clustering import find_valid_clusters
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
@@ -206,19 +206,19 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         # 计算扩展边界范围
         (extend_x, extend_y,
          definite_left, definite_right,
-         definite_front, definite_back) = calculate_extended_bounds(
+         definite_front, definite_back) = compute_extended_bounds(
             left_center, right_center,
             front_center, back_center
         )
 
         # 筛选各边界点
-        left_points = filter_side_points(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
-        right_points = filter_side_points(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
-        front_points = filter_side_points(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
-        back_points = filter_side_points(boundary_points, 1, back_center, extend_y, definite_left, definite_right)
+        left_points = filter_points_by_axis(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
+        right_points = filter_points_by_axis(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
+        front_points = filter_points_by_axis(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
+        back_points = filter_points_by_axis(boundary_points, 1, back_center, extend_y, definite_left, definite_right)
 
         # 计算最终边界
-        left, right, front, back = calculate_final_boundaries(left_points, right_points, front_points, back_points)
+        left, right, front, back = compute_statistical_boundaries(left_points, right_points, front_points, back_points)
 
         self.print_safe(f'{left=} {right=} {front=} {back=}')
 

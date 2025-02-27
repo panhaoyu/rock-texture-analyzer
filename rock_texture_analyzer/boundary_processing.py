@@ -5,7 +5,7 @@ import numpy as np
 from rock_texture_analyzer.clustering import process_clusters
 
 
-def calculate_extended_bounds(
+def compute_extended_bounds(
         left_center: float,
         right_center: float,
         front_center: float,
@@ -22,7 +22,7 @@ def calculate_extended_bounds(
             back_center - extend_y)
 
 
-def filter_side_points(
+def filter_points_by_axis(
         boundary_points: np.ndarray,
         axis: int,
         center: float,
@@ -38,7 +38,7 @@ def filter_side_points(
                            & (boundary_points[:, other_axis] < other_high)]
 
 
-def calculate_final_boundaries(
+def compute_statistical_boundaries(
         left_points: np.ndarray,
         right_points: np.ndarray,
         front_points: np.ndarray,
@@ -79,7 +79,7 @@ def create_boundary_masks(
     return boundary_mask, external_mask
 
 
-def generate_boundary_mask(
+def generate_axis_boundary_mask(
         data: np.ndarray,
         axis: int,
         center: float,
@@ -90,7 +90,7 @@ def generate_boundary_mask(
     return (data[:, axis] >= lower) & (data[:, axis] <= upper)
 
 
-def filter_height(boundary: np.ndarray) -> np.ndarray:
+def filter_vertical_outliers(boundary: np.ndarray) -> np.ndarray:
     """在高度方向上过滤掉顶部和底部各5%的点"""
     if not boundary.size:
         return boundary
