@@ -188,7 +188,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    @mark_as_recreate
     def f10_精细化对正(self, output_path: Path) -> None:
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
@@ -205,7 +204,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         write_point_cloud(output_path, cloud)
 
     @mark_as_method
-    @mark_as_recreate
     def f11_绘制点云(self, output_path: Path) -> None:
         cloud_path = self.get_file_path(self.f10_精细化对正, output_path)
         draw_point_cloud(cloud_path, output_path)
@@ -302,6 +300,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         draw_point_cloud(cloud_path, output_path)
 
     @mark_as_method
+    @mark_as_recreate
     def f14_表面二维重建(self, output_path: Path) -> None:
         """
         使用指定的插值方法将点云数据插值到二维网格上。
@@ -329,6 +328,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         np.save(output_path, interpolated_matrix)
 
     @mark_as_method
+    @mark_as_recreate
     def f15_绘制高程(self, output_path: Path) -> None:
         """
         绘制表面高程图和颜色图，保存后根据是否存在颜色图像进行显示。
