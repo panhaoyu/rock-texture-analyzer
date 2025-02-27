@@ -9,10 +9,12 @@ from pathlib import Path
 from typing import Callable
 
 import numpy as np
+import open3d.cpu.pybind.geometry
 from PIL import Image
 from more_itertools import only
 
 from p3_表面显微镜扫描数据处理.config import base_dir
+from rock_texture_analyzer.point_cloud import read_point_cloud
 
 
 class ProcessMethod(typing.Callable):
@@ -94,7 +96,21 @@ class BaseProcessor:
             func_index = int(func_index)
             func.is_single_thread and self._single_thread_lock.acquire()
             try:
-                func(self, output_path)
+                # todo 读取返回值，并根据返回值的类型，来判断应当如何写入到相应的文件中
+                result = func(self, output_path)
+                match type(result):
+                    case open3d.cpu.pybind.geometry.PointCloud:
+                        raise NotImplementedError
+                    case np.ndarray:
+                        raise NotImplementedError
+                    case Image.Image:
+                        raise NotImplementedError
+                    case type(None):
+                        raise NotImplementedError
+                    case other:
+                        raise NotImplementedError
+
+
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
@@ -119,6 +135,9 @@ class BaseProcessor:
 
     def get_input_path(self, func: ProcessMethod, output_path: Path) -> Path:
         return self.get_file_path(func, output_path.stem)
+
+    def get_input_ply(self, func: ProcessMethod, output_path: Path):
+        return read_point_cloud(self.get_input_path(func, output_path))
 
     def get_input_image(self, func: ProcessMethod, output_path: Path):
         input_path = self.get_input_path(func, output_path)
@@ -205,6 +224,8 @@ def mark_as_ply(func: Callable):
     func = ProcessMethod.of(func)
     func.suffix = '.ply'
     return func
+
+
 def mark_as_npy(func: Callable):
     func = ProcessMethod.of(func)
     func.suffix = '.npy'

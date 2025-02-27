@@ -14,7 +14,7 @@ from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
-from rock_texture_analyzer.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
+from rock_texture_analyzer.point_cloud import write_point_cloud, draw_point_cloud
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
@@ -27,8 +27,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     def f2_读取点云原始数据(self, output_path: Path) -> None:
-        input_path: Path = self.get_file_path(self.f1_原始数据, output_path)
-        write_point_cloud(output_path, read_point_cloud(input_path))
+        cloud = self.get_input_ply(self.f1_原始数据, output_path)
+        write_point_cloud(output_path, cloud)
 
     @mark_as_method
     @mark_as_single_thread
@@ -38,7 +38,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     def f4_调整为主平面(self, output_path: Path) -> None:
-        cloud = read_point_cloud(self.get_input_path(self.f2_读取点云原始数据, output_path))
+        cloud = self.get_input_ply(self.f2_读取点云原始数据, output_path)
         points = np.asarray(cloud.points)
         centered_points = points - np.mean(points, axis=0)
         plane_normal = np.linalg.svd(np.cov(centered_points.T))[2][-1]
@@ -55,7 +55,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     def f6_xOy平面对正(self, output_path: Path) -> None:
-        cloud = read_point_cloud(self.get_input_path(self.f4_调整为主平面, output_path))
+        cloud = self.get_input_ply(self.f4_调整为主平面, output_path)
         points = np.asarray(cloud.points)
         x, y = points[:, :2].T
         x_bins = np.arange(x.min(), x.max() + 1, 1)
@@ -82,7 +82,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     @mark_as_ply
     def f8_调整地面在下(self, output_path: Path) -> None:
-        cloud = read_point_cloud(self.get_input_path(self.f6_xOy平面对正, output_path))
+        cloud = self.get_input_ply(self.f6_xOy平面对正, output_path)
         points = np.asarray(cloud.points)
         if should_flip_based_on_z(*create_boundary_masks(points, extension_ratio=0.1)):
             cloud.points = Vector3dVector(-points)
@@ -97,7 +97,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     @mark_as_ply
     def f10_精细化对正(self, output_path: Path) -> None:
-        cloud = read_point_cloud(self.get_input_path(self.f8_调整地面在下, output_path))
+        cloud = self.get_input_ply(self.f8_调整地面在下, output_path)
         points = np.asarray(cloud.points)
         best_rotation = least_squares_adjustment_direction(points)
         rotated_points = points.dot(best_rotation.T)
@@ -113,7 +113,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_ply
     @mark_as_single_thread
     def f12_仅保留顶面(self, output_path: Path) -> None:
-        cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
+        cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
         thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
@@ -155,8 +155,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_npy
     def f14_表面二维重建(self, output_path: Path) -> None:
-        interpolated_matrix = surface_interpolate_2d(
-            read_point_cloud(self.get_input_path(self.f12_仅保留顶面, output_path)), 0.1, 'cubic')
+        cloud = self.get_input_ply(self.f12_仅保留顶面, output_path)
+        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
         for i, name in enumerate(['z', 'r', 'g', 'b'][:interpolated_matrix.shape[2]]):
             layer = interpolated_matrix[..., i]
             total, nan = layer.size, np.isnan(layer).sum()
