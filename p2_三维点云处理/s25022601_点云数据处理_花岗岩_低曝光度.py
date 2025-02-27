@@ -205,7 +205,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         write_point_cloud(output_path, cloud)
 
     @mark_as_method
-    @mark_as_single_thread
     @mark_as_recreate
     def f11_绘制点云(self, output_path: Path) -> None:
         cloud_path = self.get_file_path(self.f10_精细化对正, output_path)
