@@ -70,10 +70,23 @@ def create_boundary_masks(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """创建边界区域和外围区域的布尔掩码"""
     x_coords, y_coords = points[:, 0], points[:, 1]
+
+    # 计算扩展后的边界区域
     x_min, x_max = process_clusters(x_coords, extension_ratio=extension_ratio)
     y_min, y_max = process_clusters(y_coords, extension_ratio=extension_ratio)
-    boundary_mask = (x_coords >= x_min) & (x_coords <= x_max) & (y_coords >= y_min) & (y_coords <= y_max)
-    external_mask = (x_coords > x_max) | (y_coords > y_max) & (x_coords >= x_min)
+
+    # 生成边界区域掩码
+    boundary_mask = (
+            (x_coords >= x_min) & (x_coords <= x_max) &
+            (y_coords >= y_min) & (y_coords <= y_max)
+    )
+
+    # 生成外围区域掩码（边界之外的区域）
+    external_mask = (
+            (x_coords < x_min) | (x_coords > x_max) |
+            (y_coords < y_min) | (y_coords > y_max)
+    )
+
     return boundary_mask, external_mask
 
 
