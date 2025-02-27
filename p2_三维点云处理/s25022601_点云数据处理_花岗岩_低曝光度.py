@@ -10,6 +10,7 @@ from sklearn.cluster import KMeans
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread, mark_as_recreate
+from rock_texture_analyzer.least_squares_adjustment_direction import least_squares_adjustment_direction
 from rock_texture_analyzer.surface import surface_interpolate_2d
 from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered, ValueDetectionError
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
@@ -195,6 +196,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = read_point_cloud(self.get_input_path(self.f8_调整地面在下, output_path))
         points = np.asarray(cloud.points)
 
+        best_rotation = least_squares_adjustment_direction(points)
 
         # 8. 应用最佳旋转到整个点云
         rotated_points = points.dot(best_rotation.T)
