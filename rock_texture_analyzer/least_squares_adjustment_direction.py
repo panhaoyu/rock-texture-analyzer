@@ -5,116 +5,75 @@ from sklearn.cluster import KMeans
 from rock_texture_analyzer.base import BaseProcessor
 
 
-def least_squares_adjustment_direction(points: np.ndarray):
-    # 1. 分别对X轴和Y轴进行K-Means聚类
-    # 对X轴聚类
-    kmeans_x = KMeans(n_clusters=2, random_state=0)
-    kmeans_x.fit(points[:, 0].reshape(-1, 1))
-    centers_x = sorted(kmeans_x.cluster_centers_.flatten())
-    xmin, xmax = centers_x[0], centers_x[1]
+def cluster_axis(data: np.ndarray, axis: int) -> tuple:
+    """对指定轴进行K-Means聚类并返回排序后的聚类中心"""
+    kmeans = KMeans(n_clusters=2, random_state=0)
+    kmeans.fit(data[:, axis].reshape(-1, 1))
+    centers = sorted(kmeans.cluster_centers_.flatten())
+    return centers[0], centers[1]
 
-    # 对Y轴聚类
-    kmeans_y = KMeans(n_clusters=2, random_state=0)
-    kmeans_y.fit(points[:, 1].reshape(-1, 1))
-    centers_y = sorted(kmeans_y.cluster_centers_.flatten())
-    ymin, ymax = centers_y[0], centers_y[1]
 
-    # 2. 扩展边界范围，向内外分别扩展10%
-    range_x = xmax - xmin
-    range_y = ymax - ymin
-    extend_x = 0.1 * range_x
-    extend_y = 0.1 * range_y
+def generate_boundary_mask(data: np.ndarray, axis: int, center: float, extend: float) -> np.ndarray:
+    """生成边界区域的布尔掩码"""
+    lower = center - extend
+    upper = center + extend
+    return (data[:, axis] >= lower) & (data[:, axis] <= upper)
 
-    # 左侧边界
-    left_mask = (points[:, 0] <= (xmin + extend_x)) & (points[:, 0] >= (xmin - extend_x))
-    left_boundary = points[left_mask]
 
-    # 右侧边界
-    right_mask = (points[:, 0] >= (xmax - extend_x)) & (points[:, 0] <= (xmax + extend_x))
-    right_boundary = points[right_mask]
+def filter_height(boundary: np.ndarray) -> np.ndarray:
+    """在高度方向上过滤掉顶部和底部各5%的点"""
+    if len(boundary) == 0:
+        return boundary
 
-    # 前侧边界
-    front_mask = (points[:, 1] <= (ymin + extend_y)) & (points[:, 1] >= (ymin - extend_y))
-    front_boundary = points[front_mask]
+    z_values = boundary[:, 2]
+    lower = np.quantile(z_values, 0.05)
+    upper = np.quantile(z_values, 0.95)
+    return boundary[(z_values >= lower) & (z_values <= upper)]
 
-    # 后侧边界
-    back_mask = (points[:, 1] >= (ymax - extend_y)) & (points[:, 1] <= (ymax + extend_y))
-    back_boundary = points[back_mask]
 
-    # 3. 分别处理每个边界
-    boundary_left = left_boundary.copy()
-    boundary_right = right_boundary.copy()
-    boundary_front = front_boundary.copy()
-    boundary_back = back_boundary.copy()
+def create_rotation_matrix(angles_deg: tuple) -> np.ndarray:
+    """根据给定的欧拉角创建旋转矩阵（XYZ顺序）"""
+    alpha, beta, gamma = np.radians(angles_deg)
 
-    # 4. 在高度方向上舍弃10%的点（顶部和底部各5%）
-    def filter_height(boundary):
-        if len(boundary) == 0:
-            return boundary
-        z_sorted = np.sort(boundary[:, 2])
-        lower_bound = z_sorted[int(0.05 * len(z_sorted))]
-        upper_bound = z_sorted[int(0.95 * len(z_sorted))]
-        return boundary[
-            (boundary[:, 2] >= lower_bound) &
-            (boundary[:, 2] <= upper_bound)
-            ]
+    R_x = np.array([
+        [1, 0, 0],
+        [0, np.cos(alpha), -np.sin(alpha)],
+        [0, np.sin(alpha), np.cos(alpha)]
+    ])
 
-    boundary_left = filter_height(boundary_left)
-    boundary_right = filter_height(boundary_right)
-    boundary_front = filter_height(boundary_front)
-    boundary_back = filter_height(boundary_back)
+    R_y = np.array([
+        [np.cos(beta), 0, np.sin(beta)],
+        [0, 1, 0],
+        [-np.sin(beta), 0, np.cos(beta)]
+    ])
 
-    # 确保每个边界都有足够的点
-    if any(len(b) == 0 for b in [boundary_left, boundary_right, boundary_front, boundary_back]):
-        BaseProcessor.print_safe("某些边界在高度过滤后没有剩余的点。")
-        return
+    R_z = np.array([
+        [np.cos(gamma), -np.sin(gamma), 0],
+        [np.sin(gamma), np.cos(gamma), 0],
+        [0, 0, 1]
+    ])
 
-    # 5. 定义优化目标函数
+    return R_z @ R_y @ R_x
+
+
+def compute_rotated_std(R: np.ndarray, boundaries: list) -> float:
+    """计算旋转后各边界的标准差之和"""
+    rotated = [b.dot(R.T) for b in boundaries]
+    std_values = [
+        np.std(rotated[0][:, 0]),  # 左侧X轴
+        np.std(rotated[1][:, 0]),  # 右侧X轴
+        np.std(rotated[2][:, 1]),  # 前侧Y轴
+        np.std(rotated[3][:, 1])  # 后侧Y轴
+    ]
+    return sum(std_values)
+
+
+def optimize_angles(initial_angles: list, boundaries: list, bounds: tuple) -> dict:
+    """执行优化过程并返回结果"""
+
     def objective(angles_deg):
-        alpha, beta, gamma = angles_deg  # 旋转角度（度）
-        # 转换为弧度
-        alpha_rad = np.radians(alpha)
-        beta_rad = np.radians(beta)
-        gamma_rad = np.radians(gamma)
-
-        # 构建旋转矩阵（顺序：X -> Y -> Z）
-        R_x = np.array([
-            [1, 0, 0],
-            [0, np.cos(alpha_rad), -np.sin(alpha_rad)],
-            [0, np.sin(alpha_rad), np.cos(alpha_rad)]
-        ])
-        R_y = np.array([
-            [np.cos(beta_rad), 0, np.sin(beta_rad)],
-            [0, 1, 0],
-            [-np.sin(beta_rad), 0, np.cos(beta_rad)]
-        ])
-        R_z = np.array([
-            [np.cos(gamma_rad), -np.sin(gamma_rad), 0],
-            [np.sin(gamma_rad), np.cos(gamma_rad), 0],
-            [0, 0, 1]
-        ])
-        R = R_z @ R_y @ R_x
-
-        # 应用旋转
-        rotated_left = boundary_left.dot(R.T)
-        rotated_right = boundary_right.dot(R.T)
-        rotated_front = boundary_front.dot(R.T)
-        rotated_back = boundary_back.dot(R.T)
-
-        # 计算标准差
-        std_left = np.std(rotated_left[:, 0])  # 左侧边界关注x值
-        std_right = np.std(rotated_right[:, 0])  # 右侧边界关注x值
-        std_front = np.std(rotated_front[:, 1])  # 前侧边界关注y值
-        std_back = np.std(rotated_back[:, 1])  # 后侧边界关注y值
-
-        # 总目标：最小化所有标准差的加权和
-        total_std = std_left + std_right + std_front + std_back
-
-        return total_std
-
-    # 6. 使用SciPy的minimize进行优化
-    initial_angles = [0.0, 0.0, 0.0]  # 初始猜测角度（度）
-    bounds = [(-10, 10), (-10, 10), (-10, 10)]  # 旋转角度范围（度）
+        R = create_rotation_matrix(angles_deg)
+        return compute_rotated_std(R, boundaries)
 
     result = minimize(
         objective,
@@ -124,34 +83,51 @@ def least_squares_adjustment_direction(points: np.ndarray):
         options={'ftol': 1e-8, 'maxiter': 1000}
     )
 
-    if result.success:
-        best_angles = result.x
-        best_std = result.fun
-        BaseProcessor.print_safe(f"最佳旋转角度 (α, β, γ): {best_angles} 度, 总标准差: {best_std:.6f}")
+    return {
+        'success': result.success,
+        'angles': result.x,
+        'value': result.fun
+    }
+
+
+def least_squares_adjustment_direction(points: np.ndarray) -> np.ndarray:
+    # 1. 对X/Y轴进行聚类
+    xmin, xmax = cluster_axis(points, 0)
+    ymin, ymax = cluster_axis(points, 1)
+
+    # 2. 计算扩展范围
+    extend_x = 0.1 * (xmax - xmin)
+    extend_y = 0.1 * (ymax - ymin)
+
+    # 3. 提取各边界点
+    boundaries = [
+        points[generate_boundary_mask(points, 0, xmin, extend_x)],  # 左侧
+        points[generate_boundary_mask(points, 0, xmax, extend_x)],  # 右侧
+        points[generate_boundary_mask(points, 1, ymin, extend_y)],  # 前侧
+        points[generate_boundary_mask(points, 1, ymax, extend_y)]  # 后侧
+    ]
+
+    # 4. 高度过滤
+    boundaries = [filter_height(b) for b in boundaries]
+    if any(len(b) == 0 for b in boundaries):
+        BaseProcessor.print_safe("某些边界在高度过滤后没有剩余的点。")
+        return
+
+    # 5. 优化旋转角度
+    optimization_result = optimize_angles(
+        initial_angles=[0.0, 0.0, 0.0],
+        boundaries=boundaries,
+        bounds=[(-10, 10)] * 3
+    )
+
+    # 6. 处理优化结果
+    if optimization_result['success']:
+        best_angles = optimization_result['angles']
+        BaseProcessor.print_safe(
+            f"最佳旋转角度 (α, β, γ): {best_angles} 度, 总标准差: {optimization_result['value']:.6f}")
     else:
         BaseProcessor.print_safe("优化未收敛，使用初始角度。")
-        best_angles = initial_angles
+        best_angles = [0.0, 0.0, 0.0]
 
-    # 7. 构建最佳旋转矩阵
-    alpha, beta, gamma = best_angles  # 旋转角度（度）
-    alpha_rad = np.radians(alpha)
-    beta_rad = np.radians(beta)
-    gamma_rad = np.radians(gamma)
-
-    R_x = np.array([
-        [1, 0, 0],
-        [0, np.cos(alpha_rad), -np.sin(alpha_rad)],
-        [0, np.sin(alpha_rad), np.cos(alpha_rad)]
-    ])
-    R_y = np.array([
-        [np.cos(beta_rad), 0, np.sin(beta_rad)],
-        [0, 1, 0],
-        [-np.sin(beta_rad), 0, np.cos(beta_rad)]
-    ])
-    R_z = np.array([
-        [np.cos(gamma_rad), -np.sin(gamma_rad), 0],
-        [np.sin(gamma_rad), np.cos(gamma_rad), 0],
-        [0, 0, 1]
-    ])
-    best_rotation = R_z @ R_y @ R_x
-    return best_rotation
+    # 7. 生成最终旋转矩阵
+    return create_rotation_matrix(best_angles)
