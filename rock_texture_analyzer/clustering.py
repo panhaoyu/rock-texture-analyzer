@@ -42,7 +42,7 @@ def get_two_main_value_filtered(data: np.ndarray, prominence: float = 0.05) -> t
     return tuple(sorted(peak_centers.tolist()))
 
 
-def find_valid_clusters(
+def find_both_clusters(
         point_x: np.ndarray,
         point_y: np.ndarray,
         thresholds: list[float]
@@ -51,11 +51,20 @@ def find_valid_clusters(
     for threshold in thresholds:
         try:
             x1, x2 = get_two_main_value_filtered(point_x, threshold)
-            y1, y2 = get_two_main_value_filtered(point_y, threshold)
-            return x1, x2, y1, y2
+            break
         except ValueDetectionError:
             continue
-    raise ValueDetectionError(f"无法找到有效阈值，尝试了所有阈值: {thresholds}")
+    else:
+        raise ValueDetectionError(f"无法找到有效阈值，尝试了所有阈值: {thresholds}")
+    for threshold in thresholds:
+        try:
+            y1, y2 = get_two_main_value_filtered(point_y, threshold)
+            break
+        except ValueDetectionError:
+            continue
+    else:
+        raise ValueDetectionError(f"无法找到有效阈值，尝试了所有阈值: {thresholds}")
+    return x1, x2, y1, y2
 
 
 def process_clusters(
