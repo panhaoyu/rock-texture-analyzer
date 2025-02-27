@@ -8,9 +8,12 @@ from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread
-from rock_texture_analyzer.pc_utils import find_valid_clusters, calculate_extended_bounds, filter_side_points, \
-    calculate_final_boundaries, create_boundary_masks, should_flip_based_on_z, \
-    least_squares_adjustment_direction, surface_interpolate_2d
+from rock_texture_analyzer.other_utils import should_flip_based_on_z
+from rock_texture_analyzer.optimization import least_squares_adjustment_direction
+from rock_texture_analyzer.interpolation import surface_interpolate_2d
+from rock_texture_analyzer.boundary_processing import calculate_extended_bounds, filter_side_points, \
+    calculate_final_boundaries, create_boundary_masks
+from rock_texture_analyzer.clustering import find_valid_clusters
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
