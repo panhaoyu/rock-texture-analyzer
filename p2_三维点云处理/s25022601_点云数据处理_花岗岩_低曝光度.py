@@ -110,7 +110,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     @mark_as_ply
     def f10_精细化对正(self, output_path: Path) -> None:
-        raise
         cloud = read_point_cloud(self.get_input_path(self.f8_调整地面在下, output_path))
         points = np.asarray(cloud.points)
         best_rotation = least_squares_adjustment_direction(points)
