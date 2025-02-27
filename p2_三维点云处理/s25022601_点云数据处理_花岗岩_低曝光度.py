@@ -8,11 +8,12 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread
+    mark_as_single_thread, mark_as_recreate
+from rock_texture_analyzer.get_top import _calculate_extended_bounds, _find_valid_clusters, _filter_side_points, \
+    _calculate_final_boundaries
 from rock_texture_analyzer.k_means import get_centers_with_extension
 from rock_texture_analyzer.least_squares_adjustment_direction import least_squares_adjustment_direction
 from rock_texture_analyzer.surface import surface_interpolate_2d
-from rock_texture_analyzer.utils.get_two_peaks import get_two_main_value_filtered, ValueDetectionError
 from rock_texture_analyzer.utils.point_cloud import write_point_cloud, read_point_cloud, draw_point_cloud
 
 
@@ -185,6 +186,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         draw_point_cloud(cloud_path, output_path)
 
     @mark_as_method
+    @mark_as_recreate
     def f12_仅保留顶面(self, output_path: Path) -> None:
         """
         细化对正，通过分别对X和Y轴进行K-Means聚类，扩展边界范围，并使用SciPy的优化方法旋转优化使四个侧边界与坐标轴对齐。
@@ -193,84 +195,61 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = read_point_cloud(self.get_input_path(self.f10_精细化对正, output_path))
         points = np.asarray(cloud.points)
 
+        # 处理Z轴选择边界点
         point_z = points[:, 2]
         bottom_center = np.min(point_z)
         top_center = np.max(point_z)
-        range_z = (top_center - bottom_center)
+        range_z = top_center - bottom_center
         z_selector = (point_z > (bottom_center + range_z * 0.1)) & (point_z < (top_center - range_z * 0.4))
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
 
-        # 尝试不同的阈值进行处理
+        # 通过阈值尝试获取有效聚类中心
         thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
-        for threshold in thresholds:
-            try:
-                left_center, right_center = get_two_main_value_filtered(point_x, threshold)
-                front_center, back_center = get_two_main_value_filtered(point_y, threshold)
-                break
-            except ValueDetectionError:
-                continue
-        else:
-            raise ValueDetectionError(f"无法找到有效阈值，尝试了所有阈值: {thresholds}")
+        left_center, right_center, front_center, back_center = _find_valid_clusters(point_x, point_y, thresholds)
 
         self.print_safe(f'{left_center=} {right_center=}')
         self.print_safe(f'{front_center=} {back_center=}')
+        assert back_center > front_center and right_center > left_center
 
-        assert back_center > front_center
-        assert right_center > left_center
+        # 计算扩展边界范围
+        (extend_x, extend_y,
+         definite_left, definite_right,
+         definite_front, definite_back) = _calculate_extended_bounds(
+            left_center, right_center,
+            front_center, back_center
+        )
 
-        # 2. 扩展边界范围，向内外分别扩展10%
-        extend_x = 0.1 * (right_center - left_center)
-        extend_y = 0.1 * (back_center - front_center)
+        # 筛选各边界点
+        left_points = _filter_side_points(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
+        right_points = _filter_side_points(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
+        front_points = _filter_side_points(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
+        back_points = _filter_side_points(boundary_points, 1, back_center, extend_y, definite_left, definite_right)
 
-        definite_front = front_center + extend_y
-        definite_back = back_center - extend_y
-        definite_left = left_center + extend_x
-        definite_right = right_center - extend_x
-
-        left_points = boundary_points[np.abs(point_x - left_center) < extend_x]
-        right_points = boundary_points[np.abs(point_x - right_center) < extend_x]
-        front_points = boundary_points[np.abs(point_y - front_center) < extend_y]
-        back_points = boundary_points[np.abs(point_y - back_center) < extend_y]
-
-        left_points = left_points[(left_points[:, 1] > definite_front) & (left_points[:, 1] < definite_back)]
-        right_points = right_points[(right_points[:, 1] > definite_front) & (right_points[:, 1] < definite_back)]
-        front_points = front_points[(front_points[:, 0] > definite_left) & (front_points[:, 0] < definite_right)]
-        back_points = back_points[(back_points[:, 0] > definite_left) & (back_points[:, 0] < definite_right)]
-
-        left_mean = np.mean(left_points[:, 0])
-        left_std = np.std(left_points[:, 0])
-        right_mean = np.mean(right_points[:, 0])
-        right_std = np.std(right_points[:, 0])
-        front_mean = np.mean(front_points[:, 1])
-        front_std = np.std(front_points[:, 1])
-        back_mean = np.mean(back_points[:, 1])
-        back_std = np.std(back_points[:, 1])
-
-        std_range = 5
-        left = left_mean + std_range * left_std
-        right = right_mean - std_range * right_std
-        front = front_mean + std_range * front_std
-        back = back_mean - std_range * back_std
+        # 计算最终边界
+        left, right, front, back = _calculate_final_boundaries(left_points, right_points, front_points, back_points)
 
         self.print_safe(f'{left=} {right=} {front=} {back=}')
 
+        # 应用最终筛选条件
         point_x, point_y, point_z = points[:, 0], points[:, 1], points[:, 2]
         top_selector = (
                 (point_x > left) & (point_x < right)
                 & (point_y > front) & (point_y < back)
                 & (point_z > bottom_center + range_z * 0.5)
         )
-
         cloud.points = open3d.utility.Vector3dVector(points[top_selector])
 
-        colors = np.asarray(cloud.colors)  # 扫描的时候未必开启对颜色的扫描
+        # 处理颜色数据
+        colors = np.asarray(cloud.colors)
         if colors.size:
             cloud.colors = open3d.utility.Vector3dVector(colors[top_selector])
+
         write_point_cloud(output_path, cloud)
 
     @mark_as_method
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_绘制点云(self, output_path: Path) -> None:
         cloud_path = self.get_file_path(self.f12_仅保留顶面, output_path.stem)
         draw_point_cloud(cloud_path, output_path)
