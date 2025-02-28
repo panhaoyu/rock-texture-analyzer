@@ -11,6 +11,34 @@ class ValueDetectionError(ValueError):
     pass
 
 
+def find_single_peak(data: np.ndarray, prominence: Union[float, list[float]] = 0.1) -> float:
+    """基于KDE方法识别单峰分布的主峰
+
+    Args:
+        data: 输入一维数据数组
+        prominence: 峰检测的最小突出度，支持单值或列表形式
+
+    Returns:
+        主峰对应的x坐标
+
+    Raises:
+        ValueDetectionError: 无法检测到有效峰时抛出异常
+    """
+    kde = KernelDensity()
+    kde.fit(data.reshape(-1, 1))
+    x_range = np.linspace(data.min(), data.max(), 1000)
+    log_density = kde.score_samples(x_range.reshape(-1, 1))
+    density = np.exp(log_density)
+
+    peaks, properties = find_peaks(density, prominence=prominence)
+    if len(peaks) == 0:
+        raise ValueDetectionError("未检测到有效峰")
+
+    print(properties)
+    main_peak = peaks[np.argmax(properties['peak_heights'])]  # 修正键名
+    return x_range[main_peak]
+
+
 def find_two_peaks(data: np.ndarray, prominence: Union[float, list[float]]) -> tuple[float, float]:
     """去除背景数据后提取双峰分布的两个主要峰值，基于KDE方法。
 
@@ -39,17 +67,6 @@ def find_two_peaks(data: np.ndarray, prominence: Union[float, list[float]]) -> t
             peak_centers = x_range[peaks].flatten()
             return tuple(sorted(peak_centers[:2]))
     raise ValueDetectionError(f"无法检测到两个明显峰，尝试prominence列表{prominences}后仍失败")
-
-
-def find_peaks_on_both_sides(
-        point_x: np.ndarray,
-        point_y: np.ndarray,
-        thresholds: list[float],
-) -> tuple[float, float, float, float]:
-    """通过尝试不同阈值获取有效聚类中心"""
-    x1, x2 = find_two_peaks(point_x, prominence=thresholds)
-    y1, y2 = find_two_peaks(point_y, prominence=thresholds)
-    return x1, x2, y1, y2
 
 
 def process_clusters(

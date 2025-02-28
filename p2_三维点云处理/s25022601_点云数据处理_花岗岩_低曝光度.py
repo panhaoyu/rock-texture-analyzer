@@ -11,7 +11,8 @@ from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyPr
     mark_as_single_thread, mark_as_ply, mark_as_npy
 from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
     compute_statistical_boundaries, create_boundary_masks
-from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_peaks, ValueDetectionError
+from rock_texture_analyzer.clustering import find_two_peaks, ValueDetectionError, \
+    find_single_peak
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
@@ -128,13 +129,15 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         try:
             bottom, top = find_two_peaks(point_z, thresholds)
         except ValueDetectionError:
-            raise NotImplementedError
+            bottom = np.min(point_z)
+            top = find_single_peak(point_z, thresholds)
         self.print_safe(f'{bottom=} {top=}')
         range_z = top - bottom
         z_selector = (point_z > (bottom + range_z * 0.1)) & (point_z < (top - range_z * 0.4))
         boundary_points = points[z_selector]
         point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
-        left_center, right_center, front_center, back_center = find_peaks_on_both_sides(point_x, point_y, thresholds)
+        left_center, right_center = find_two_peaks(point_x, prominence=thresholds)
+        front_center, back_center = find_two_peaks(point_y, prominence=thresholds)
         self.print_safe(f'{left_center=} {right_center=}')
         self.print_safe(f'{front_center=} {back_center=}')
         assert back_center > front_center and right_center > left_center
