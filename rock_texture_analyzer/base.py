@@ -12,6 +12,7 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 from PIL import Image
+from matplotlib import pyplot as plt
 from more_itertools import only
 from open3d.cpu.pybind.geometry import PointCloud
 
@@ -60,18 +61,13 @@ class BaseProcessor:
 
     @cached_property
     def step_functions(self):
-        class_methods: dict[int, ProcessMethod] = {}
+        class_methods: dict[int, list[ProcessMethod]] = {}
         for klass in self.__class__.mro():
             for value in vars(klass).values():
                 if isinstance(value, ProcessMethod):
-                    index = value.step_index
-                    if index in class_methods:
-                        existing = class_methods[index]
-                        raise ValueError(f'Duplicated step: {value.func_name}, {existing.func_name}')
-                    else:
-                        class_methods[index] = value
-        class_methods: list[ProcessMethod] = [v for k, v in sorted(class_methods.items())]
-        return class_methods
+                    class_methods.setdefault(value.step_index, []).append(value)
+        sorted_methods = sorted(class_methods.items(), key=lambda x: x[0])
+        return [method for _, methods in sorted_methods for method in methods]
 
     @cached_property
     def base_dir(self) -> Path:
@@ -111,7 +107,9 @@ class BaseProcessor:
                     case '.png':
                         if isinstance(result, np.ndarray):
                             result = Image.fromarray(result)
-                        if isinstance(result, Image.Image):
+                        if isinstance(result, plt.Figure):
+                            result.savefig(output_path)
+                        elif isinstance(result, Image.Image):
                             result.save(output_path)
                         elif isinstance(result, PointCloud):
                             draw_point_cloud(result, output_path)
@@ -119,7 +117,7 @@ class BaseProcessor:
                             raise NotImplementedError(f'Unknown png type: {type(result)}')
                     case '.xlsx':
                         assert isinstance(result, pd.DataFrame)
-                        result.toexcel(output_path)
+                        result.to_excel(output_path)
                     case '.pickle':
                         output_path.write_bytes(pickle.dumps(result))
                     case other:

@@ -2,12 +2,13 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import seaborn as sns
 from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
+    mark_as_single_thread, mark_as_ply, mark_as_npy
 from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
     compute_statistical_boundaries, create_boundary_masks
 from rock_texture_analyzer.clustering import find_peaks_on_both_sides, find_two_peaks
@@ -106,6 +107,15 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     def f11_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f10_精细化对正, output_path)
+
+    @mark_as_method
+    def f11_计算顶面与底面位置的KDE图(self, output_path: Path):
+        figure: plt.Figure = plt.figure()
+        cloud = self.get_input_ply(self.f10_精细化对正, output_path)
+        z = np.asarray(cloud.points)[:, 2]
+        ax = figure.subplots()
+        sns.kdeplot(z, fill=True, ax=ax)
+        return figure
 
     @mark_as_method
     @mark_as_ply
