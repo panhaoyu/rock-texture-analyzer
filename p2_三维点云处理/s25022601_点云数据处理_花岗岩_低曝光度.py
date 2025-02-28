@@ -61,8 +61,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         hist = np.histogram2d(x, y, bins=[x_bins, y_bins])[0]
         density_image = np.where(hist > 50, 255, 0).astype(np.uint8)[::-1]
 
-        if (contours := cv2.findContours(density_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]):
-            angle = (rect := cv2.minAreaRect(max(contours, key=cv2.contourArea)))[-1]
+        if contours := cv2.findContours(density_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]:
+            angle = cv2.minAreaRect(max(contours, key=cv2.contourArea))[-1]
             angle = angle if angle < -45 else angle + 90
             theta = np.radians(-angle)
             R_z = np.array([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
