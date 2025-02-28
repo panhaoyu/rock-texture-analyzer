@@ -164,28 +164,24 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return self.f13_1_仅保留顶面.read(path)
 
     @mark_as_png
-    @mark_as_recreate
     def f14_2_绘制左侧点云(self, path: Path):
         cloud = self.f13_2_仅保留左侧面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    @mark_as_recreate
     def f14_3_绘制右侧点云(self, path: Path):
         cloud = self.f13_3_仅保留右侧面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    @mark_as_recreate
     def f14_4_绘制前面点云(self, path: Path):
         cloud = self.f13_4_仅保留前面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    @mark_as_recreate
     def f14_5_绘制后面点云(self, path: Path):
         cloud = self.f13_5_仅保留后面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
@@ -228,14 +224,30 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return combined_img
 
     @mark_as_png
-    def f18_合并全部的图(self, path: Path):
+    @mark_as_recreate
+    def f18_合并全部的图(self, path: Path) -> Image.Image:
         left = self.f14_2_绘制左侧点云.read(path)
         right = self.f14_3_绘制右侧点云.read(path)
         front = self.f14_4_绘制前面点云.read(path)
         back = self.f14_5_绘制后面点云.read(path)
         center = self.f16_绘制图像.read(path)
-        # todo 这些全都是PIL的Image，把它们合并为一张图，center在中心，剩下的四个粘在周围。
-        return combined
+
+        s1 = left.height // 2  # 假设所有子图尺寸相同
+        s2, s3, s4 = s1 * 2, s1 * 3, s1 * 4
+
+        center = center.resize((s2, s2))
+        left = left.resize((s1, s2))
+        right = right.resize((s1, s2))
+        front = front.resize((s2, s1))
+        back = back.resize((s2, s1))
+
+        new_img = Image.new('RGB', (s4, s4), (255, 255, 255))
+        new_img.paste(left, (0, s1))
+        new_img.paste(front, (s1, 0))
+        new_img.paste(center, (s1, s1))
+        new_img.paste(right, (s3, s1))
+        new_img.paste(back, (s1, s3))
+        return new_img
 
 
 if __name__ == '__main__':
