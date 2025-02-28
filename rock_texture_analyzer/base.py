@@ -40,6 +40,9 @@ class ProcessMethod(typing.Callable):
     def __str__(self):
         return self.func_name
 
+    def __repr__(self):
+        return f'<{self.func_name}[{self.suffix}]>'
+
     @cached_property
     def step_index(self):
         return int(re.fullmatch(f'f(\d+)_(.*)', self.func_name).group(1))
@@ -149,8 +152,7 @@ class BaseProcessor:
                 recreate_require = func.is_recreate_required
                 if not recreate_require:
                     continue
-            func_index, func_name = re.fullmatch(r'f(\d+)_(.*?)', func.func_name).groups()
-            func_index = int(func_index)
+            func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and self._single_thread_lock.acquire()
             try:
                 result = func(self, output_path)
@@ -209,7 +211,6 @@ def mark_as_source(func: Callable):
     func = ProcessMethod.of(func)
     func.is_source = True
     return func
-
 
 
 def mark_as_final(func: Callable):
