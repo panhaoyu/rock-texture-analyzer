@@ -12,7 +12,8 @@ from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProce
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
-from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top
+from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
+    point_cloud_top_projection
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
@@ -127,18 +128,17 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f13_2_仅保留左侧面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
-        z0, z1 = z0 + (z1 - z0) * 0.1, z1 - (z1 - z0) * 0.2
+        z0, z1 = z0 + (z1 - z0) * 0.05, z1 - (z1 - z0) * 0.2
         R = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x1, x0)
-
 
     @mark_as_ply
     @mark_as_single_thread
     def f13_3_仅保留右侧面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
-        z0, z1 = z0 + (z1 - z0) * 0.1, z1 - (z1 - z0) * 0.2
+        z0, z1 = z0 + (z1 - z0) * 0.05, z1 - (z1 - z0) * 0.2
         R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x0, x1)
@@ -148,7 +148,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f13_4_仅保留前面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
-        z0, z1 = z0 + (z1 - z0) * 0.1, z1 - (z1 - z0) * 0.2
+        z0, z1 = z0 + (z1 - z0) * 0.05, z1 - (z1 - z0) * 0.2
         R = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y1, y0)
@@ -158,7 +158,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f13_5_仅保留后面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
-        z0, z1 = z0 + (z1 - z0) * 0.1, z1 - (z1 - z0) * 0.2
+        z0, z1 = z0 + (z1 - z0) * 0.05, z1 - (z1 - z0) * 0.2
         R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y0, y1)
@@ -168,37 +168,32 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return self.f13_1_仅保留顶面.read(output_path)
 
     @mark_as_png
-    @mark_as_single_thread
     @mark_as_recreate
     def f14_2_绘制左侧点云(self, output_path: Path):
         cloud = self.f13_2_仅保留左侧面.read(output_path)
-        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
-        return interpolated_matrix
+        matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
+        return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    @mark_as_single_thread
     @mark_as_recreate
     def f14_3_绘制右侧点云(self, output_path: Path):
         cloud = self.f13_3_仅保留右侧面.read(output_path)
-        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
-        return interpolated_matrix
+        matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
+        return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    @mark_as_single_thread
     @mark_as_recreate
     def f14_4_绘制前面点云(self, output_path: Path):
         cloud = self.f13_4_仅保留前面.read(output_path)
-        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
-        return interpolated_matrix
+        matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
+        return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    @mark_as_single_thread
     @mark_as_recreate
     def f14_5_绘制后面点云(self, output_path: Path):
         cloud = self.f13_5_仅保留后面.read(output_path)
-        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
-        return interpolated_matrix
-
+        matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
+        return point_cloud_top_projection(matrix)
 
     @mark_as_npy
     def f14_表面二维重建(self, output_path: Path):
@@ -219,19 +214,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_png
     def f16_绘制图像(self, output_path: Path) -> np.ndarray:
         matrix = self.f14_表面二维重建.read(output_path)
-        matrix = matrix[:, :, 1:4]
-        assert matrix.shape[2] >= 3, "输入矩阵需要至少3个通道"
-
-        def _normalize_channel(channel: np.ndarray) -> np.ndarray:
-            v_min = np.nanquantile(channel, 0.01)
-            v_max = np.nanquantile(channel, 0.99)
-            return np.nan_to_num((channel - v_min) / max(v_max - v_min, 1e-9), copy=False)
-
-        channels = [
-            _normalize_channel(matrix[..., i]) * 255
-            for i in range(3)
-        ]
-        return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
+        return point_cloud_top_projection(matrix)
 
     @mark_as_png
     def f17_合并两张图(self, output_path: Path):

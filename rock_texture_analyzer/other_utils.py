@@ -67,3 +67,19 @@ def point_cloud_keep_top(cloud: PointCloud, x0: float, x1: float, y0: float, y1:
     if colors.size:
         cloud.colors = Vector3dVector(colors[top_selector])
     return cloud
+
+
+def point_cloud_top_projection(matrix: np.ndarray) -> np.ndarray:
+    matrix = matrix[:, :, 1:4]
+    assert matrix.shape[2] >= 3, "输入矩阵需要至少3个通道"
+
+    def _normalize_channel(channel: np.ndarray) -> np.ndarray:
+        v_min = np.nanquantile(channel, 0.01)
+        v_max = np.nanquantile(channel, 0.99)
+        return np.nan_to_num((channel - v_min) / max(v_max - v_min, 1e-9), copy=False)
+
+    channels = [
+        _normalize_channel(matrix[..., i]) * 255
+        for i in range(3)
+    ]
+    return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
