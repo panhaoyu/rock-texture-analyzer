@@ -7,7 +7,7 @@ from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
+from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProcessRequiredException, \
     mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
@@ -18,22 +18,19 @@ from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_ro
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     is_debug = True
 
-    @mark_as_method
+    @mark_as_ply
     def f1_原始数据(self, output_path: Path):
         raise ManuallyProcessRequiredException
 
-    @mark_as_method
     @mark_as_ply
     def f2_读取点云原始数据(self, output_path: Path):
-        cloud = self.get_input_ply(self.f1_原始数据, output_path)
-        return cloud
+        return self.f1_原始数据.read(output_path)
 
-    @mark_as_method
+    @mark_as_png
     @mark_as_single_thread
     def f3_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f2_读取点云原始数据, output_path)
 
-    @mark_as_method
     @mark_as_ply
     def f4_调整为主平面(self, output_path: Path):
         cloud = self.get_input_ply(self.f2_读取点云原始数据, output_path)
@@ -45,12 +42,11 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud.points = Vector3dVector(centered_points @ rotation_matrix.T)
         return cloud
 
-    @mark_as_method
+    @mark_as_png
     @mark_as_single_thread
     def f5_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f4_调整为主平面, output_path)
 
-    @mark_as_method
     @mark_as_ply
     def f6_xOy平面对正(self, output_path: Path):
         cloud = self.get_input_ply(self.f4_调整为主平面, output_path)
@@ -70,13 +66,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
         return cloud
 
-    @mark_as_method
+    @mark_as_png
     @mark_as_single_thread
     def f7_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f6_xOy平面对正, output_path)
 
-    @mark_as_method
-    @mark_as_ply
+    @mark_as_png
     @mark_as_single_thread
     def f8_调整地面在下(self, output_path: Path):
         cloud = self.get_input_ply(self.f6_xOy平面对正, output_path)
@@ -85,13 +80,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             cloud.points = Vector3dVector(-points)
         return cloud
 
-    @mark_as_method
+    @mark_as_png
     @mark_as_single_thread
     def f9_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f8_调整地面在下, output_path)
 
-    @mark_as_method
-    @mark_as_ply
+    @mark_as_png
     @mark_as_single_thread
     def f10_精细化对正(self, output_path: Path):
         cloud = self.get_input_ply(self.f8_调整地面在下, output_path)
@@ -101,12 +95,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud.points = Vector3dVector(rotated_points)
         return cloud
 
-    @mark_as_method
+    @mark_as_png
     @mark_as_single_thread
     def f11_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f10_精细化对正, output_path)
 
-    @mark_as_method
+    @mark_as_png
     def f11_计算顶面与底面位置的KDE图(self, output_path: Path):
         figure: plt.Figure = plt.figure()
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
@@ -116,14 +110,13 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return figure
 
     @mark_as_pickle
-    @mark_as_method
+    @mark_as_png
     def f12_各个面的坐标(self, output_path: Path):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x0, x1, y0, y1, z0, z1 = get_boundaries(points)
         return x0, x1, y0, y1, z0, z1
 
-    @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
     def f13_仅保留顶面(self, output_path: Path):
@@ -138,12 +131,11 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             cloud.colors = Vector3dVector(colors[top_selector])
         return cloud
 
-    @mark_as_method
+    @mark_as_png
     @mark_as_single_thread
     def f14_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f13_仅保留顶面, output_path)
 
-    @mark_as_method
     @mark_as_npy
     def f14_表面二维重建(self, output_path: Path):
         cloud = self.get_input_ply(self.f13_仅保留顶面, output_path)
@@ -154,14 +146,14 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             self.print_safe(f"Layer '{name}': {total=} {nan=} {nan / total * 100:.2f}%")
         return interpolated_matrix
 
-    @mark_as_method
+    @mark_as_png
     def f15_绘制高程(self, output_path: Path):
         elevation = self.get_input_array(self.f14_表面二维重建, output_path)[..., 0]
         norm = plt.Normalize(*np.nanquantile(elevation, [0.01, 0.99]))
         return Image.fromarray(
             (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8))
 
-    @mark_as_method
+    @mark_as_png
     def f16_绘制图像(self, output_path: Path) -> np.ndarray:
         matrix = self.get_input_array(self.f14_表面二维重建, output_path)
         matrix = matrix[:, :, 1:4]
@@ -181,7 +173,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         ]
         return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
 
-    @mark_as_method
+    @mark_as_png
     def f17_合并两张图(self, output_path: Path):
         """将高程图与表面图合并为横向排列的图片"""
         elevation_img = self.get_input_image(self.f15_绘制高程, output_path)
