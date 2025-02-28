@@ -9,7 +9,7 @@ from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
-from rock_texture_analyzer.boundary_processing import create_boundary_masks, get_boundaries
+from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
@@ -81,7 +81,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f8_调整地面在下(self, output_path: Path):
         cloud = self.get_input_ply(self.f6_xOy平面对正, output_path)
         points = np.asarray(cloud.points)
-        if should_flip_based_on_z(*create_boundary_masks(points, extension_ratio=0.1)):
+        if should_flip_based_on_z(points):
             cloud.points = Vector3dVector(-points)
         return cloud
 
