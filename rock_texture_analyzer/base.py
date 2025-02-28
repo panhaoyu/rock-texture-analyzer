@@ -22,7 +22,7 @@ from rock_texture_analyzer.point_cloud import write_point_cloud, draw_point_clou
 T = typing.TypeVar('T')
 
 
-class ProcessMethod(typing.Callable[[Path], T], typing.Generic[T]):
+class ProcessMethod(typing.Generic[T]):
     # 用于给各个装饰器使用的变量
     is_recreate_required: bool = False
     is_source: bool = False
