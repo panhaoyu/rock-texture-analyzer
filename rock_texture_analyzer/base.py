@@ -17,7 +17,7 @@ from more_itertools import only
 from open3d.cpu.pybind.geometry import PointCloud
 
 from p3_表面显微镜扫描数据处理.config import base_dir
-from rock_texture_analyzer.point_cloud import read_point_cloud, write_point_cloud, draw_point_cloud
+from rock_texture_analyzer.point_cloud import write_point_cloud, draw_point_cloud, read_point_cloud
 
 
 class ProcessMethod(typing.Callable):
@@ -27,6 +27,7 @@ class ProcessMethod(typing.Callable):
     is_final: bool = False
     is_single_thread: bool = False
     suffix: str = ".png"
+    processor: 'BaseProcessor'
 
     def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
@@ -49,6 +50,59 @@ class ProcessMethod(typing.Callable):
         else:
             return ProcessMethod(value)
 
+    @cached_property
+    def directory(self):
+        return self.processor.base_dir / self.func_name.replace('_', '-').lstrip('f')
+
+    def get_input_path(self, output_path: Path):
+        return self.directory.joinpath(f'{output_path.stem}{self.suffix}')
+
+    def read(self, path: Path):
+        input_path = self.get_input_path(path)
+        match input_path.suffix:
+            case '.ply':
+                return read_point_cloud(input_path)
+            case '.pickle':
+                with input_path.open('rb') as f:
+                    return pickle.load(f)
+            case '.npy' | '.npz':
+                return np.load(input_path)
+            case '.png' | '.jpg':
+                with Image.open(input_path) as img:
+                    return img.copy()
+            case _:
+                raise NotImplementedError(f"Unsupported file type: {input_path.suffix}")
+
+    def write(self, obj: typing.Any, path: Path):
+        self.directory.mkdir(parents=True, exist_ok=True)
+        path = self.get_input_path(path)
+        match self.suffix:
+            case '.ply':
+                assert isinstance(obj, PointCloud)
+                write_point_cloud(path, obj)
+            case '.npy':
+                assert isinstance(obj, np.ndarray)
+                np.save(path, obj)
+            case '.png':
+                if isinstance(obj, np.ndarray):
+                    obj = Image.fromarray(obj)
+                if isinstance(obj, plt.Figure):
+                    obj.savefig(path)
+                elif isinstance(obj, Image.Image):
+                    obj.save(path)
+                elif isinstance(obj, PointCloud):
+                    draw_point_cloud(obj, path)
+                else:
+                    raise NotImplementedError(f'Unknown png type: {type(obj)}')
+            case '.xlsx':
+                assert isinstance(obj, pd.DataFrame)
+                obj.to_excel(path)
+            case '.pickle':
+                with path.open('wb') as f:
+                    pickle.dump(obj, f)
+            case other:
+                raise NotImplementedError(f'Unknown suffix: "{other}"')
+
 
 class BaseProcessor:
     _print_lock: threading.Lock = threading.Lock()
@@ -67,7 +121,10 @@ class BaseProcessor:
                 if isinstance(value, ProcessMethod):
                     class_methods.setdefault(value.step_index, []).append(value)
         sorted_methods = sorted(class_methods.items(), key=lambda x: x[0])
-        return [method for _, methods in sorted_methods for method in methods]
+        methods = [method for _, methods in sorted_methods for method in methods]
+        for method in methods:
+            method.processor = self
+        return methods
 
     @cached_property
     def base_dir(self) -> Path:
@@ -83,9 +140,9 @@ class BaseProcessor:
         assert result.exists(), result
         return result
 
-    def process_stem(self, stem: str) -> None:
+    def process_path(self, path: Path) -> None:
         for func in self.step_functions:
-            output_path: Path = self.get_file_path(func, stem)
+            output_path: Path = func.get_input_path(path)
             if output_path.exists():
                 recreate_require = func.is_recreate_required
                 if not recreate_require:
@@ -95,83 +152,20 @@ class BaseProcessor:
             func.is_single_thread and self._single_thread_lock.acquire()
             try:
                 result = func(self, output_path)
-                output_path = Path(output_path)
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                match output_path.suffix:
-                    case '.ply':
-                        assert isinstance(result, PointCloud)
-                        write_point_cloud(output_path, result)
-                    case '.npy':
-                        assert isinstance(result, np.ndarray)
-                        np.save(output_path, result)
-                    case '.png':
-                        if isinstance(result, np.ndarray):
-                            result = Image.fromarray(result)
-                        if isinstance(result, plt.Figure):
-                            result.savefig(output_path)
-                        elif isinstance(result, Image.Image):
-                            result.save(output_path)
-                        elif isinstance(result, PointCloud):
-                            draw_point_cloud(result, output_path)
-                        else:
-                            raise NotImplementedError(f'Unknown png type: {type(result)}')
-                    case '.xlsx':
-                        assert isinstance(result, pd.DataFrame)
-                        result.to_excel(output_path)
-                    case '.pickle':
-                        with output_path.open('wb') as f:
-                            pickle.dump(result, f)
-                    case other:
-                        raise NotImplementedError(f'Unknown suffix: "{other}"')
+                func.write(result, output_path)
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
-                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
+                self.print_safe(f'{func_index:02d} {path:10} {func_name} 需要人工处理：{message}')
                 break
             except Exception as e:
-                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 异常：{e}')
+                self.print_safe(f'{func_index:02d} {path:10} {func_name} 异常：{e}')
                 with self._print_lock:
                     traceback.print_exc()
                 break
             finally:
                 func.is_single_thread and self._single_thread_lock.release_lock()
-            self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
-
-    def get_file_path(self, func: ProcessMethod, stem: str | Path) -> Path:
-        if isinstance(stem, Path):
-            stem = stem.stem
-        dir_path: Path = self.base_dir / func.func_name.replace('_', '-').lstrip('f')
-        extensions: set[str] = {p.suffix for p in dir_path.glob('*') if p.is_file()}
-        suffix: str = next(iter(extensions), func.suffix)
-        return dir_path / f'{stem}{suffix}'
-
-    def get_input_path(self, func: ProcessMethod, output_path: Path) -> Path:
-        return self.get_file_path(func, output_path.stem)
-
-    def get_input_ply(self, func: ProcessMethod, output_path: Path):
-        return read_point_cloud(self.get_input_path(func, output_path))
-
-    def get_input_image(self, func: ProcessMethod, output_path: Path):
-        input_path = self.get_input_path(func, output_path)
-        with Image.open(input_path) as img:
-            return img.copy()
-
-    def get_input_pickle(self, func: ProcessMethod, output_path: Path) -> typing.Any:
-        path = self.get_input_path(func, output_path)
-        with path.open('rb') as f:
-            return pickle.load(f)
-
-    def get_input_array(self, func: ProcessMethod, output_path: Path):
-        path = self.get_input_path(func, output_path)
-        match path.suffix:
-            case '.png' | '.jpg':
-                image = self.get_input_image(func, output_path)
-                array = np.asarray(image).copy()
-            case '.npy':
-                array = np.load(path)
-            case other:
-                raise NotImplementedError(other)
-        return array
+            self.print_safe(f'{func_index:02d} {path:10} {func_name} 完成')
 
     enable_multithread: bool = True
     is_debug: bool = False
@@ -184,22 +178,17 @@ class BaseProcessor:
         source_function = only((f for f in functions if f.is_source), functions[0])
         final_function = only((f for f in functions if f.is_final), functions[-1])
 
-        for func in functions:
-            obj.get_file_path(func, 'dummy').parent.mkdir(parents=True, exist_ok=True)
-
-        source_file = obj.get_file_path(source_function, 'dummy')
-        source_dir: Path = source_file.parent
-        stems = [file.stem for file in source_dir.glob(f'*{source_file.suffix}')]
+        files = [file for file in source_function.directory.glob(f'*{source_function.suffix}')]
         if cls.is_debug:
-            stems = stems[:2]
+            files = files[:2]
         if cls.enable_multithread:
             with ThreadPoolExecutor() as executor:
-                executor.map(obj.process_stem, stems)
+                executor.map(obj.process_path, files)
         else:
-            for stem in stems:
-                obj.process_stem(stem)
-        zip_path = source_dir.parent / f"{source_dir.parent.name}.zip"
-        final_dir = obj.get_file_path(final_function, 'dummy').parent
+            for file in files:
+                obj.process_path(file)
+        zip_path = obj.base_dir / f"{obj.base_dir.name}.zip"
+        final_dir = final_function.directory
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
             [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
 
@@ -251,5 +240,5 @@ def mark_as_npy(func: Callable):
 
 def mark_as_pickle(func: Callable) -> ProcessMethod:
     func = ProcessMethod.of(func)
-    func.is_pickle = True
+    func.suffix = '.pickle'
     return func
