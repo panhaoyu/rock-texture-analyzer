@@ -12,7 +12,7 @@ from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProce
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
-from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
+from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
@@ -112,20 +112,15 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x0, x1, y0, y1, z0, z1 = get_boundaries(points)
+        self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
         return x0, x1, y0, y1, z0, z1
 
     @mark_as_ply
-    @mark_as_single_thread
+    @mark_as_recreate
     def f13_1_仅保留顶面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
-        points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
-        x, y, z = points.T
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
-        self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
-        top_selector = ((x > x0) & (x < x1) & (y > y0) & (y < y1) & (z > ((z0 + z1) / 2)))
-        cloud.points = Vector3dVector(points[top_selector])
-        if colors.size:
-            cloud.colors = Vector3dVector(colors[top_selector])
+        point_cloud_keep_top(cloud, x0, x1, y0, y1, z0, z1)
         return cloud
 
     @mark_as_ply
@@ -177,6 +172,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return cloud
 
     @mark_as_png
+    @mark_as_recreate
     def f14_1_绘制顶面点云(self, output_path: Path):
         return self.f13_1_仅保留顶面.read(output_path)
 

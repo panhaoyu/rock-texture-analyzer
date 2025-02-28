@@ -1,4 +1,6 @@
 import numpy as np
+from open3d.cpu.pybind.t.geometry import PointCloud
+from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.clustering import process_clusters
 
@@ -54,3 +56,14 @@ def create_rotation_matrix(angles_deg: tuple) -> np.ndarray:
     ])
 
     return R_z @ R_y @ R_x
+
+
+def point_cloud_keep_top(cloud: PointCloud, x0: float, x1: float, y0: float, y1: float, z0: float, z1: float):
+    points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
+    x, y, z = points.T
+    cloud = PointCloud()
+    top_selector = ((x > x0) & (x < x1) & (y > y0) & (y < y1) & (z > ((z0 + z1) / 2)))
+    cloud.points = Vector3dVector(points[top_selector])
+    if colors.size:
+        cloud.colors = Vector3dVector(colors[top_selector])
+    return cloud
