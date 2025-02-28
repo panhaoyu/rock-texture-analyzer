@@ -62,20 +62,20 @@ class ProcessMethod(typing.Callable):
         return self.directory.joinpath(f'{output_path.stem}{self.suffix}')
 
     def read(self, path: Path):
-        input_path = self.get_input_path(path)
-        match input_path.suffix:
+        path = self.get_input_path(path)
+        match self.suffix:
             case '.ply':
-                return read_point_cloud(input_path)
+                return read_point_cloud(path)
             case '.pickle':
-                with input_path.open('rb') as f:
+                with path.open('rb') as f:
                     return pickle.load(f)
             case '.npy' | '.npz':
-                return np.load(input_path)
+                return np.load(path)
             case '.png' | '.jpg':
-                with Image.open(input_path) as img:
+                with Image.open(path) as img:
                     return img.copy()
-            case _:
-                raise NotImplementedError(f"Unsupported file type: {input_path.suffix}")
+            case other:
+                raise NotImplementedError(f"Unsupported file type: {other}")
 
     def write(self, obj: typing.Any, path: Path):
         self.directory.mkdir(parents=True, exist_ok=True)
