@@ -122,8 +122,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     def f12_仅保留顶面(self, output_path: Path):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
-        points = np.asarray(cloud.points)
-        colors = np.asarray(cloud.colors)
+        points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x, y, z = points.T
         x0, x1, y0, y1, z0, z1 = get_boundaries(points)
         self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
