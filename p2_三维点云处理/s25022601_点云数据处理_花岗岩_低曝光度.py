@@ -147,8 +147,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f15_绘制高程(self, output_path: Path):
         elevation = self.f14_表面二维重建.read(output_path)[..., 0]
         norm = plt.Normalize(*np.nanquantile(elevation, [0.01, 0.99]))
-        return Image.fromarray(
-            (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8))
+        return (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8)
 
     @mark_as_png
     def f16_绘制图像(self, output_path: Path) -> np.ndarray:
@@ -159,10 +158,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         def _normalize_channel(channel: np.ndarray) -> np.ndarray:
             v_min = np.nanquantile(channel, 0.01)
             v_max = np.nanquantile(channel, 0.99)
-            return np.nan_to_num(
-                (channel - v_min) / max(v_max - v_min, 1e-9),
-                copy=False
-            )
+            return np.nan_to_num((channel - v_min) / max(v_max - v_min, 1e-9), copy=False)
 
         channels = [
             _normalize_channel(matrix[..., i]) * 255
