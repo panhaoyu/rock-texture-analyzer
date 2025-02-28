@@ -69,7 +69,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f7_绘制点云(self, output_path: Path):
         return self.f6_xOy平面对正.read(output_path)
 
-    @mark_as_png
+    @mark_as_ply
     @mark_as_single_thread
     def f8_调整地面在下(self, output_path: Path):
         cloud = self.f6_xOy平面对正.read(output_path)
@@ -83,7 +83,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f9_绘制点云(self, output_path: Path):
         return self.f8_调整地面在下.read(output_path)
 
-    @mark_as_png
+    @mark_as_ply
     @mark_as_single_thread
     def f10_精细化对正(self, output_path: Path):
         cloud = self.f8_调整地面在下.read(output_path)

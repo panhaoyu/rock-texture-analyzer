@@ -146,6 +146,7 @@ class BaseProcessor:
         return result
 
     def process_path(self, path: Path) -> None:
+        stem = path.stem
         for func in self.step_functions:
             output_path: Path = func.get_input_path(path)
             if output_path.exists():
@@ -160,16 +161,16 @@ class BaseProcessor:
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
-                self.print_safe(f'{func_index:02d} {path:10} {func_name} 需要人工处理：{message}')
+                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
                 break
             except Exception as e:
-                self.print_safe(f'{func_index:02d} {path:10} {func_name} 异常：{e}')
+                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 异常：{e}')
                 with self._print_lock:
                     traceback.print_exc()
                 break
             finally:
                 func.is_single_thread and self._single_thread_lock.release_lock()
-            self.print_safe(f'{func_index:02d} {path:10} {func_name} 完成')
+            self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     enable_multithread: bool = True
     is_debug: bool = False
