@@ -159,7 +159,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             layer = interpolated_matrix[..., i]
             total, nan = layer.size, np.isnan(layer).sum()
             self.print_safe(f"Layer '{name}': {total=} {nan=} {nan / total * 100:.2f}%")
-        np.save(output_path, interpolated_matrix)
+        return interpolated_matrix
 
     @mark_as_method
     def f15_绘制高程(self, output_path: Path):
@@ -169,12 +169,25 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8))
 
     @mark_as_method
-    def f16_绘制图像(self, output_path: Path):
-        if (matrix := self.get_input_array(self.f14_表面二维重建, output_path)).shape[2] > 1:
-            color = np.clip([(matrix[..., i] - np.nanquantile(matrix[..., i], 0.01)) / (
-                    np.nanquantile(matrix[..., i], 0.99) - np.nanquantile(matrix[..., i], 0.01) + 1e-9) for i in
-                             range(1, 4)] * 255, 0, 255).astype(np.uint8)
-            return np.round(color).transpose(1, 2, 0)
+    @mark_as_recreate
+    def f16_绘制图像(self, output_path: Path) -> np.ndarray:
+        matrix = self.get_input_array(self.f14_表面二维重建, output_path)
+        matrix = matrix[:, :, 1:4]
+        assert matrix.shape[2] >= 3, "输入矩阵需要至少3个通道"
+
+        def _normalize_channel(channel: np.ndarray) -> np.ndarray:
+            v_min = np.nanquantile(channel, 0.01)
+            v_max = np.nanquantile(channel, 0.99)
+            return np.nan_to_num(
+                (channel - v_min) / max(v_max - v_min, 1e-9),
+                copy=False
+            )
+
+        channels = [
+            _normalize_channel(matrix[..., i]) * 255
+            for i in range(3)
+        ]
+        return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
 
     @mark_as_method
     @mark_as_recreate
