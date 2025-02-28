@@ -5,42 +5,7 @@ import numpy as np
 from rock_texture_analyzer.clustering import process_clusters, find_two_peaks, ValueDetectionError, find_single_peak
 
 
-def compute_extended_bounds(
-        start_center: float,
-        end_center: float,
-        extend_percent: float = 0.1
-) -> tuple[float, float, float]:
-    """计算单方向扩展边界，返回扩展量和扩展后的起止边界"""
-    extend = extend_percent * (end_center - start_center)
-    return extend, start_center + extend, end_center - extend
-
-
-def compute_boundary(
-        boundary_points: np.ndarray,
-        axis: int,
-        center: float,
-        extend: float,
-        other_low: float,
-        other_high: float,
-        is_positive: bool,
-        std_range: int = 5
-) -> float:
-    """计算单方向的统计边界"""
-    # 筛选指定轴向的边界点
-    axis_vals = boundary_points[:, axis]
-    other_axis = 1 - axis
-    mask = (np.abs(axis_vals - center) < extend)
-    mask &= (boundary_points[:, other_axis] > other_low)
-    mask &= (boundary_points[:, other_axis] < other_high)
-    filtered_points = boundary_points[mask]
-
-    # 计算统计边界
-    values = filtered_points[:, axis]
-    offset = std_range * np.std(values)
-    return (np.mean(values) + offset) if is_positive else (np.mean(values) - offset)
-
-
-def get_boundaries(points: np.ndarray):
+def get_boundaries(points: np.ndarray) -> tuple[float, float, float, float, float, float]:
     point_z = points[:, 2]
     thresholds = [0.05, 0.04, 0.03, 0.02, 0.01, 0.005]
     try:
@@ -48,21 +13,52 @@ def get_boundaries(points: np.ndarray):
     except ValueDetectionError:
         bottom = np.min(point_z)
         top = find_single_peak(point_z, thresholds)
+
     range_z = top - bottom
     z_selector = (point_z > (bottom + range_z * 0.1)) & (point_z < (top - range_z * 0.4))
     boundary_points = points[z_selector]
+
     point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
-    left_center, right_center = find_two_peaks(point_x, prominence=thresholds)
-    front_center, back_center = find_two_peaks(point_y, prominence=thresholds)
+    left_center, right_center = find_two_peaks(point_x, thresholds)
+    front_center, back_center = find_two_peaks(point_y, thresholds)
     assert back_center > front_center and right_center > left_center
 
-    extend_x, definite_left, definite_right = compute_extended_bounds(left_center, right_center)
-    extend_y, definite_front, definite_back = compute_extended_bounds(front_center, back_center)
+    # 计算扩展边界
+    extend_x = 0.1 * (right_center - left_center)
+    definite_left = left_center + extend_x
+    definite_right = right_center - extend_x
+    extend_y = 0.1 * (back_center - front_center)
+    definite_front = front_center + extend_y
+    definite_back = back_center - extend_y
 
-    left = compute_boundary(boundary_points, 0, left_center, extend_x, definite_front, definite_back, True)
-    right = compute_boundary(boundary_points, 0, right_center, extend_x, definite_front, definite_back, False)
-    front = compute_boundary(boundary_points, 1, front_center, extend_y, definite_left, definite_right, True)
-    back = compute_boundary(boundary_points, 1, back_center, extend_y, definite_left, definite_right, False)
+    # 计算左右边界
+    axis, center, extend = 0, left_center, extend_x
+    axis_vals = boundary_points[:, axis]
+    mask = (np.abs(axis_vals - center) < extend)
+    mask &= (boundary_points[:, 1] > definite_front) & (boundary_points[:, 1] < definite_back)
+    filtered = boundary_points[mask]
+    left = np.mean(filtered[:, axis]) + 5 * np.std(filtered[:, axis])
+
+    axis, center, extend = 0, right_center, extend_x
+    axis_vals = boundary_points[:, axis]
+    mask = (np.abs(axis_vals - center) < extend)
+    mask &= (boundary_points[:, 1] > definite_front) & (boundary_points[:, 1] < definite_back)
+    filtered = boundary_points[mask]
+    right = np.mean(filtered[:, axis]) - 5 * np.std(filtered[:, axis])
+
+    axis, center, extend = 1, front_center, extend_y
+    axis_vals = boundary_points[:, axis]
+    mask = (np.abs(axis_vals - center) < extend)
+    mask &= (boundary_points[:, 0] > definite_left) & (boundary_points[:, 0] < definite_right)
+    filtered = boundary_points[mask]
+    front = np.mean(filtered[:, axis]) + 5 * np.std(filtered[:, axis])
+
+    axis, center, extend = 1, back_center, extend_y
+    axis_vals = boundary_points[:, axis]
+    mask = (np.abs(axis_vals - center) < extend)
+    mask &= (boundary_points[:, 0] > definite_left) & (boundary_points[:, 0] < definite_right)
+    filtered = boundary_points[mask]
+    back = np.mean(filtered[:, axis]) - 5 * np.std(filtered[:, axis])
 
     return left, right, front, back, bottom, top
 
