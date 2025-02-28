@@ -8,7 +8,7 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle, mark_as_recreate
+    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
@@ -224,7 +224,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return combined_img
 
     @mark_as_png
-    @mark_as_recreate
     def f18_合并全部的图(self, path: Path) -> Image.Image:
         left = self.f14_2_绘制左侧点云.read(path)
         right = self.f14_3_绘制右侧点云.read(path)
