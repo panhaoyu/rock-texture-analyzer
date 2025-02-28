@@ -14,14 +14,15 @@ import pandas as pd
 from PIL import Image
 from matplotlib import pyplot as plt
 from more_itertools import only
-from numpy import ndarray
 from open3d.cpu.pybind.geometry import PointCloud
 
 from p3_表面显微镜扫描数据处理.config import base_dir
 from rock_texture_analyzer.point_cloud import write_point_cloud, draw_point_cloud, read_point_cloud
 
+T = typing.TypeVar('T')
 
-class ProcessMethod(typing.Callable):
+
+class ProcessMethod(typing.Callable, typing.Generic[T]):
     # 用于给各个装饰器使用的变量
     is_recreate_required: bool = False
     is_source: bool = False
@@ -226,12 +227,19 @@ def mark_as_single_thread(func: Callable):
     return func
 
 
-class JpgProcessor(ProcessMethod):
-    def read(self, path: Path) -> Image.Image:
-        return super().read(path)
+class JpgProcessor(ProcessMethod[Image.Image]): pass
 
-    def write(self, obj: Image.Image, path: Path) -> None:
-        return super().write(obj, path)
+
+class PngProcessor(ProcessMethod[Image.Image]): pass
+
+
+class PlyProcessor(ProcessMethod[PointCloud]): pass
+
+
+class NpyProcessor(ProcessMethod[np.ndarray]): pass
+
+
+class PickleProcessor(ProcessMethod[typing.Any]): pass
 
 
 def mark_as_jpg(func: Callable) -> JpgProcessor:
@@ -241,27 +249,11 @@ def mark_as_jpg(func: Callable) -> JpgProcessor:
     return func
 
 
-class PngProcessor(ProcessMethod):
-    def read(self, path: Path) -> Image.Image:
-        return super().read(path)
-
-    def write(self, obj: Image.Image, path: Path) -> None:
-        return super().write(obj, path)
-
-
 def mark_as_png(func: Callable) -> PngProcessor:
     func = PngProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.png'
     return func
-
-
-class PlyProcessor(ProcessMethod):
-    def read(self, path: Path) -> PointCloud:
-        return super().read(path)
-
-    def write(self, obj: PointCloud, path: Path) -> None:
-        return super().write(obj, path)
 
 
 def mark_as_ply(func: Callable) -> PlyProcessor:
@@ -271,27 +263,11 @@ def mark_as_ply(func: Callable) -> PlyProcessor:
     return func
 
 
-class NpyProcessor(ProcessMethod):
-    def read(self, path: Path) -> ndarray:
-        return super().read(path)
-
-    def write(self, obj: ndarray, path: Path) -> None:
-        return super().write(obj, path)
-
-
 def mark_as_npy(func: Callable) -> NpyProcessor:
     func = NpyProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.npy'
     return func
-
-
-class PickleProcessor(ProcessMethod):
-    def read(self, path: Path) -> typing.Any:
-        return super().read(path)
-
-    def write(self, obj: typing.Any, path: Path) -> None:
-        return super().write(obj, path)
 
 
 def mark_as_pickle(func: Callable) -> PickleProcessor:
