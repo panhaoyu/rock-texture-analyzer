@@ -8,7 +8,7 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle
+    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle, mark_as_recreate
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
@@ -130,6 +130,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_2_仅保留左侧面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
@@ -142,6 +143,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_3_仅保留右侧面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
@@ -154,6 +156,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_4_仅保留前面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
@@ -166,6 +169,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_5_仅保留后面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
@@ -183,21 +187,25 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_png
     @mark_as_single_thread
+    @mark_as_recreate
     def f14_2_绘制左侧点云(self, output_path: Path):
         return self.f13_2_仅保留左侧面.read(output_path)
 
     @mark_as_png
     @mark_as_single_thread
+    @mark_as_recreate
     def f14_3_绘制右侧点云(self, output_path: Path):
         return self.f13_3_仅保留右侧面.read(output_path)
 
     @mark_as_png
     @mark_as_single_thread
+    @mark_as_recreate
     def f14_4_绘制前面点云(self, output_path: Path):
         return self.f13_4_仅保留前面.read(output_path)
 
     @mark_as_png
     @mark_as_single_thread
+    @mark_as_recreate
     def f14_5_绘制后面点云(self, output_path: Path):
         return self.f13_5_仅保留后面.read(output_path)
 
