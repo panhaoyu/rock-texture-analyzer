@@ -116,6 +116,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return x0, x1, y0, y1, z0, z1
 
     @mark_as_ply
+    @mark_as_single_thread
     def f13_1_仅保留顶面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
@@ -123,7 +124,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_2_仅保留左侧面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
@@ -135,7 +135,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_3_仅保留右侧面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
@@ -146,7 +145,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_4_仅保留前面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
@@ -157,7 +155,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_5_仅保留后面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
@@ -174,25 +171,34 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_single_thread
     @mark_as_recreate
     def f14_2_绘制左侧点云(self, output_path: Path):
-        return self.f13_2_仅保留左侧面.read(output_path)
+        cloud = self.f13_2_仅保留左侧面.read(output_path)
+        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
+        return interpolated_matrix
 
     @mark_as_png
     @mark_as_single_thread
     @mark_as_recreate
     def f14_3_绘制右侧点云(self, output_path: Path):
-        return self.f13_3_仅保留右侧面.read(output_path)
+        cloud = self.f13_3_仅保留右侧面.read(output_path)
+        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
+        return interpolated_matrix
 
     @mark_as_png
     @mark_as_single_thread
     @mark_as_recreate
     def f14_4_绘制前面点云(self, output_path: Path):
-        return self.f13_4_仅保留前面.read(output_path)
+        cloud = self.f13_4_仅保留前面.read(output_path)
+        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
+        return interpolated_matrix
 
     @mark_as_png
     @mark_as_single_thread
     @mark_as_recreate
     def f14_5_绘制后面点云(self, output_path: Path):
-        return self.f13_5_仅保留后面.read(output_path)
+        cloud = self.f13_5_仅保留后面.read(output_path)
+        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
+        return interpolated_matrix
+
 
     @mark_as_npy
     def f14_表面二维重建(self, output_path: Path):
