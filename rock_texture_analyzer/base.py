@@ -90,6 +90,7 @@ class ProcessMethod(typing.Callable):
                     obj = Image.fromarray(obj)
                 if isinstance(obj, plt.Figure):
                     obj.savefig(path)
+                    plt.close(obj)
                 elif isinstance(obj, Image.Image):
                     obj.save(path)
                 elif isinstance(obj, PointCloud):
@@ -221,6 +222,21 @@ def mark_as_final(func: Callable):
 def mark_as_single_thread(func: Callable):
     func = ProcessMethod.of(func)
     func.is_single_thread = True
+    return func
+
+
+class JpgProcessor(ProcessMethod):
+    def read(self, path: Path) -> Image.Image:
+        return super().read(path)
+
+    def write(self, obj: Image.Image, path: Path) -> None:
+        return super().write(obj, path)
+
+
+def mark_as_jpg(func: Callable) -> JpgProcessor:
+    func = JpgProcessor.of(func)
+    assert func.suffix is None
+    func.suffix = '.jpg'
     return func
 
 
