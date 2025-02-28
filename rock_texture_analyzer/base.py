@@ -33,7 +33,6 @@ class ProcessMethod(typing.Callable):
     def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
         self.func_name = func.__name__
-        assert self.suffix is not None
 
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
@@ -48,6 +47,7 @@ class ProcessMethod(typing.Callable):
     @classmethod
     def of(cls, value: Callable | 'ProcessMethod'):
         if isinstance(value, ProcessMethod):
+            assert value.suffix is not None
             return value
         else:
             return ProcessMethod(value)
