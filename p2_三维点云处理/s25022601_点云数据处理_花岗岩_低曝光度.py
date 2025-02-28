@@ -116,7 +116,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_ply
     @mark_as_single_thread
-    def f13_仅保留顶面(self, output_path: Path):
+    def f13_1_仅保留顶面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x, y, z = points.T
@@ -128,14 +128,24 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             cloud.colors = Vector3dVector(colors[top_selector])
         return cloud
 
+    @mark_as_ply
+    @mark_as_single_thread
+    def f13_2_仅保留左侧面(self, output_path: Path):
+        raise NotImplementedError
+
     @mark_as_png
     @mark_as_single_thread
-    def f14_绘制点云(self, output_path: Path):
-        return self.f13_仅保留顶面.read(output_path)
+    def f14_1_绘制顶面点云(self, output_path: Path):
+        return self.f13_1_仅保留顶面.read(output_path)
+
+    @mark_as_png
+    @mark_as_single_thread
+    def f14_2_绘制左侧点云(self, output_path: Path):
+        raise NotImplementedError
 
     @mark_as_npy
     def f14_表面二维重建(self, output_path: Path):
-        cloud = self.f13_仅保留顶面.read(output_path)
+        cloud = self.f13_1_仅保留顶面.read(output_path)
         interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
         for i, name in enumerate(['z', 'r', 'g', 'b'][:interpolated_matrix.shape[2]]):
             layer = interpolated_matrix[..., i]
