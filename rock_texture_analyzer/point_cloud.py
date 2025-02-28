@@ -1,9 +1,10 @@
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 
 import open3d as o3d
-from open3d.cpu.pybind.t.geometry import PointCloud
+from open3d.cpu.pybind.geometry import PointCloud
 
 
 def read_point_cloud(input_path: Path, **kwargs) -> o3d.geometry.PointCloud:
@@ -28,18 +29,25 @@ def write_point_cloud(
         return success
 
 
+_thread_local = threading.Lock()
+
+
 def draw_point_cloud(cloud: Path | PointCloud, output_path: Path) -> None:
     """通过临时路径保存点云可视化截图（支持中文路径）"""
     if isinstance(cloud, Path):
         cloud = read_point_cloud(cloud)
 
-    vis = o3d.visualization.Visualizer()
-    vis.create_window(visible=False)
-    vis.add_geometry(cloud)
-
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_file = Path(tmpdir) / f"temp_{output_path.suffix}"
-        vis.capture_screen_image(temp_file.as_posix(), do_render=True)
+        with _thread_local:
+            vis = o3d.visualization.Visualizer()
+            vis.create_window(visible=False)
+            vis.clear_geometries()
+            vis.add_geometry(cloud)
+            vis.update_geometry(cloud)
+            vis.poll_events()
+            vis.update_renderer()
+            vis.capture_screen_image(temp_file.as_posix(), do_render=True)
+            vis.destroy_window()
         shutil.copy2(temp_file, output_path)
 
-    vis.destroy_window()
