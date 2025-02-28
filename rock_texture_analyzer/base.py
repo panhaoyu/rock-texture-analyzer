@@ -30,6 +30,7 @@ class ProcessMethod(typing.Generic[T]):
     is_single_thread: bool = False
     suffix: str = None
     processor: 'BaseProcessor'
+    lock = threading.Lock()
 
     def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
@@ -113,7 +114,6 @@ class ProcessMethod(typing.Generic[T]):
 
 class BaseProcessor:
     _print_lock: threading.Lock = threading.Lock()
-    _single_thread_lock: threading.Lock = threading.Lock()
 
     @classmethod
     def print_safe(cls, message: str) -> None:
@@ -156,7 +156,7 @@ class BaseProcessor:
                 if not recreate_require:
                     continue
             func_index, func_name = func.step_index, func.func_name
-            func.is_single_thread and self._single_thread_lock.acquire()
+            func.is_single_thread and func.lock.acquire_lock()
             try:
                 result = func(self, output_path)
                 func.write(result, output_path)
@@ -171,7 +171,7 @@ class BaseProcessor:
                     traceback.print_exc()
                 break
             finally:
-                func.is_single_thread and self._single_thread_lock.release_lock()
+                func.is_single_thread and func.lock.release_lock()
             self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     enable_multithread: bool = True
