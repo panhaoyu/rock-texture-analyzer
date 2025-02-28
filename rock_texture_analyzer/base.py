@@ -227,51 +227,51 @@ def mark_as_single_thread(func: Callable):
     return func
 
 
-class JpgProcessor(ProcessMethod[Image.Image]): pass
+class __JpgProcessor(ProcessMethod[Image.Image]): pass
 
 
-class PngProcessor(ProcessMethod[Image.Image]): pass
+class __PngProcessor(ProcessMethod[Image.Image]): pass
 
 
-class PlyProcessor(ProcessMethod[PointCloud]): pass
+class __PlyProcessor(ProcessMethod[PointCloud]): pass
 
 
-class NpyProcessor(ProcessMethod[np.ndarray]): pass
+class __NpyProcessor(ProcessMethod[np.ndarray]): pass
 
 
-class PickleProcessor(ProcessMethod[typing.Any]): pass
+class __PickleProcessor(ProcessMethod[typing.Any]): pass
 
 
-def mark_as_jpg(func: Callable) -> JpgProcessor:
-    func = JpgProcessor.of(func)
+def mark_as_jpg(func: Callable) -> __JpgProcessor:
+    func = __JpgProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.jpg'
     return func
 
 
-def mark_as_png(func: Callable) -> PngProcessor:
-    func = PngProcessor.of(func)
+def mark_as_png(func: Callable) -> __PngProcessor:
+    func = __PngProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.png'
     return func
 
 
-def mark_as_ply(func: Callable) -> PlyProcessor:
-    func = PlyProcessor.of(func)
+def mark_as_ply(func: Callable) -> __PlyProcessor:
+    func = __PlyProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.ply'
     return func
 
 
-def mark_as_npy(func: Callable) -> NpyProcessor:
-    func = NpyProcessor.of(func)
+def mark_as_npy(func: Callable) -> __NpyProcessor:
+    func = __NpyProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.npy'
     return func
 
 
-def mark_as_pickle(func: Callable) -> PickleProcessor:
-    func = PickleProcessor.of(func)
+def mark_as_pickle(func: Callable) -> __PickleProcessor:
+    func = __PickleProcessor.of(func)
     assert func.suffix is None, func.suffix
     func.suffix = '.pickle'
     return func
