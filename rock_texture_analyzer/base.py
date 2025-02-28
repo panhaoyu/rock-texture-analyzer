@@ -47,7 +47,6 @@ class ProcessMethod(typing.Callable):
     @classmethod
     def of(cls, value: Callable | 'ProcessMethod'):
         if isinstance(value, ProcessMethod):
-            assert value.suffix is not None
             return value
         else:
             return ProcessMethod(value)
@@ -235,7 +234,7 @@ class JpgProcessor(ProcessMethod):
 
 def mark_as_jpg(func: Callable) -> JpgProcessor:
     func = JpgProcessor.of(func)
-    assert func.suffix is None
+    assert func.suffix is None, func.suffix
     func.suffix = '.jpg'
     return func
 
@@ -250,7 +249,7 @@ class PngProcessor(ProcessMethod):
 
 def mark_as_png(func: Callable) -> PngProcessor:
     func = PngProcessor.of(func)
-    assert func.suffix is None
+    assert func.suffix is None, func.suffix
     func.suffix = '.png'
     return func
 
@@ -265,7 +264,7 @@ class PlyProcessor(ProcessMethod):
 
 def mark_as_ply(func: Callable) -> PlyProcessor:
     func = PlyProcessor.of(func)
-    assert func.suffix is None
+    assert func.suffix is None, func.suffix
     func.suffix = '.ply'
     return func
 
@@ -280,7 +279,7 @@ class NpyProcessor(ProcessMethod):
 
 def mark_as_npy(func: Callable) -> NpyProcessor:
     func = NpyProcessor.of(func)
-    assert func.suffix is None
+    assert func.suffix is None, func.suffix
     func.suffix = '.npy'
     return func
 
@@ -295,6 +294,6 @@ class PickleProcessor(ProcessMethod):
 
 def mark_as_pickle(func: Callable) -> PickleProcessor:
     func = PickleProcessor.of(func)
-    assert func.suffix is None
+    assert func.suffix is None, func.suffix
     func.suffix = '.pickle'
     return func
