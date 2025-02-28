@@ -8,9 +8,9 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy
-from rock_texture_analyzer.boundary_processing import filter_points_by_axis, \
-    compute_statistical_boundaries, create_boundary_masks, compute_extended_bounds
+    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
+from rock_texture_analyzer.boundary_processing import create_boundary_masks, compute_extended_bounds, \
+    compute_directional_boundary
 from rock_texture_analyzer.clustering import find_two_peaks, ValueDetectionError, \
     find_single_peak
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
@@ -19,7 +19,7 @@ from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_ro
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
-    is_debug = False
+    is_debug = True
 
     @mark_as_method
     def f1_原始数据(self, output_path: Path):
@@ -121,6 +121,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f12_仅保留顶面(self, output_path: Path):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points = np.asarray(cloud.points)
@@ -143,11 +144,16 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         assert back_center > front_center and right_center > left_center
         extend_x, definite_left, definite_right = compute_extended_bounds(left_center, right_center)
         extend_y, definite_front, definite_back = compute_extended_bounds(front_center, back_center)
-        left_points = filter_points_by_axis(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
-        right_points = filter_points_by_axis(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
-        front_points = filter_points_by_axis(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
-        back_points = filter_points_by_axis(boundary_points, 1, back_center, extend_y, definite_left, definite_right)
-        left, right, front, back = compute_statistical_boundaries(left_points, right_points, front_points, back_points)
+
+        left = compute_directional_boundary(
+            boundary_points, 0, left_center, extend_x, definite_front, definite_back, True)
+        right = compute_directional_boundary(
+            boundary_points, 0, right_center, extend_x, definite_front, definite_back, False)
+        front = compute_directional_boundary(
+            boundary_points, 1, front_center, extend_y, definite_left, definite_right, True)
+        back = compute_directional_boundary(
+            boundary_points, 1, back_center, extend_y, definite_left, definite_right, False)
+
         self.print_safe(f'{left=} {right=} {front=} {back=}')
         point_x, point_y, point_z = points[:, 0], points[:, 1], points[:, 2]
         top_selector = (
@@ -163,6 +169,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
+    @mark_as_recreate
     def f13_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f12_仅保留顶面, output_path)
 

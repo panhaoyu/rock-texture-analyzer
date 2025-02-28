@@ -13,44 +13,30 @@ def compute_extended_bounds(
     extend = extend_percent * (end_center - start_center)
     return extend, start_center + extend, end_center - extend
 
-def filter_points_by_axis(
+
+def compute_directional_boundary(
         boundary_points: np.ndarray,
         axis: int,
         center: float,
         extend: float,
         other_low: float,
-        other_high: float
-) -> np.ndarray:
-    """筛选指定轴向的边界点，返回过滤后的点集"""
+        other_high: float,
+        is_positive: bool,
+        std_range: int = 5
+) -> float:
+    """计算单方向的统计边界"""
+    # 筛选指定轴向的边界点
     axis_vals = boundary_points[:, axis]
     other_axis = 1 - axis
     mask = (np.abs(axis_vals - center) < extend)
     mask &= (boundary_points[:, other_axis] > other_low)
     mask &= (boundary_points[:, other_axis] < other_high)
-    return boundary_points[mask]
+    filtered_points = boundary_points[mask]
 
-
-def compute_statistical_boundaries(
-        left_points: np.ndarray,
-        right_points: np.ndarray,
-        front_points: np.ndarray,
-        back_points: np.ndarray,
-        std_range: int = 5
-) -> tuple[float, float, float, float]:
-    """计算基于统计方法的最终边界"""
-
-    def calc_boundary(points: np.ndarray, axis: int, is_positive: bool) -> float:
-        """计算单边统计边界"""
-        values = points[:, axis]
-        offset = std_range * np.std(values)
-        return (np.mean(values) + offset) if is_positive else (np.mean(values) - offset)
-
-    return (
-        calc_boundary(left_points, 0, True),
-        calc_boundary(right_points, 0, False),
-        calc_boundary(front_points, 1, True),
-        calc_boundary(back_points, 1, False)
-    )
+    # 计算统计边界
+    values = filtered_points[:, axis]
+    offset = std_range * np.std(values)
+    return (np.mean(values) + offset) if is_positive else (np.mean(values) - offset)
 
 
 def create_boundary_masks(
