@@ -11,32 +11,35 @@ class ValueDetectionError(ValueError):
     pass
 
 
-def find_single_peak(data: np.ndarray, prominence: Union[float, list[float]] = 0.1) -> float:
-    """基于KDE方法识别单峰分布的主峰
-
+def find_single_peak(data: np.ndarray, prominence: Union[float, list[float]]) -> float:
+    """去除背景数据后提取单峰分布的主要峰值，基于KDE方法。
     Args:
-        data: 输入一维数据数组
-        prominence: 峰检测的最小突出度，支持单值或列表形式
-
+        data: 输入的原始数据
+        prominence: 峰值检测时的最小显著性，支持单值或列表形式
     Returns:
-        主峰对应的x坐标
-
+        主峰对应的位置
     Raises:
-        ValueDetectionError: 无法检测到有效峰时抛出异常
+        ValueDetectionError: 当无法检测到有效峰时
     """
-    kde = KernelDensity()
+    kde = KernelDensity(kernel='gaussian', bandwidth=1.0)
     kde.fit(data.reshape(-1, 1))
-    x_range = np.linspace(data.min(), data.max(), 1000)
-    log_density = kde.score_samples(x_range.reshape(-1, 1))
+    x_min, x_max = data.min(), data.max()
+    x_range = x_max - x_min
+    x_min -= x_range * 0.1
+    x_max += x_range * 0.1
+    x = np.linspace(x_min, x_max, 1000).reshape(-1, 1)
+    log_density = kde.score_samples(x)
     density = np.exp(log_density)
 
-    peaks, properties = find_peaks(density, prominence=prominence)
-    if len(peaks) == 0:
-        raise ValueDetectionError("未检测到有效峰")
+    prominences = [prominence] if isinstance(prominence, (int, float)) else prominence
+    for p in prominences:
+        peaks, properties = find_peaks(density, prominence=p)
+        if not len(peaks) == 1:
+            continue
+        main_peak = peaks[0]
+        return float(x[main_peak][0])
 
-    print(properties)
-    main_peak = peaks[np.argmax(properties['peak_heights'])]  # 修正键名
-    return x_range[main_peak]
+    raise ValueDetectionError(f"无法检测到有效峰，尝试prominence列表{prominences}后仍失败")
 
 
 def find_two_peaks(data: np.ndarray, prominence: Union[float, list[float]]) -> tuple[float, float]:
