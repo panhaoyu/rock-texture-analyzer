@@ -4,25 +4,14 @@ import numpy as np
 
 from rock_texture_analyzer.clustering import process_clusters
 
-
 def compute_extended_bounds(
-        left_center: float,
-        right_center: float,
-        front_center: float,
-        back_center: float,
-        extend_percent: float = 0.1
-) -> tuple[float, float, float, float, float, float]:
-    """计算扩展后的边界范围，返回扩展量和扩展后的各方向边界值"""
-    extend_x = extend_percent * (right_center - left_center)
-    extend_y = extend_percent * (back_center - front_center)
-    return (
-        extend_x, extend_y,
-        left_center + extend_x,
-        right_center - extend_x,
-        front_center + extend_y,
-        back_center - extend_y
-    )
-
+    start_center: float,
+    end_center: float,
+    extend_percent: float = 0.1
+) -> tuple[float, float, float]:
+    """计算单方向扩展边界，返回扩展量和扩展后的起止边界"""
+    extend = extend_percent * (end_center - start_center)
+    return extend, start_center + extend, end_center - extend
 
 def filter_points_by_axis(
         boundary_points: np.ndarray,

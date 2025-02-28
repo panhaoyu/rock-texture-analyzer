@@ -9,8 +9,8 @@ from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread, mark_as_ply, mark_as_npy
-from rock_texture_analyzer.boundary_processing import compute_extended_bounds, filter_points_by_axis, \
-    compute_statistical_boundaries, create_boundary_masks
+from rock_texture_analyzer.boundary_processing import filter_points_by_axis, \
+    compute_statistical_boundaries, create_boundary_masks, compute_extended_bounds
 from rock_texture_analyzer.clustering import find_two_peaks, ValueDetectionError, \
     find_single_peak
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
@@ -141,8 +141,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         self.print_safe(f'{left_center=} {right_center=}')
         self.print_safe(f'{front_center=} {back_center=}')
         assert back_center > front_center and right_center > left_center
-        (extend_x, extend_y, definite_left, definite_right, definite_front, definite_back) = \
-            (compute_extended_bounds(left_center, right_center, front_center, back_center))
+        extend_x, definite_left, definite_right = compute_extended_bounds(left_center, right_center)
+        extend_y, definite_front, definite_back = compute_extended_bounds(front_center, back_center)
         left_points = filter_points_by_axis(boundary_points, 0, left_center, extend_x, definite_front, definite_back)
         right_points = filter_points_by_axis(boundary_points, 0, right_center, extend_x, definite_front, definite_back)
         front_points = filter_points_by_axis(boundary_points, 1, front_center, extend_y, definite_left, definite_right)
