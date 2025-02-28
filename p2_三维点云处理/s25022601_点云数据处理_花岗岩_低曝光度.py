@@ -114,7 +114,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
-        thresholds = [0.1, 0.05, 0.03, 0.02, 0.01]
+        thresholds = [0.2, 0.1, 0.05, 0.03, 0.02, 0.01, 0.005]
         bottom, top = find_two_peaks(point_z, thresholds)
         self.print_safe(f'{bottom=} {top=}')
         range_z = top - bottom
@@ -169,7 +169,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8))
 
     @mark_as_method
-    @mark_as_recreate
     def f16_绘制图像(self, output_path: Path) -> np.ndarray:
         matrix = self.get_input_array(self.f14_表面二维重建, output_path)
         matrix = matrix[:, :, 1:4]
@@ -190,7 +189,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
 
     @mark_as_method
-    @mark_as_recreate
     def f17_合并两张图(self, output_path: Path):
         """将高程图与表面图合并为横向排列的图片"""
         elevation_img = self.get_input_image(self.f15_绘制高程, output_path)
