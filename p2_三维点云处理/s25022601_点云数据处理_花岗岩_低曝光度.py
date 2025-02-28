@@ -108,7 +108,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         return figure
 
     @mark_as_pickle
-    @mark_as_png
     def f12_各个面的坐标(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
