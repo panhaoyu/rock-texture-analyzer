@@ -38,8 +38,7 @@ def find_two_peaks(data: np.ndarray, prominence: Union[float, list[float]]) -> t
         if len(peaks) >= 2:
             peak_centers = x_range[peaks].flatten()
             return tuple(sorted(peak_centers[:2]))
-    raise ValueDetectionError(
-        f"无法检测到两个明显峰，尝试prominence列表{prominences}后仍失败")
+    raise ValueDetectionError(f"无法检测到两个明显峰，尝试prominence列表{prominences}后仍失败")
 
 
 def find_peaks_on_both_sides(
