@@ -126,8 +126,8 @@ class BaseProcessor:
             for value in vars(klass).values():
                 if isinstance(value, ProcessMethod):
                     class_methods.setdefault(value.step_index, []).append(value)
-        # 按照书写的顺序进行排序，而不是按照名称进行排序
-        methods = list(class_methods.values())
+        sorted_methods = sorted(class_methods.items(), key=lambda x: x[0])
+        methods = [method for _, methods in sorted_methods for method in methods]
         for method in methods:
             method.processor = self
         return methods
