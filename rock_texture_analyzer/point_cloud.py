@@ -29,25 +29,28 @@ def write_point_cloud(
         return success
 
 
-_thread_local = threading.Lock()
+# 使用线程本地存储保存每个线程的Visualizer实例
+_thread_local = threading.local()
 
 
 def draw_point_cloud(cloud: Path | PointCloud, output_path: Path) -> None:
-    """通过临时路径保存点云可视化截图（支持中文路径）"""
+    """通过线程本地存储实现无锁可视化"""
     if isinstance(cloud, Path):
         cloud = read_point_cloud(cloud)
 
+    # 每个线程维护自己的Visualizer实例
+    if not hasattr(_thread_local, 'vis'):
+        _thread_local.vis = o3d.visualization.Visualizer()
+        _thread_local.vis.create_window(visible=False)
+    else:
+        _thread_local.vis.clear_geometries()
+
+    _thread_local.vis.add_geometry(cloud)
+    _thread_local.vis.update_geometry(cloud)
+    _thread_local.vis.poll_events()
+    _thread_local.vis.update_renderer()
+
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_file = Path(tmpdir) / f"temp_{output_path.suffix}"
-        with _thread_local:
-            vis = o3d.visualization.Visualizer()
-            vis.create_window(visible=False)
-            vis.clear_geometries()
-            vis.add_geometry(cloud)
-            vis.update_geometry(cloud)
-            vis.poll_events()
-            vis.update_renderer()
-            vis.capture_screen_image(temp_file.as_posix(), do_render=True)
-            vis.destroy_window()
-        shutil.copy2(temp_file, output_path)
-
+        _thread_local.vis.capture_screen_image(str(temp_file), do_render=True)
+        shutil.copy(temp_file, output_path)
