@@ -126,11 +126,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         x, y, z = points.T
         x0, x1, y0, y1, z0, z1 = get_boundaries(points)
         self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
-        top_selector = (
-                (x > x0) & (x < x1)
-                & (y > y0) & (y < y1)
-                & (z > ((z0 + z1) / 2))
-        )
+        top_selector = ((x > x0) & (x < x1) & (y > y0) & (y < y1) & (z > ((z0 + z1) / 2)))
         cloud.points = Vector3dVector(points[top_selector])
         if colors.size:
             cloud.colors = Vector3dVector(colors[top_selector])
