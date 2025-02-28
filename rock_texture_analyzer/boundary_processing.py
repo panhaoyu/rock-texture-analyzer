@@ -6,38 +6,34 @@ from rock_texture_analyzer.clustering import process_clusters, find_two_peaks, V
 
 
 def get_boundaries(points: np.ndarray) -> tuple[float, float, float, float, float, float]:
-    point_z = points[:, 2]
+    _, _, z = points.T
     thresholds = [0.05, 0.04, 0.03, 0.02, 0.01, 0.005]
     try:
-        bottom, top = find_two_peaks(point_z, thresholds)
+        z0, z1 = find_two_peaks(z, thresholds)
     except ValueDetectionError:
-        bottom, top = np.min(point_z), find_single_peak(point_z, thresholds)
-    z_selector = (point_z > (bottom + (top - bottom) * 0.1)) & (point_z < (top - (top - bottom) * 0.4))
-    boundary_points = points[z_selector]
-    point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
-    left_center, right_center = find_two_peaks(point_x, thresholds)
-    front_center, back_center = find_two_peaks(point_y, thresholds)
-    assert back_center > front_center and right_center > left_center
+        z0, z1 = np.min(z), find_single_peak(z, thresholds)
+    z_range = z1 - z0
+    points = points[(z > (z0 + z_range * 0.1)) & (z < (z1 - z_range * 0.4))]
+    x, y, _ = points.T
 
-    # todo 拆分为两行
-    extend_x, extend_y = 0.1 * (right_center - left_center), 0.1 * (back_center - front_center)
+    x0c, x1c = find_two_peaks(x, thresholds)
+    y0c, y1c = find_two_peaks(y, thresholds)
+    assert y1c > y0c and x1c > x0c
 
-    # todo 各个mask都分别独立定义，例如，left_mask
-    # todo boundary_points[:, 0] 与 1 分别独立定义为变量，以简化后面的写法。
-    # todo 避免使用多行表达式，可以多定义一些变量
-    mask = (np.abs(boundary_points[:, 0] - left_center) < extend_x) & (
-            boundary_points[:, 1] > (front_center + extend_y)) & (boundary_points[:, 1] < (back_center - extend_y))
-    left = np.mean(boundary_points[mask][:, 0]) + 5 * np.std(boundary_points[mask][:, 0])
-    mask = (np.abs(boundary_points[:, 0] - right_center) < extend_x) & (
-            boundary_points[:, 1] > (front_center + extend_y)) & (boundary_points[:, 1] < (back_center - extend_y))
-    right = np.mean(boundary_points[mask][:, 0]) - 5 * np.std(boundary_points[mask][:, 0])
-    mask = (np.abs(boundary_points[:, 1] - front_center) < extend_y) & (
-            boundary_points[:, 0] > (left_center + extend_x)) & (boundary_points[:, 0] < (right_center - extend_x))
-    front = np.mean(boundary_points[mask][:, 1]) + 5 * np.std(boundary_points[mask][:, 1])
-    mask = (np.abs(boundary_points[:, 1] - back_center) < extend_y) & (
-            boundary_points[:, 0] > (left_center + extend_x)) & (boundary_points[:, 0] < (right_center - extend_x))
-    back = np.mean(boundary_points[mask][:, 1]) - 5 * np.std(boundary_points[mask][:, 1])
-    return left, right, front, back, bottom, top
+    dx = 0.1 * (x1c - x0c)
+    dy = 0.1 * (y1c - y0c)
+
+    x0_pts = x[(np.abs(x - x0c) < dx) & (y > y0c + dy) & (y < y1c - dy)]
+    x1_pts = x[(np.abs(x - x1c) < dx) & (y > y0c + dy) & (y < y1c - dy)]
+    y0_pts = y[(np.abs(y - y0c) < dy) & (x > x0c + dx) & (x < x1c - dx)]
+    y1_pts = y[(np.abs(y - y1c) < dy) & (x > x0c + dx) & (x < x1c - dx)]
+
+    x0 = np.mean(x0_pts) + 5 * np.std(x0_pts)
+    x1 = np.mean(x1_pts) - 5 * np.std(x1_pts)
+    y0 = np.mean(y0_pts) + 5 * np.std(y0_pts)
+    y1 = np.mean(y1_pts) - 5 * np.std(y1_pts)
+
+    return x0, x1, y0, y1, z0, z1
 
 
 def create_boundary_masks(
