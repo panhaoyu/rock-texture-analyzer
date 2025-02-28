@@ -120,7 +120,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f13_1_仅保留顶面(self, output_path: Path):
         cloud = self.f10_精细化对正.read(output_path)
         x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(output_path)
-        point_cloud_keep_top(cloud, x0, x1, y0, y1, z0, z1)
+        cloud = point_cloud_keep_top(cloud, x0, x1, y0, y1, z0, z1)
         return cloud
 
     @mark_as_ply
