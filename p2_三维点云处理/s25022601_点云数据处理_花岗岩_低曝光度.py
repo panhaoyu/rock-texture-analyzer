@@ -124,7 +124,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points = np.asarray(cloud.points)
         point_z = points[:, 2]
-        thresholds = [0.2, 0.1, 0.05, 0.03, 0.02, 0.01, 0.005]
+        thresholds = [0.05, 0.04, 0.03, 0.02, 0.01, 0.005]
         bottom, top = find_two_peaks(point_z, thresholds)
         self.print_safe(f'{bottom=} {top=}')
         range_z = top - bottom
