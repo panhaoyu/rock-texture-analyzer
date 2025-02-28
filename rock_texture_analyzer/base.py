@@ -105,6 +105,7 @@ class ProcessMethod(typing.Generic[T]):
                 obj.to_excel(path)
             case '.pickle':
                 with path.open('wb') as f:
+                    # noinspection PyTypeChecker
                     pickle.dump(obj, f)
             case other:
                 raise NotImplementedError(f'Unknown suffix: "{other}"')
