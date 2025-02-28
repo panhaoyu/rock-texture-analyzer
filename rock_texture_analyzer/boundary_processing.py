@@ -36,10 +36,7 @@ def get_boundaries(points: np.ndarray) -> tuple[float, float, float, float, floa
     return x0, x1, y0, y1, z0, z1
 
 
-def create_boundary_masks(
-        points: np.ndarray,
-        extension_ratio: float = 0.1
-) -> Tuple[np.ndarray, np.ndarray]:
+def create_boundary_masks(points: np.ndarray, extension_ratio: float = 0.1) -> Tuple[np.ndarray, np.ndarray]:
     """创建边界区域和外围区域的布尔掩码"""
     x_coords, y_coords = points[:, 0], points[:, 1]
 
