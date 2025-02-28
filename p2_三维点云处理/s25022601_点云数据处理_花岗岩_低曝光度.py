@@ -16,7 +16,7 @@ from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_ro
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
-    is_debug = True
+    is_debug = False
 
     @mark_as_ply
     def f1_原始数据(self, output_path: Path):
