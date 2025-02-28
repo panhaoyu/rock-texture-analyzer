@@ -10,7 +10,7 @@ from open3d.cpu.pybind.utility import Vector3dVector
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
 from rock_texture_analyzer.boundary_processing import create_boundary_masks, compute_extended_bounds, \
-    compute_directional_boundary
+    compute_boundary
 from rock_texture_analyzer.clustering import find_two_peaks, ValueDetectionError, \
     find_single_peak
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
@@ -145,14 +145,10 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         extend_x, definite_left, definite_right = compute_extended_bounds(left_center, right_center)
         extend_y, definite_front, definite_back = compute_extended_bounds(front_center, back_center)
 
-        left = compute_directional_boundary(
-            boundary_points, 0, left_center, extend_x, definite_front, definite_back, True)
-        right = compute_directional_boundary(
-            boundary_points, 0, right_center, extend_x, definite_front, definite_back, False)
-        front = compute_directional_boundary(
-            boundary_points, 1, front_center, extend_y, definite_left, definite_right, True)
-        back = compute_directional_boundary(
-            boundary_points, 1, back_center, extend_y, definite_left, definite_right, False)
+        left = compute_boundary(boundary_points, 0, left_center, extend_x, definite_front, definite_back, True)
+        right = compute_boundary(boundary_points, 0, right_center, extend_x, definite_front, definite_back, False)
+        front = compute_boundary(boundary_points, 1, front_center, extend_y, definite_left, definite_right, True)
+        back = compute_boundary(boundary_points, 1, back_center, extend_y, definite_left, definite_right, False)
 
         self.print_safe(f'{left=} {right=} {front=} {back=}')
         point_x, point_y, point_z = points[:, 0], points[:, 1], points[:, 2]

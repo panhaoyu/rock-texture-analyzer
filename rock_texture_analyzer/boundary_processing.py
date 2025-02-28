@@ -14,7 +14,7 @@ def compute_extended_bounds(
     return extend, start_center + extend, end_center - extend
 
 
-def compute_directional_boundary(
+def compute_boundary(
         boundary_points: np.ndarray,
         axis: int,
         center: float,
