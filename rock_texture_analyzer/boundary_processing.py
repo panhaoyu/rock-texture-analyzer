@@ -2,12 +2,13 @@ from typing import Tuple
 
 import numpy as np
 
-from rock_texture_analyzer.clustering import process_clusters
+from rock_texture_analyzer.clustering import process_clusters, find_two_peaks, ValueDetectionError, find_single_peak
+
 
 def compute_extended_bounds(
-    start_center: float,
-    end_center: float,
-    extend_percent: float = 0.1
+        start_center: float,
+        end_center: float,
+        extend_percent: float = 0.1
 ) -> tuple[float, float, float]:
     """计算单方向扩展边界，返回扩展量和扩展后的起止边界"""
     extend = extend_percent * (end_center - start_center)
@@ -37,6 +38,33 @@ def compute_boundary(
     values = filtered_points[:, axis]
     offset = std_range * np.std(values)
     return (np.mean(values) + offset) if is_positive else (np.mean(values) - offset)
+
+
+def get_boundaries(points: np.ndarray):
+    point_z = points[:, 2]
+    thresholds = [0.05, 0.04, 0.03, 0.02, 0.01, 0.005]
+    try:
+        bottom, top = find_two_peaks(point_z, thresholds)
+    except ValueDetectionError:
+        bottom = np.min(point_z)
+        top = find_single_peak(point_z, thresholds)
+    range_z = top - bottom
+    z_selector = (point_z > (bottom + range_z * 0.1)) & (point_z < (top - range_z * 0.4))
+    boundary_points = points[z_selector]
+    point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
+    left_center, right_center = find_two_peaks(point_x, prominence=thresholds)
+    front_center, back_center = find_two_peaks(point_y, prominence=thresholds)
+    assert back_center > front_center and right_center > left_center
+
+    extend_x, definite_left, definite_right = compute_extended_bounds(left_center, right_center)
+    extend_y, definite_front, definite_back = compute_extended_bounds(front_center, back_center)
+
+    left = compute_boundary(boundary_points, 0, left_center, extend_x, definite_front, definite_back, True)
+    right = compute_boundary(boundary_points, 0, right_center, extend_x, definite_front, definite_back, False)
+    front = compute_boundary(boundary_points, 1, front_center, extend_y, definite_left, definite_right, True)
+    back = compute_boundary(boundary_points, 1, back_center, extend_y, definite_left, definite_right, False)
+
+    return left, right, front, back, bottom, top
 
 
 def create_boundary_masks(

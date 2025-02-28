@@ -9,10 +9,7 @@ from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
     mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
-from rock_texture_analyzer.boundary_processing import create_boundary_masks, compute_extended_bounds, \
-    compute_boundary
-from rock_texture_analyzer.clustering import find_two_peaks, ValueDetectionError, \
-    find_single_peak
+from rock_texture_analyzer.boundary_processing import create_boundary_masks, get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix
@@ -125,40 +122,17 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     def f12_仅保留顶面(self, output_path: Path):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points = np.asarray(cloud.points)
-        point_z = points[:, 2]
-        thresholds = [0.05, 0.04, 0.03, 0.02, 0.01, 0.005]
-        try:
-            bottom, top = find_two_peaks(point_z, thresholds)
-        except ValueDetectionError:
-            bottom = np.min(point_z)
-            top = find_single_peak(point_z, thresholds)
-        self.print_safe(f'{bottom=} {top=}')
-        range_z = top - bottom
-        z_selector = (point_z > (bottom + range_z * 0.1)) & (point_z < (top - range_z * 0.4))
-        boundary_points = points[z_selector]
-        point_x, point_y = boundary_points[:, 0], boundary_points[:, 1]
-        left_center, right_center = find_two_peaks(point_x, prominence=thresholds)
-        front_center, back_center = find_two_peaks(point_y, prominence=thresholds)
-        self.print_safe(f'{left_center=} {right_center=}')
-        self.print_safe(f'{front_center=} {back_center=}')
-        assert back_center > front_center and right_center > left_center
-        extend_x, definite_left, definite_right = compute_extended_bounds(left_center, right_center)
-        extend_y, definite_front, definite_back = compute_extended_bounds(front_center, back_center)
+        colors = np.asarray(cloud.colors)
 
-        left = compute_boundary(boundary_points, 0, left_center, extend_x, definite_front, definite_back, True)
-        right = compute_boundary(boundary_points, 0, right_center, extend_x, definite_front, definite_back, False)
-        front = compute_boundary(boundary_points, 1, front_center, extend_y, definite_left, definite_right, True)
-        back = compute_boundary(boundary_points, 1, back_center, extend_y, definite_left, definite_right, False)
-
-        self.print_safe(f'{left=} {right=} {front=} {back=}')
-        point_x, point_y, point_z = points[:, 0], points[:, 1], points[:, 2]
+        x, y, z = points.T
+        x0, x1, y0, y1, z0, z1 = get_boundaries(points)
+        self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
         top_selector = (
-                (point_x > left) & (point_x < right)
-                & (point_y > front) & (point_y < back)
-                & (point_z > (bottom + range_z * 0.5))
+                (x > x0) & (x < x1)
+                & (y > y0) & (y < y1)
+                & (z > ((z0 + z1) / 2))
         )
         cloud.points = Vector3dVector(points[top_selector])
-        colors = np.asarray(cloud.colors)
         if colors.size:
             cloud.colors = Vector3dVector(colors[top_selector])
         return cloud
