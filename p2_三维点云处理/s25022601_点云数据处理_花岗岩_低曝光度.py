@@ -8,7 +8,7 @@ from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from rock_texture_analyzer.base import BaseProcessor, mark_as_method, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_recreate
+    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
@@ -78,7 +78,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f8_调整地面在下(self, output_path: Path):
         cloud = self.get_input_ply(self.f6_xOy平面对正, output_path)
         points = np.asarray(cloud.points)
@@ -88,7 +87,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    @mark_as_recreate
     def f9_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f8_调整地面在下, output_path)
 
@@ -117,14 +115,22 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
         sns.kdeplot(z, fill=True, ax=ax)
         return figure
 
+    @mark_as_pickle
+    @mark_as_method
+    def f12_各个面的坐标(self, output_path: Path):
+        cloud = self.get_input_ply(self.f10_精细化对正, output_path)
+        points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
+        x0, x1, y0, y1, z0, z1 = get_boundaries(points)
+        return x0, x1, y0, y1, z0, z1
+
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
-    def f12_仅保留顶面(self, output_path: Path):
+    def f13_仅保留顶面(self, output_path: Path):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x, y, z = points.T
-        x0, x1, y0, y1, z0, z1 = get_boundaries(points)
+        x0, x1, y0, y1, z0, z1 = self.get_input_pickle(self.f12_各个面的坐标, output_path)
         self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
         top_selector = ((x > x0) & (x < x1) & (y > y0) & (y < y1) & (z > ((z0 + z1) / 2)))
         cloud.points = Vector3dVector(points[top_selector])
@@ -134,13 +140,13 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    def f13_绘制点云(self, output_path: Path):
-        return self.get_input_ply(self.f12_仅保留顶面, output_path)
+    def f14_绘制点云(self, output_path: Path):
+        return self.get_input_ply(self.f13_仅保留顶面, output_path)
 
     @mark_as_method
     @mark_as_npy
     def f14_表面二维重建(self, output_path: Path):
-        cloud = self.get_input_ply(self.f12_仅保留顶面, output_path)
+        cloud = self.get_input_ply(self.f13_仅保留顶面, output_path)
         interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
         for i, name in enumerate(['z', 'r', 'g', 'b'][:interpolated_matrix.shape[2]]):
             layer = interpolated_matrix[..., i]

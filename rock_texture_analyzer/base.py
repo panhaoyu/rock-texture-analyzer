@@ -119,7 +119,8 @@ class BaseProcessor:
                         assert isinstance(result, pd.DataFrame)
                         result.to_excel(output_path)
                     case '.pickle':
-                        output_path.write_bytes(pickle.dumps(result))
+                        with output_path.open('wb') as f:
+                            pickle.dump(result, f)
                     case other:
                         raise NotImplementedError(f'Unknown suffix: "{other}"')
             except ManuallyProcessRequiredException as exception:
@@ -154,6 +155,11 @@ class BaseProcessor:
         input_path = self.get_input_path(func, output_path)
         with Image.open(input_path) as img:
             return img.copy()
+
+    def get_input_pickle(self, func: ProcessMethod, output_path: Path) -> typing.Any:
+        path = self.get_input_path(func, output_path)
+        with path.open('rb') as f:
+            return pickle.load(f)
 
     def get_input_array(self, func: ProcessMethod, output_path: Path):
         path = self.get_input_path(func, output_path)
@@ -240,4 +246,10 @@ def mark_as_ply(func: Callable):
 def mark_as_npy(func: Callable):
     func = ProcessMethod.of(func)
     func.suffix = '.npy'
+    return func
+
+
+def mark_as_pickle(func: Callable) -> ProcessMethod:
+    func = ProcessMethod.of(func)
+    func.is_pickle = True
     return func
