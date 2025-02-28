@@ -78,6 +78,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
+    @mark_as_recreate
     def f8_调整地面在下(self, output_path: Path):
         cloud = self.get_input_ply(self.f6_xOy平面对正, output_path)
         points = np.asarray(cloud.points)
@@ -87,6 +88,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
+    @mark_as_recreate
     def f9_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f8_调整地面在下, output_path)
 
@@ -118,7 +120,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_method
     @mark_as_ply
     @mark_as_single_thread
-    @mark_as_recreate
     def f12_仅保留顶面(self, output_path: Path):
         cloud = self.get_input_ply(self.f10_精细化对正, output_path)
         points = np.asarray(cloud.points)
@@ -134,7 +135,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
 
     @mark_as_method
     @mark_as_single_thread
-    @mark_as_recreate
     def f13_绘制点云(self, output_path: Path):
         return self.get_input_ply(self.f12_仅保留顶面, output_path)
 
