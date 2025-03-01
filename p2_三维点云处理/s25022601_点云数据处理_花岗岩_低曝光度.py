@@ -8,7 +8,6 @@ from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from batch_processor import mark_as_recreate
 from batch_processor.batch_processor import BatchProcessor
 from batch_processor.processors.base import ManuallyProcessRequiredException, mark_as_single_thread
 from batch_processor.processors.combined_excel import mark_as_combined_excel
@@ -257,9 +256,25 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     @mark_as_png
     def f20_按要求进行旋转与翻转(self, path: Path):
         v1, = self.f19_旋转与翻转方向.read(path)
-        if v1 == -1:
-            raise ManuallyProcessRequiredException('Open the previous excel to specify the rotation and flip params')
         return self.f18_合并全部的图.read(path).rotate(-90 * v1)
+
+    @mark_as_npy
+    def f21_表面二维重建_旋转(self, path: Path):
+        matrix = self.f14_表面二维重建.read(path)
+        v1, = self.f19_旋转与翻转方向.read(path)
+        return np.rot90(matrix, k=-v1, axes=(0, 1))
+
+    @mark_as_png
+    def f22_绘制高程_旋转(self, path: Path):
+        img = self.f15_绘制高程.read(path)
+        v1, = self.f19_旋转与翻转方向.read(path)
+        return img.rotate(-90 * v1)
+
+    @mark_as_png
+    def f23_绘制图像_旋转(self, path: Path):
+        img = self.f16_绘制图像.read(path)
+        v1, = self.f19_旋转与翻转方向.read(path)
+        return img.rotate(-90 * v1)
 
 
 if __name__ == '__main__':
