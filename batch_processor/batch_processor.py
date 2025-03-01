@@ -1,6 +1,5 @@
 import logging
 import re
-import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from functools import cached_property
@@ -15,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class BatchProcessor:
-    _print_lock: threading.Lock = threading.Lock()
-
     @cached_property
     def step_functions(self):
         class_methods: dict[int, list[BaseProcessor]] = {}
