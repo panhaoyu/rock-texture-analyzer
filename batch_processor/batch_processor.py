@@ -12,6 +12,13 @@ from .processors.base import BaseProcessor, ManuallyProcessRequiredException
 
 logger = logging.getLogger(Path(__file__).stem)
 
+logging.basicConfig(
+    level=logging.INFO,
+    style='{',
+    datefmt='%H%M%S',
+    format="{levelname:>8} {asctime} {name:<20} {message}"
+)
+
 
 class BatchProcessor:
     @cached_property

@@ -21,12 +21,6 @@ from rock_texture_analyzer.optimization import least_squares_adjustment_directio
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
     depth_matrix_to_rgb_image, merge_5_images, depth_matrix_to_elevation_image
 
-logging.basicConfig(
-    level=logging.INFO,
-    style='{',
-    datefmt='%H%M%S',
-    format="{levelname:>8} {asctime} {name:<20} {message}"
-)
 
 logger = logging.getLogger(Path(__name__).stem)
 
