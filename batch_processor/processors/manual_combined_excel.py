@@ -3,6 +3,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
+import pandas as pd
+
 from batch_processor.processors.base import BaseProcessor
 
 
@@ -42,9 +44,30 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         return self.directory / f'combined{self.suffix}'
 
     def on_batch_started(self):
-        # todo 从 combined_file 里面读取数据，然后写入到data里面去
-        raise NotImplementedError
+        if not self.combined_file_path.exists():
+            return
+
+        df = pd.read_excel(self.combined_file_path, engine='openpyxl')
+        if list(df.columns) != list(self.columns):
+            raise ValueError(f"Column mismatch. Expected {self.columns}, got {df.columns.tolist()}")
+
+        for _, row in df.iterrows():
+            stem = row['stem']
+            self.data[stem] = tuple(row[col] for col in self.columns)
 
     def on_batch_ended(self):
-        # todo 将data里面的数据写入到 combined_file
-        raise NotImplementedError
+        if not self.data:
+            return
+
+        df = pd.DataFrame.from_dict(
+            {k: list(v) for k, v in self.data.items()},
+            orient='index',
+            columns=self.columns
+        )
+        df.index.name = 'stem'
+
+        if self.combined_file_path.exists():
+            existing_df = pd.read_excel(self.combined_file_path, engine='openpyxl')
+            df = pd.concat([existing_df, df])
+
+        df.to_excel(self.combined_file_path, index=True)
