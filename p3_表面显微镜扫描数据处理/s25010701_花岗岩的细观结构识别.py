@@ -5,8 +5,9 @@ from typing import Type
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
-from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProcessRequiredException, \
-    mark_as_single_thread
+from batch_processor.batch_processor import BatchProcessor
+from batch_processor.processors.png import mark_as_png
+from batch_processor.processors.base import ManuallyProcessRequiredException, mark_as_single_thread
 
 
 class GraniteIdentifier(RockGrainIdentifier):
@@ -20,7 +21,7 @@ class GraniteIdentifier(RockGrainIdentifier):
     ]
 
 
-class s25010701_花岗岩的细观结构识别(BaseProcessor):
+class s25010701_花岗岩的细观结构识别(BatchProcessor):
     @mark_as_png
     def f1_原始图像(self, output_path: Path):
         raise ManuallyProcessRequiredException

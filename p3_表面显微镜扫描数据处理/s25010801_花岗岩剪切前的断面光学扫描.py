@@ -6,10 +6,13 @@ import numpy as np
 from PIL import Image
 from more_itertools import only
 
-from rock_texture_analyzer.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_png
+import batch_processor.processors.base
+from batch_processor.batch_processor import BatchProcessor
+from batch_processor.processors.png import mark_as_png
+from batch_processor.processors.base import ManuallyProcessRequiredException
 
 
-class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
+class s25010801_花岗岩剪切前的断面光学扫描(BatchProcessor):
     v6_转换为凸多边形的检测长度_像素 = 100
     v9_不参与拉伸系数计算的边界宽度_像素 = 100
     v12_不参与垂直拉伸系数计算的边界高度_像素 = 100
@@ -185,8 +188,10 @@ class s25010801_花岗岩剪切前的断面光学扫描(BaseProcessor):
         x_original, y_original = np.meshgrid(np.arange(a.shape[1]), np.arange(a.shape[0]))
 
         # 取透明度通道里面的第一个非空的值与最后一个非空的值作为边界，并计算每列的中心位置
-        y_min = np.array([next((idx for idx, val in enumerate(col) if val > 0), 0) for col in a.T])
-        y_max = np.array([len(col) - 1 - next((idx for idx, val in enumerate(col[::-1]) if val > 0), 0) for col in a.T])
+        y_min = np.array([next((idx for idx, val in enumerate(col) if val > 0), 0) for col in
+                          batch_processor.processors.base.T])
+        y_max = np.array([len(col) - 1 - next((idx for idx, val in enumerate(col[::-1]) if val > 0), 0) for col in
+                          batch_processor.processors.base.T])
         y_center = (y_min + y_max) / 2
         y_center[:border] = y_center[border]
         y_center[-border:] = y_center[-border]

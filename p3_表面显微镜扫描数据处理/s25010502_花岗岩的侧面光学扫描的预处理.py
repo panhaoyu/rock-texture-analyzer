@@ -7,10 +7,13 @@ import requests
 from PIL import Image, ImageFilter
 
 from p3_表面显微镜扫描数据处理.utils.s1_图像补全_阿里云 import erase_image_with_oss
-from rock_texture_analyzer.base import BaseProcessor, ManuallyProcessRequiredException, mark_as_png, mark_as_jpg
+from batch_processor.batch_processor import BatchProcessor
+from batch_processor.processors.jpg import mark_as_jpg
+from batch_processor.processors.png import mark_as_png
+from batch_processor.processors.base import ManuallyProcessRequiredException
 
 
-class s25010502_花岗岩的侧面光学扫描的预处理(BaseProcessor):
+class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
     p3_左侧裁剪区域_像素: int = 1400
     p3_右侧裁剪区域_像素: int = 1000
     p4_左右边界裁剪宽度_像素: int = 100

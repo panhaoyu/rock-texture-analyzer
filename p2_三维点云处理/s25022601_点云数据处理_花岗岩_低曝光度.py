@@ -7,8 +7,13 @@ from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from rock_texture_analyzer.base import BaseProcessor, mark_as_png, ManuallyProcessRequiredException, \
-    mark_as_single_thread, mark_as_ply, mark_as_npy, mark_as_pickle
+from batch_processor.batch_processor import BatchProcessor
+from batch_processor.processors.base import ManuallyProcessRequiredException, mark_as_single_thread
+from batch_processor.processors.manual_combined_excel import mark_as_manual_combined_excel
+from batch_processor.processors.npy import mark_as_npy
+from batch_processor.processors.pickle import mark_as_pickle
+from batch_processor.processors.ply import mark_as_ply
+from batch_processor.processors.png import mark_as_png
 from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
@@ -16,7 +21,7 @@ from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_ro
     point_cloud_top_projection, merge_5_images
 
 
-class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
+class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     is_debug = False
 
     @mark_as_ply
@@ -233,6 +238,10 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
             front=self.f14_4_绘制前面点云.read(path),
             back=self.f14_5_绘制后面点云.read(path),
         )
+
+    @mark_as_manual_combined_excel(columns=('顺时针旋转次数', '翻转'))
+    def f19_旋转与翻转方向(self, path: Path):
+        pass
 
 
 if __name__ == '__main__':
