@@ -9,7 +9,7 @@ from open3d.cpu.pybind.utility import Vector3dVector
 
 from batch_processor.batch_processor import BatchProcessor
 from batch_processor.processors.base import ManuallyProcessRequiredException, mark_as_single_thread
-from batch_processor.processors.manual_combined_excel import mark_as_manual_combined_excel
+from batch_processor.processors.manual_combined_excel import mark_as_combined_excel
 from batch_processor.processors.npy import mark_as_npy
 from batch_processor.processors.pickle import mark_as_pickle
 from batch_processor.processors.ply import mark_as_ply
@@ -239,9 +239,9 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
             back=self.f14_5_绘制后面点云.read(path),
         )
 
-    @mark_as_manual_combined_excel(columns=('顺时针旋转次数', '翻转'))
+    @mark_as_combined_excel(columns=('顺时针旋转次数', '翻转'))
     def f19_旋转与翻转方向(self, path: Path):
-        pass
+        return 0, 0
 
 
 if __name__ == '__main__':

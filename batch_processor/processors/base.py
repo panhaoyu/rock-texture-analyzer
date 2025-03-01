@@ -5,7 +5,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
-from batch_processor.batch_processor import BatchProcessor
+if typing.TYPE_CHECKING:
+    from ..batch_processor import BatchProcessor
 
 T = typing.TypeVar('T')
 

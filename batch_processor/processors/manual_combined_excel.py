@@ -8,7 +8,7 @@ import pandas as pd
 from batch_processor.processors.base import BaseProcessor
 
 
-def mark_as_manual_combined_excel(columns: tuple[str, ...]):
+def mark_as_combined_excel(columns: tuple[str, ...]):
     def wrapper(func: Callable):
         func = __CombinedExcelProcessor.of(func)
         assert func.suffix is None, func.suffix
@@ -33,10 +33,10 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         # stem -> column values
         self.data: dict[str, _RowType] = {}
 
-    def read(self, path: Path):
+    def _read(self, path: Path):
         return self.data[path.stem]
 
-    def write(self, obj: typing.Any, path: Path):
+    def _write(self, obj: typing.Any, path: Path):
         self.data[path.stem] = obj
 
     @cached_property
