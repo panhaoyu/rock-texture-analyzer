@@ -66,7 +66,7 @@ class BaseProcessor(typing.Generic[T]):
 
     def read(self, path: Path):
         path = self.get_input_path(path)
-        self._read(path)
+        return self._read(path)
 
     def _write(self, obj: typing.Any, path: Path):
         raise NotImplementedError(self.__class__.__name__)
