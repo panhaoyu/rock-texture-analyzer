@@ -52,10 +52,10 @@ class BatchProcessor:
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
             with func.meta_process_lock:
-                func.pending_stems.remove(stem)
-                func.processing_stems.add(stem)
                 if not func.processing_stems and not func.processed_stems:
                     func.on_batch_started()
+                func.pending_stems.remove(stem)
+                func.processing_stems.add(stem)
             try:
                 result = func(self, path)
                 func.write(result, path)
