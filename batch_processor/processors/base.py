@@ -25,6 +25,7 @@ class BaseProcessor(typing.Generic[T]):
     # 用于记录目前已经处理以及未处理的文件列表
     all_stems: set[str]
     pending_stems: set[str]
+    processing_stems: set[str]
     processed_stems: set[str]
 
     def __init__(self, func: Callable[[Path], typing.Any]):
@@ -32,6 +33,7 @@ class BaseProcessor(typing.Generic[T]):
         self.func_name = func.__name__
         self.all_stems = set()
         self.pending_stems = set()
+        self.processing_stems = set()
         self.processed_stems = set()
 
     def __call__(self, *args, **kwargs):

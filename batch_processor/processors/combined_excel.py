@@ -8,7 +8,7 @@ import pandas as pd
 
 from batch_processor.processors.base import BaseProcessor
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(Path(__file__).stem)
 
 
 def mark_as_combined_excel(columns: tuple[str, ...]):
@@ -45,6 +45,7 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         return self.directory / f'combined{self.suffix}'
 
     def on_batch_started(self):
+        logger.info('Batch started')
         if not self.combined_file_path.exists():
             return
 
@@ -57,6 +58,7 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
             self.data[stem] = tuple(row[col] for col in self.columns)
 
     def on_batch_finished(self):
+        logger.info('Batch finished')
         if not self.data:
             return
         df = pd.DataFrame.from_dict(
