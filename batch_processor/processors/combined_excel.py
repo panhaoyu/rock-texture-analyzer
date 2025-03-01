@@ -1,3 +1,4 @@
+import logging
 import typing
 from functools import cached_property
 from pathlib import Path
@@ -6,6 +7,8 @@ from typing import Callable
 import pandas as pd
 
 from batch_processor.processors.base import BaseProcessor
+
+logger = logging.getLogger(__name__)
 
 
 def mark_as_combined_excel(columns: tuple[str, ...]):
@@ -42,6 +45,7 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         return self.directory / f'combined{self.suffix}'
 
     def on_batch_started(self):
+        logger.info('Batch star')
         if not self.combined_file_path.exists():
             return
 
@@ -54,6 +58,7 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
             self.data[stem] = tuple(row[col] for col in self.columns)
 
     def on_batch_ended(self):
+        logger.info('Batch ended')
         if not self.data:
             return
 
