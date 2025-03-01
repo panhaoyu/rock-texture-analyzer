@@ -56,7 +56,7 @@ class BatchProcessor:
                 if not recreate_require:
                     continue
             func_index, func_name = func.step_index, func.func_name
-            func.is_single_thread and func.lock.acquire_lock()
+            func.is_single_thread and func.single_thread_process_lock.acquire_lock()
             try:
                 result = func(self, output_path)
                 func.write(result, output_path)
@@ -71,7 +71,7 @@ class BatchProcessor:
                     traceback.print_exc()
                 break
             finally:
-                func.is_single_thread and func.lock.release_lock()
+                func.is_single_thread and func.single_thread_process_lock.release_lock()
             self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     enable_multithread: bool = True

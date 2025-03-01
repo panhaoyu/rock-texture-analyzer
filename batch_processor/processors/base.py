@@ -26,7 +26,7 @@ class BaseProcessMethod(typing.Generic[T]):
     is_single_thread: bool = False
     suffix: str = None
     processor: 'BatchProcessor'
-    lock = threading.Lock()
+    single_thread_process_lock = threading.Lock()
 
     def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
