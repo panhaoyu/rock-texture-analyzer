@@ -107,6 +107,12 @@ class BaseProcessMethod(typing.Generic[T]):
             case other:
                 raise NotImplementedError(f'Unknown suffix: "{other}"')
 
+    def on_batch_start(self):
+        raise NotImplementedError
+
+    def on_batch_finished(self):
+        raise NotImplementedError
+
 
 class ManuallyProcessRequiredException(Exception):
     pass

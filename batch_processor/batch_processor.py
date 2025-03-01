@@ -77,17 +77,25 @@ class BatchProcessor:
     enable_multithread: bool = True
     is_debug: bool = False
 
+    @cached_property
+    def source_function(self):
+        return only((f for f in self.step_functions if f.is_source), self.step_functions[0])
+
+    @cached_property
+    def final_function(self):
+        return only((f for f in self.step_functions if f.is_final), self.step_functions[-1])
+
+    @cached_property
+    def files(self):
+        files = [file for file in self.source_function.directory.glob(f'*{self.source_function.suffix}')]
+        if self.is_debug:
+            files = files[:2]
+        return files
+
     @classmethod
     def main(cls) -> None:
         obj = cls()
-
-        functions = obj.step_functions
-        source_function = only((f for f in functions if f.is_source), functions[0])
-        final_function = only((f for f in functions if f.is_final), functions[-1])
-
-        files = [file for file in source_function.directory.glob(f'*{source_function.suffix}')]
-        if cls.is_debug:
-            files = files[:2]
+        files = obj.files
         if cls.enable_multithread:
             with ThreadPoolExecutor() as executor:
                 executor.map(obj.process_path, files)
@@ -95,6 +103,6 @@ class BatchProcessor:
             for file in files:
                 obj.process_path(file)
         zip_path = obj.base_dir / f"{obj.base_dir.name}.zip"
-        final_dir = final_function.directory
+        final_dir = obj.final_function.directory
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
             [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
