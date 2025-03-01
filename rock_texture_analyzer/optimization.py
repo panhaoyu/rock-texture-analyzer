@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import numpy as np
 from scipy.optimize import minimize
@@ -7,7 +8,7 @@ from rock_texture_analyzer.boundary_processing import generate_axis_boundary_mas
 from rock_texture_analyzer.clustering import process_clusters
 from rock_texture_analyzer.other_utils import create_rotation_matrix
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(Path(__file__).stem)
 
 def compute_rotated_std(R: np.ndarray, boundaries: list) -> float:
     """计算旋转后各边界的标准差之和"""

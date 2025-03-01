@@ -10,7 +10,7 @@ from more_itertools import only
 from p3_表面显微镜扫描数据处理.config import base_dir
 from .processors.base import BaseProcessor, ManuallyProcessRequiredException
 
-logger = logging.getLogger('BatchProcessor')
+logger = logging.getLogger(Path(__file__).stem)
 
 
 class BatchProcessor:
