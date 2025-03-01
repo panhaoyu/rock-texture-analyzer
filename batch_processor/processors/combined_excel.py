@@ -53,8 +53,9 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
     def on_batch_finished(self):
         if not self.data:
             return
+        items = sorted(self.data.items(), key=lambda x: x[0])
         df = pd.DataFrame.from_dict(
-            {k: list(v) for k, v in self.data.items()},
+            {k: list(v) for k, v in items},
             orient='index',
             columns=self.columns
         )

@@ -68,17 +68,17 @@ class BaseProcessor(typing.Generic[T]):
     def is_processed(self, path: Path) -> bool:
         return self.get_input_path(path).exists()
 
-    def _read(self, path: Path):
+    def _read(self, path: Path) -> T:
         raise NotImplementedError(self.__class__.__name__)
 
-    def read(self, path: Path):
+    def read(self, path: Path) -> T:
         path = self.get_input_path(path)
         return self._read(path)
 
-    def _write(self, obj: typing.Any, path: Path):
+    def _write(self, obj: T, path: Path):
         raise NotImplementedError(self.__class__.__name__)
 
-    def write(self, obj: typing.Any, path: Path):
+    def write(self, obj: T, path: Path):
         path = self.get_input_path(path)
         self.directory.mkdir(parents=True, exist_ok=True)
         self._write(obj, path)

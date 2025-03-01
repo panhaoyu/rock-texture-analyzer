@@ -8,6 +8,7 @@ from PIL import Image
 from matplotlib import cm, pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
+from batch_processor import mark_as_recreate
 from batch_processor.batch_processor import BatchProcessor
 from batch_processor.processors.base import ManuallyProcessRequiredException, mark_as_single_thread
 from batch_processor.processors.combined_excel import mark_as_combined_excel
@@ -247,15 +248,17 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
             back=self.f14_5_绘制后面点云.read(path),
         )
 
-    @mark_as_combined_excel(columns=('顺时针旋转次数', '翻转'))
+    @mark_as_combined_excel(columns=('顺时针旋转次数',))
     def f19_旋转与翻转方向(self, path: Path):
-        return -1, -1
+        return -1,
 
+    @mark_as_recreate
     @mark_as_png
     def f20_按要求进行旋转与翻转(self, path: Path):
-        v1, v2 = self.f19_旋转与翻转方向.read(path)
-        if v1 == -1 or v2 == -1:
+        v1, = self.f19_旋转与翻转方向.read(path)
+        if v1 == -1:
             raise ManuallyProcessRequiredException('Open the previous excel to specify the rotation and flip params')
+        return self.f18_合并全部的图.read(path).rotate(-90 * v1)
 
 
 if __name__ == '__main__':

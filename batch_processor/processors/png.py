@@ -14,7 +14,7 @@ from rock_texture_analyzer.point_cloud import draw_point_cloud
 class __PngProcessor(BaseProcessor[Image.Image]):
     suffix = '.png'
 
-    def _read(self, path: Path):
+    def _read(self, path: Path) -> Image.Image:
         with Image.open(path) as img:
             return img.copy()
 
