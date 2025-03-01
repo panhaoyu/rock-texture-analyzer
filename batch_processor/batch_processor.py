@@ -1,6 +1,6 @@
+import logging
 import re
 import threading
-import traceback
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from functools import cached_property
@@ -11,14 +11,11 @@ from more_itertools import only
 from p3_表面显微镜扫描数据处理.config import base_dir
 from .processors.base import BaseProcessor, ManuallyProcessRequiredException
 
+logger = logging.getLogger(__name__)
+
 
 class BatchProcessor:
     _print_lock: threading.Lock = threading.Lock()
-
-    @classmethod
-    def print_safe(cls, message: str) -> None:
-        with cls._print_lock:
-            print(message)
 
     @cached_property
     def step_functions(self):
@@ -65,18 +62,16 @@ class BatchProcessor:
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
-                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
+                logger.info(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
                 break
             except Exception as e:
-                self.print_safe(f'{func_index:02d} {stem:10} {func_name} 异常：{e}')
-                with self._print_lock:
-                    traceback.print_exc()
+                logger.exception(f'{func_index:02d} {stem:10} {func_name} 异常：{e}')
                 break
             finally:
                 func.is_single_thread and func.single_thread_process_lock.release_lock()
             func.processed_stems.add(stem)
             func.pending_stems or func.on_batch_finished()
-            self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
+            logger.info(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     enable_multithread: bool = True
     is_debug: bool = False

@@ -62,4 +62,4 @@ def export_to_autocad(array: np.ndarray):
     output_dir.mkdir(parents=True, exist_ok=True)
     dxf_path = output_dir.joinpath('elevation.dxf')
     doc.saveas(str(dxf_path))
-    self.print_safe(f"高程数据已成功导出到 {dxf_path}")
+    logger.info(f"高程数据已成功导出到 {dxf_path}")

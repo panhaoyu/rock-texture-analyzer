@@ -53,7 +53,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             right_crop: int = self.p3_右侧裁剪区域_像素
             width, height = image.size
             if width <= left_crop + right_crop:
-                self.print_safe(
+                logger.info(
                     f"{output_path.stem} 图像宽度不足以截取 {left_crop} 左边和 {right_crop} 右边像素。跳过裁剪。")
                 return
             cropped_image: Image.Image = image.crop((left_crop, 0, width - right_crop, height))
@@ -140,7 +140,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             threshold: float = self.p8_水平裁剪过程的有效点阈值_比例 * max_count
             left_candidates: np.ndarray = np.where(white_counts > threshold)[0]
             if left_candidates.size == 0:
-                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过边界裁剪。")
+                logger.info(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过边界裁剪。")
                 return
             left_boundary: int = left_candidates.min()
             right_candidates: np.ndarray = np.where(white_counts > threshold)[0]
@@ -148,7 +148,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             left_boundary = min(left_boundary + self.p8_水平边界裁剪收缩_像素, width)
             right_boundary = max(right_boundary - self.p8_水平边界裁剪收缩_像素, 0)
             if left_boundary >= right_boundary:
-                self.print_safe(f"{output_path.stem} 边界裁剪后区域无效，跳过裁剪。")
+                logger.info(f"{output_path.stem} 边界裁剪后区域无效，跳过裁剪。")
                 return
             cropped_image: Image.Image = image.crop((left_boundary, 0, right_boundary, height))
             return cropped_image
@@ -162,7 +162,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
                 binary_image = binary_image.convert("L")
             binary_array: np.ndarray = np.array(binary_image)
             if binary_array.ndim != 2:
-                self.print_safe(f"{output_path.stem} 二值化图像不是二维的，无法进行边界裁剪。")
+                logger.info(f"{output_path.stem} 二值化图像不是二维的，无法进行边界裁剪。")
                 return
             height, width = binary_array.shape
             white_counts: np.ndarray = np.sum(binary_array > 128, axis=0)
@@ -170,7 +170,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             threshold: float = self.p8_水平裁剪过程的有效点阈值_比例 * max_count
             left_candidates: np.ndarray = np.where(white_counts > threshold)[0]
             if left_candidates.size == 0:
-                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过进一步边界裁剪。")
+                logger.info(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过进一步边界裁剪。")
                 return
             left_boundary: int = left_candidates.min()
             right_candidates: np.ndarray = np.where(white_counts > threshold)[0]
@@ -178,7 +178,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             left_boundary = min(left_boundary + self.p8_水平边界裁剪收缩_像素, width)
             right_boundary = max(right_boundary - self.p8_水平边界裁剪收缩_像素, 0)
             if left_boundary >= right_boundary:
-                self.print_safe(f"{output_path.stem} 进一步边界裁剪后区域无效，跳过裁剪。")
+                logger.info(f"{output_path.stem} 进一步边界裁剪后区域无效，跳过裁剪。")
                 return
         with Image.open(color_input_path) as color_image:
             cropped_image: Image.Image = color_image.crop((left_boundary, 0, right_boundary, height))
@@ -210,7 +210,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             threshold: float = self.p10_纵向裁剪过程的有效点阈值_比例 * max_count
             top_candidates: np.ndarray = np.where(white_counts > threshold)[0]
             if top_candidates.size == 0:
-                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过纵向裁剪。")
+                logger.info(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过纵向裁剪。")
                 return
             top_boundary: int = top_candidates.min()
             bottom_candidates: np.ndarray = np.where(white_counts > threshold)[0]
@@ -218,7 +218,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             top_boundary = min(top_boundary + self.p10_纵向边界裁剪收缩_像素, height)
             bottom_boundary = max(bottom_boundary - self.p10_纵向边界裁剪收缩_像素, 0)
             if top_boundary >= bottom_boundary:
-                self.print_safe(f"{output_path.stem} 纵向裁剪后区域无效，跳过裁剪。")
+                logger.info(f"{output_path.stem} 纵向裁剪后区域无效，跳过裁剪。")
                 return
             cropped_image: Image.Image = image.crop((0, top_boundary, width, bottom_boundary))
             return cropped_image
@@ -232,7 +232,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
                 binary_image = binary_image.convert("L")
             binary_array: np.ndarray = np.array(binary_image)
             if binary_array.ndim != 2:
-                self.print_safe(f"{output_path.stem} 二值化图像不是二维的，无法进行纵向裁剪。")
+                logger.info(f"{output_path.stem} 二值化图像不是二维的，无法进行纵向裁剪。")
                 return
             height, width = binary_array.shape
             white_counts: np.ndarray = np.sum(binary_array > 128, axis=1)
@@ -240,7 +240,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             threshold: float = self.p10_纵向裁剪过程的有效点阈值_比例 * max_count
             top_candidates: np.ndarray = np.where(white_counts > threshold)[0]
             if top_candidates.size == 0:
-                self.print_safe(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过进一步纵向裁剪。")
+                logger.info(f"{output_path.stem} 没有检测到满足阈值的白色点，跳过进一步纵向裁剪。")
                 return
             top_boundary: int = top_candidates.min()
             bottom_candidates: np.ndarray = np.where(white_counts > threshold)[0]
@@ -248,7 +248,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             top_boundary = min(top_boundary + self.p10_纵向边界裁剪收缩_像素, height)
             bottom_boundary = max(bottom_boundary - self.p10_纵向边界裁剪收缩_像素, 0)
             if top_boundary >= bottom_boundary:
-                self.print_safe(f"{output_path.stem} 进一步纵向裁剪后区域无效，跳过裁剪。")
+                logger.info(f"{output_path.stem} 进一步纵向裁剪后区域无效，跳过裁剪。")
                 return
         with Image.open(color_input_path) as color_image:
             cropped_image: Image.Image = color_image.crop((0, top_boundary, width, bottom_boundary))
@@ -262,7 +262,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
             lab: Image.Image = image.convert('LAB')
             l, _, _ = lab.split()
             l_array: np.ndarray = np.asarray(l).ravel()
-        self.print_safe(f'{np.quantile(l_array, 0.05)=} {np.quantile(l_array, 0.95)=}')
+        logger.info(f'{np.quantile(l_array, 0.05)=} {np.quantile(l_array, 0.95)=}')
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot(111)
         ax.hist(l_array, bins=256)

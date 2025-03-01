@@ -1,11 +1,13 @@
+import logging
+
 import numpy as np
 from scipy.optimize import minimize
 
-from batch_processor.batch_processor import BatchProcessor
 from rock_texture_analyzer.boundary_processing import generate_axis_boundary_mask, filter_vertical_outliers
 from rock_texture_analyzer.clustering import process_clusters
 from rock_texture_analyzer.other_utils import create_rotation_matrix
 
+logger = logging.getLogger(__name__)
 
 def compute_rotated_std(R: np.ndarray, boundaries: list) -> float:
     """计算旋转后各边界的标准差之和"""
@@ -61,7 +63,7 @@ def least_squares_adjustment_direction(points: np.ndarray) -> np.ndarray:
     # 4. 高度过滤
     boundaries = [filter_vertical_outliers(b) for b in boundaries]
     if any(len(b) == 0 for b in boundaries):
-        BatchProcessor.print_safe("某些边界在高度过滤后没有剩余的点。")
+        logger.info("某些边界在高度过滤后没有剩余的点。")
         return
 
     # 5. 优化旋转角度
@@ -74,10 +76,9 @@ def least_squares_adjustment_direction(points: np.ndarray) -> np.ndarray:
     # 6. 处理优化结果
     if optimization_result['success']:
         best_angles = optimization_result['angles']
-        BatchProcessor.print_safe(
-            f"最佳旋转角度 (α, β, γ): {best_angles} 度, 总标准差: {optimization_result['value']:.6f}")
+        logger.info(f"最佳旋转角度 (α, β, γ): {best_angles} 度, 总标准差: {optimization_result['value']:.6f}")
     else:
-        BatchProcessor.print_safe("优化未收敛，使用初始角度。")
+        logger.info("优化未收敛，使用初始角度。")
         best_angles = [0.0, 0.0, 0.0]
 
     # 7. 生成最终旋转矩阵

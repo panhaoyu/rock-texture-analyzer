@@ -35,7 +35,7 @@ def matlab_surface(array: np.ndarray):
     Z = matlab.double(elevation.tolist())
 
     # 调用 MATLAB 绘图函数
-    self.print_safe("在 MATLAB 中绘制三维表面...")
+    logger.info("在 MATLAB 中绘制三维表面...")
     eng.figure(nargout=0)
     eng.mesh(X, Y, Z, nargout=0)
     eng.grid(nargout=0)
@@ -44,7 +44,7 @@ def matlab_surface(array: np.ndarray):
     output_dir.mkdir(parents=True, exist_ok=True)
     matlab_plot_path = str(output_dir.joinpath('matlab_surface_plot.png'))
     eng.savefig(matlab_plot_path, nargout=0)
-    self.print_safe(f"MATLAB 图像已保存到 {matlab_plot_path}")
+    logger.info(f"MATLAB 图像已保存到 {matlab_plot_path}")
 
     # 显示 MATLAB 图形窗口
     eng.show(nargout=0)

@@ -118,7 +118,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         cloud = self.f10_精细化对正.read(path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x0, x1, y0, y1, z0, z1 = get_boundaries(points)
-        self.print_safe(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
+        logger.info(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
         return x0, x1, y0, y1, z0, z1
 
     @mark_as_single_thread
@@ -199,7 +199,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         for i, name in enumerate(['z', 'r', 'g', 'b'][:interpolated_matrix.shape[2]]):
             layer = interpolated_matrix[..., i]
             total, nan = layer.size, np.isnan(layer).sum()
-            self.print_safe(f"Layer '{name}': {total=} {nan=} {nan / total * 100:.2f}%")
+            logger.info(f"Layer '{name}': {total=} {nan=} {nan / total * 100:.2f}%")
         return interpolated_matrix
 
     @mark_as_png
