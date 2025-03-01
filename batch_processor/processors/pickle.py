@@ -7,7 +7,7 @@ from batch_processor.processors.base import BaseProcessor
 
 
 class __PickleProcessor(BaseProcessor[typing.Any]):
-    suffix = '.npy'
+    suffix = '.pickle'
 
     def _read(self, path: Path):
         with path.open('rb') as f:

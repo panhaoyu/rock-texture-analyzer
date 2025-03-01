@@ -55,6 +55,7 @@ class BatchProcessor:
                 recreate_require = func.is_recreate_required
                 if not recreate_require:
                     continue
+            print(f'{stem} {func.func_name}')
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
             func.processed_stems or func.on_batch_started()
