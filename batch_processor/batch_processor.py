@@ -51,11 +51,9 @@ class BatchProcessor:
                     continue
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
-            with func.meta_process_lock:
-                if not func.processing_stems and not func.processed_stems:
-                    func.on_batch_started()
-                func.pending_stems.remove(stem)
-                func.processing_stems.add(stem)
+            func.check_batch_started()
+            func.pending_stems.remove(stem)
+            func.processing_stems.add(stem)
             try:
                 result = func(self, path)
                 func.write(result, path)
@@ -70,11 +68,9 @@ class BatchProcessor:
             finally:
                 func.is_single_thread and func.single_thread_process_lock.release_lock()
             logger.info(f'{func_index:02d} {stem:10} {func_name} 完成')
-            with func.meta_process_lock:
-                func.processing_stems.remove(stem)
-                func.processed_stems.add(stem)
-                if not func.pending_stems and not func.processing_stems:
-                    func.on_batch_finished()
+            func.processing_stems.remove(stem)
+            func.processed_stems.add(stem)
+            func.check_batch_finished()
 
     enable_multithread: bool = True
     is_debug: bool = False

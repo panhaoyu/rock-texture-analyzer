@@ -19,22 +19,24 @@ class BaseProcessor(typing.Generic[T]):
     is_single_thread: bool = False
     suffix: str = None
     processor: 'BatchProcessor'
-    single_thread_process_lock = threading.Lock()
-    meta_process_lock = threading.Lock()
-
-    # 用于记录目前已经处理以及未处理的文件列表
-    all_stems: set[str]
-    pending_stems: set[str]
-    processing_stems: set[str]
-    processed_stems: set[str]
 
     def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
         self.func_name = func.__name__
-        self.all_stems = set()
-        self.pending_stems = set()
-        self.processing_stems = set()
-        self.processed_stems = set()
+
+        # 处理处理单线程的事务
+        self.single_thread_process_lock = threading.Lock()
+
+        # 用于记录目前已经处理以及未处理的文件列表
+        self.all_stems: set[str] = set()
+        self.pending_stems: set[str] = set()
+        self.processing_stems: set[str] = set()
+        self.processed_stems: set[str] = set()
+
+        # 用于记录相应的回调是否已经被调用
+        self.meta_process_lock = threading.Lock()
+        self.is_batch_started_called: bool = False
+        self.is_batch_finished_called: bool = False
 
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
@@ -88,6 +90,13 @@ class BaseProcessor(typing.Generic[T]):
         - 打开句柄
         """
 
+    def check_batch_started(self):
+        with self.meta_process_lock:
+            if self.is_batch_started_called:
+                return
+            self.is_batch_started_called = True
+            self.on_batch_started()
+
     def on_batch_finished(self):
         """
         在处理最后一个文件之后，调用此回调
@@ -97,6 +106,13 @@ class BaseProcessor(typing.Generic[T]):
         - 清理处理过程中需要的一些临时变量
         - 关闭句柄
         """
+
+    def check_batch_finished(self):
+        with self.meta_process_lock:
+            if self.is_batch_finished_called:
+                return
+            self.is_batch_finished_called = True
+            self.on_batch_finished()
 
 
 class ManuallyProcessRequiredException(Exception):
