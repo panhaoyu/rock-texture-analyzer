@@ -7,6 +7,8 @@ from batch_processor.processors.base import BaseProcessor
 
 
 class __PickleProcessor(BaseProcessor[typing.Any]):
+    suffix = '.npy'
+
     def _read(self, path: Path):
         with path.open('rb') as f:
             return pickle.load(f)
@@ -18,7 +20,4 @@ class __PickleProcessor(BaseProcessor[typing.Any]):
 
 
 def mark_as_pickle(func: Callable) -> __PickleProcessor:
-    func = __PickleProcessor.of(func)
-    assert func.suffix is None, func.suffix
-    func.suffix = '.pickle'
-    return func
+    return __PickleProcessor.of(func)

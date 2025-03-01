@@ -8,6 +8,8 @@ from batch_processor.processors.base import BaseProcessor
 
 
 class __NpyProcessor(BaseProcessor[np.ndarray]):
+    suffix = '.npy'
+
     def _read(self, path: Path):
         return np.load(path)
 
@@ -17,7 +19,4 @@ class __NpyProcessor(BaseProcessor[np.ndarray]):
 
 
 def mark_as_npy(func: Callable) -> __NpyProcessor:
-    func = __NpyProcessor.of(func)
-    assert func.suffix is None, func.suffix
-    func.suffix = '.npy'
-    return func
+    return __NpyProcessor.of(func)

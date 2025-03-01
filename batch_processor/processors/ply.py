@@ -9,6 +9,8 @@ from rock_texture_analyzer.point_cloud import read_point_cloud, write_point_clou
 
 
 class __PlyProcessor(BaseProcessor[PointCloud]):
+    suffix = '.ply'
+
     def _read(self, path: Path):
         return read_point_cloud(path)
 
@@ -18,7 +20,4 @@ class __PlyProcessor(BaseProcessor[PointCloud]):
 
 
 def mark_as_ply(func: Callable) -> __PlyProcessor:
-    func = __PlyProcessor.of(func)
-    assert func.suffix is None, func.suffix
-    func.suffix = '.ply'
-    return func
+    return __PlyProcessor.of(func)

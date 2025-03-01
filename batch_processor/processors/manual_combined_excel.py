@@ -11,8 +11,6 @@ from batch_processor.processors.base import BaseProcessor
 def mark_as_combined_excel(columns: tuple[str, ...]):
     def wrapper(func: Callable):
         func = __CombinedExcelProcessor.of(func)
-        assert func.suffix is None, func.suffix
-        func.suffix = '.xlsx'
         func.columns = columns
         return func
 

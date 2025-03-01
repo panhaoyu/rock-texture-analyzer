@@ -52,7 +52,7 @@ class BaseProcessor(typing.Generic[T]):
         if isinstance(value, BaseProcessor):
             return value
         else:
-            return BaseProcessor(value)
+            return cls(value)
 
     @cached_property
     def directory(self):

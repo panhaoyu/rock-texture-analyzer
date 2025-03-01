@@ -12,6 +12,8 @@ from rock_texture_analyzer.point_cloud import draw_point_cloud
 
 
 class __PngProcessor(BaseProcessor[Image.Image]):
+    suffix = '.png'
+
     def _read(self, path: Path):
         with Image.open(path) as img:
             return img.copy()
@@ -31,7 +33,4 @@ class __PngProcessor(BaseProcessor[Image.Image]):
 
 
 def mark_as_png(func: Callable) -> __PngProcessor:
-    func = __PngProcessor.of(func)
-    assert func.suffix is None, func.suffix
-    func.suffix = '.png'
-    return func
+    return __PngProcessor.of(func)
