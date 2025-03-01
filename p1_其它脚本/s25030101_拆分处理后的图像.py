@@ -1,4 +1,13 @@
+import shutil
 from pathlib import Path
 
 source_dir = Path(r'F:\data\laser-scanner\25030101-劈裂面形貌扫描\1201-翻转使得上下面可以比较')
-# todo 把这个文件夹里面的文件按照stem的最后两位进行拆分，可能是Ua,Ub,Da,Db，分别复制到其下属的4个子文件夹中
+suffixes = {'Ua', 'Ub', 'Da', 'Db'}
+
+for f in source_dir.iterdir():
+    if not f.is_file():
+        continue
+    if (suffix := f.stem[-2:]) in suffixes:
+        target = source_dir / suffix
+        target.mkdir(exist_ok=True)
+        shutil.copy(f, target / f.name)

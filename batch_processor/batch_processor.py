@@ -49,12 +49,13 @@ class BatchProcessor:
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
             func.pending_stems.remove(stem)
             func.processing_stems.add(stem)
+            is_processed = False
             try:
                 func.check_batch_started()
-                if func.is_processed(path) and not func.is_recreate_required:
-                    continue
-                result = func(self, path)
-                func.write(result, path)
+                if not func.is_processed(path) or func.is_recreate_required:
+                    is_processed = True
+                    result = func(self, path)
+                    func.write(result, path)
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
@@ -67,7 +68,7 @@ class BatchProcessor:
                 func.is_single_thread and func.single_thread_process_lock.release_lock()
             finished_stems = len(func.processed_stems) + 1
             all_stems = len(func.all_stems)
-            logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
+            is_processed and logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
             func.processing_stems.remove(stem)
             func.processed_stems.add(stem)
             func.check_batch_finished()
