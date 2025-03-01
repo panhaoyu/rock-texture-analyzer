@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import seaborn as sns
 from PIL import Image
-from matplotlib import cm, pyplot as plt
+from matplotlib import pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
 from batch_processor.batch_processor import BatchProcessor
@@ -19,7 +19,7 @@ from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
-    point_cloud_top_projection, merge_5_images
+    depth_matrix_to_rgb_image, merge_5_images, depth_matrix_to_elevation_image
 
 logging.basicConfig(
     level=logging.INFO,
@@ -170,25 +170,25 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     def f0902_绘制左侧点云(self, path: Path):
         cloud = self.f0802_仅保留左侧面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return point_cloud_top_projection(matrix)
+        return depth_matrix_to_rgb_image(matrix)
 
     @mark_as_png
     def f0903_绘制右侧点云(self, path: Path):
         cloud = self.f0803_仅保留右侧面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return point_cloud_top_projection(matrix)
+        return depth_matrix_to_rgb_image(matrix)
 
     @mark_as_png
     def f0904_绘制前面点云(self, path: Path):
         cloud = self.f0804_仅保留前面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return point_cloud_top_projection(matrix)
+        return depth_matrix_to_rgb_image(matrix)
 
     @mark_as_png
     def f0905_绘制后面点云(self, path: Path):
         cloud = self.f0805_仅保留后面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return point_cloud_top_projection(matrix)
+        return depth_matrix_to_rgb_image(matrix)
 
     @mark_as_npy
     def f1001_表面二维重建(self, path: Path):
@@ -202,14 +202,11 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_png
     def f1002_绘制高程(self, path: Path):
-        elevation = self.f1001_表面二维重建.read(path)[..., 0]
-        norm = plt.Normalize(*np.nanquantile(elevation, [0.01, 0.99]))
-        return (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8)
+        return depth_matrix_to_elevation_image(self.f1001_表面二维重建.read(path))
 
     @mark_as_png
     def f1003_绘制图像(self, path: Path) -> np.ndarray:
-        matrix = self.f1001_表面二维重建.read(path)
-        return point_cloud_top_projection(matrix)
+        return depth_matrix_to_rgb_image(self.f1001_表面二维重建.read(path))
 
     @mark_as_png
     def f1004_合并两张图(self, path: Path):
@@ -249,40 +246,32 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         return self.f1101_合并全部的图.read(path).rotate(-90 * v1)
 
     @mark_as_npy
-    def f1104_表面二维重建_旋转(self, path: Path):
+    def f1104_旋转使得方向一致(self, path: Path):
         matrix = self.f1001_表面二维重建.read(path)
         v1, = self.f1102_旋转与翻转方向.read(path)
         return np.rot90(matrix, k=-v1, axes=(0, 1))
 
     @mark_as_png
-    def f1105_绘制高程_旋转(self, path: Path):
-        img = self.f1002_绘制高程.read(path)
-        v1, = self.f1102_旋转与翻转方向.read(path)
-        return img.rotate(-90 * v1)
+    def f1105_高程图(self, path: Path):
+        return depth_matrix_to_elevation_image(self.f1104_旋转使得方向一致.read(path))
 
     @mark_as_png
-    def f1106_绘制图像_旋转(self, path: Path):
-        img = self.f1003_绘制图像.read(path)
-        v1, = self.f1102_旋转与翻转方向.read(path)
-        return img.rotate(-90 * v1)
+    def f1106_色彩图(self, path: Path):
+        return depth_matrix_to_rgb_image(self.f1104_旋转使得方向一致.read(path))
 
     @mark_as_npy
-    def f1201_根据上下面进行水平翻转(self, path: Path):
-        need_invert = path.stem[-1] in {'U', 'u'}
-        matrix = self.f1104_表面二维重建_旋转.read(path)
-        return matrix[:, ::-1] if need_invert else matrix
+    def f1201_翻转使得上下面可以比较(self, path: Path):
+        need_invert = path.stem[-2] in {'U', 'u'}
+        matrix = self.f1104_旋转使得方向一致.read(path)
+        return matrix[:, ::-1, :] if need_invert else matrix
 
     @mark_as_png
     def f1202_高程图(self, path: Path):
-        need_invert = path.stem[-1] in {'U', 'u'}
-        img = self.f1105_绘制高程_旋转.read(path)
-        return img.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if need_invert else img
+        return depth_matrix_to_elevation_image(self.f1201_翻转使得上下面可以比较.read(path))
 
     @mark_as_png
-    def f1203_图像(self, path: Path):
-        need_invert = path.stem[-1] in {'U', 'u'}
-        img = self.f1106_绘制图像_旋转.read(path)
-        return img.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if need_invert else img
+    def f1203_色彩图(self, path: Path):
+        return depth_matrix_to_rgb_image(self.f1201_翻转使得上下面可以比较.read(path))
 
 
 if __name__ == '__main__':
