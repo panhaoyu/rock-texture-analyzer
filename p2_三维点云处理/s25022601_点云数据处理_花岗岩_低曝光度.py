@@ -39,17 +39,17 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         raise ManuallyProcessRequiredException
 
     @mark_as_ply
-    def f2_读取点云原始数据(self, path: Path):
+    def f0201_读取点云原始数据(self, path: Path):
         return self.f1_原始数据.read(path)
 
     @mark_as_single_thread
     @mark_as_png
-    def f3_绘制点云(self, path: Path):
-        return self.f2_读取点云原始数据.read(path)
+    def f0202_绘制点云(self, path: Path):
+        return self.f0201_读取点云原始数据.read(path)
 
     @mark_as_ply
-    def f4_调整为主平面(self, path: Path):
-        cloud = self.f2_读取点云原始数据.read(path)
+    def f0301_调整为主平面(self, path: Path):
+        cloud = self.f0201_读取点云原始数据.read(path)
         points = np.asarray(cloud.points)
         centered_points = points - np.mean(points, axis=0)
         plane_normal = np.linalg.svd(np.cov(centered_points.T))[2][-1]
@@ -60,12 +60,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_single_thread
     @mark_as_png
-    def f5_绘制点云(self, path: Path):
-        return self.f4_调整为主平面.read(path)
+    def f0302_绘制点云(self, path: Path):
+        return self.f0301_调整为主平面.read(path)
 
     @mark_as_ply
-    def f6_xOy平面对正(self, path: Path):
-        cloud = self.f4_调整为主平面.read(path)
+    def f0401_xOy平面对正(self, path: Path):
+        cloud = self.f0301_调整为主平面.read(path)
         points = np.asarray(cloud.points)
         x, y = points[:, :2].T
         x_bins = np.arange(x.min(), x.max() + 1)
@@ -82,13 +82,13 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_single_thread
     @mark_as_png
-    def f7_绘制点云(self, path: Path):
-        return self.f6_xOy平面对正.read(path)
+    def f0402_绘制点云(self, path: Path):
+        return self.f0401_xOy平面对正.read(path)
 
     @mark_as_single_thread
     @mark_as_ply
-    def f8_调整地面在下(self, path: Path):
-        cloud = self.f6_xOy平面对正.read(path)
+    def f0501_调整地面在下(self, path: Path):
+        cloud = self.f0401_xOy平面对正.read(path)
         points = np.asarray(cloud.points)
         if should_flip_based_on_z(points):
             cloud.points = Vector3dVector(-points)
@@ -96,13 +96,13 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_single_thread
     @mark_as_png
-    def f9_绘制点云(self, path: Path):
-        return self.f8_调整地面在下.read(path)
+    def f0502_绘制点云(self, path: Path):
+        return self.f0501_调整地面在下.read(path)
 
     @mark_as_single_thread
     @mark_as_ply
-    def f10_精细化对正(self, path: Path):
-        cloud = self.f8_调整地面在下.read(path)
+    def f0601_精细化对正(self, path: Path):
+        cloud = self.f0501_调整地面在下.read(path)
         points = np.asarray(cloud.points)
         best_rotation = least_squares_adjustment_direction(points)
         rotated_points = points.dot(best_rotation.T)
@@ -111,21 +111,21 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_single_thread
     @mark_as_png
-    def f11_绘制点云(self, path: Path):
-        return self.f10_精细化对正.read(path)
+    def f0602_绘制点云(self, path: Path):
+        return self.f0601_精细化对正.read(path)
 
     @mark_as_png
-    def f11_计算顶面与底面位置的KDE图(self, path: Path):
+    def f0701_计算顶面与底面位置的KDE图(self, path: Path):
         figure: plt.Figure = plt.figure()
-        cloud = self.f10_精细化对正.read(path)
+        cloud = self.f0601_精细化对正.read(path)
         z = np.asarray(cloud.points)[:, 2]
         ax = figure.subplots()
         sns.kdeplot(z, fill=True, ax=ax)
         return figure
 
     @mark_as_pickle
-    def f12_各个面的坐标(self, path: Path):
-        cloud = self.f10_精细化对正.read(path)
+    def f0702_各个面的坐标(self, path: Path):
+        cloud = self.f0601_精细化对正.read(path)
         points, colors = np.asarray(cloud.points), np.asarray(cloud.colors)
         x0, x1, y0, y1, z0, z1 = get_boundaries(points)
         logger.info(f'{x0=} {x1=} {y0=} {y1=} {z0=} {z1=}')
@@ -133,78 +133,78 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_single_thread
     @mark_as_ply
-    def f13_1_仅保留顶面(self, path: Path):
-        cloud = self.f10_精细化对正.read(path)
-        x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(path)
+    def f0801_仅保留顶面(self, path: Path):
+        cloud = self.f0601_精细化对正.read(path)
+        x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         return point_cloud_keep_top(cloud, x0, x1, y0, y1, z0, z1)
 
     @mark_as_single_thread
     @mark_as_ply
-    def f13_2_仅保留左侧面(self, path: Path):
-        cloud = self.f10_精细化对正.read(path)
-        x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(path)
+    def f0802_仅保留左侧面(self, path: Path):
+        cloud = self.f0601_精细化对正.read(path)
+        x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x1, x0)
 
     @mark_as_single_thread
     @mark_as_ply
-    def f13_3_仅保留右侧面(self, path: Path):
-        cloud = self.f10_精细化对正.read(path)
-        x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(path)
+    def f0803_仅保留右侧面(self, path: Path):
+        cloud = self.f0601_精细化对正.read(path)
+        x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x0, x1)
 
     @mark_as_single_thread
     @mark_as_ply
-    def f13_4_仅保留前面(self, path: Path):
-        cloud = self.f10_精细化对正.read(path)
-        x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(path)
+    def f0804_仅保留前面(self, path: Path):
+        cloud = self.f0601_精细化对正.read(path)
+        x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y1, y0)
 
     @mark_as_single_thread
     @mark_as_ply
-    def f13_5_仅保留后面(self, path: Path):
-        cloud = self.f10_精细化对正.read(path)
-        x0, x1, y0, y1, z0, z1 = self.f12_各个面的坐标.read(path)
+    def f0805_仅保留后面(self, path: Path):
+        cloud = self.f0601_精细化对正.read(path)
+        x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.asarray(cloud.points) @ R)
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y0, y1)
 
     @mark_as_png
-    def f14_1_绘制顶面点云(self, path: Path):
-        return self.f13_1_仅保留顶面.read(path)
+    def f0901_绘制顶面点云(self, path: Path):
+        return self.f0801_仅保留顶面.read(path)
 
     @mark_as_png
-    def f14_2_绘制左侧点云(self, path: Path):
-        cloud = self.f13_2_仅保留左侧面.read(path)
+    def f0902_绘制左侧点云(self, path: Path):
+        cloud = self.f0802_仅保留左侧面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    def f14_3_绘制右侧点云(self, path: Path):
-        cloud = self.f13_3_仅保留右侧面.read(path)
+    def f0903_绘制右侧点云(self, path: Path):
+        cloud = self.f0803_仅保留右侧面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    def f14_4_绘制前面点云(self, path: Path):
-        cloud = self.f13_4_仅保留前面.read(path)
+    def f0904_绘制前面点云(self, path: Path):
+        cloud = self.f0804_仅保留前面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    def f14_5_绘制后面点云(self, path: Path):
-        cloud = self.f13_5_仅保留后面.read(path)
+    def f0905_绘制后面点云(self, path: Path):
+        cloud = self.f0805_仅保留后面.read(path)
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
         return point_cloud_top_projection(matrix)
 
     @mark_as_npy
-    def f14_表面二维重建(self, path: Path):
-        cloud = self.f13_1_仅保留顶面.read(path)
+    def f1001_表面二维重建(self, path: Path):
+        cloud = self.f0801_仅保留顶面.read(path)
         interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
         for i, name in enumerate(['z', 'r', 'g', 'b'][:interpolated_matrix.shape[2]]):
             layer = interpolated_matrix[..., i]
@@ -213,21 +213,21 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         return interpolated_matrix
 
     @mark_as_png
-    def f15_绘制高程(self, path: Path):
-        elevation = self.f14_表面二维重建.read(path)[..., 0]
+    def f1002_绘制高程(self, path: Path):
+        elevation = self.f1001_表面二维重建.read(path)[..., 0]
         norm = plt.Normalize(*np.nanquantile(elevation, [0.01, 0.99]))
         return (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(elevation)[..., :3] * 255).astype(np.uint8)
 
     @mark_as_png
-    def f16_绘制图像(self, path: Path) -> np.ndarray:
-        matrix = self.f14_表面二维重建.read(path)
+    def f1003_绘制图像(self, path: Path) -> np.ndarray:
+        matrix = self.f1001_表面二维重建.read(path)
         return point_cloud_top_projection(matrix)
 
     @mark_as_png
-    def f17_合并两张图(self, path: Path):
+    def f1004_合并两张图(self, path: Path):
         """将高程图与表面图合并为横向排列的图片"""
-        elevation_img = self.f15_绘制高程.read(path)
-        surface_img = self.f16_绘制图像.read(path)
+        elevation_img = self.f1002_绘制高程.read(path)
+        surface_img = self.f1003_绘制图像.read(path)
         if not surface_img:
             elevation_img.save(path)
             return
@@ -239,41 +239,41 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         return combined_img
 
     @mark_as_png
-    def f18_合并全部的图(self, path: Path) -> Image.Image:
+    def f1101_合并全部的图(self, path: Path) -> Image.Image:
         """合并所有方向图像为单个图像"""
         return merge_5_images(
-            center=self.f16_绘制图像.read(path),
-            left=self.f14_2_绘制左侧点云.read(path),
-            right=self.f14_3_绘制右侧点云.read(path),
-            front=self.f14_4_绘制前面点云.read(path),
-            back=self.f14_5_绘制后面点云.read(path),
+            center=self.f1003_绘制图像.read(path),
+            left=self.f0902_绘制左侧点云.read(path),
+            right=self.f0903_绘制右侧点云.read(path),
+            front=self.f0904_绘制前面点云.read(path),
+            back=self.f0905_绘制后面点云.read(path),
         )
 
     @mark_as_combined_excel(columns=('顺时针旋转次数',))
-    def f19_旋转与翻转方向(self, path: Path):
+    def f1102_旋转与翻转方向(self, path: Path):
         return -1,
 
     @mark_as_png
-    def f20_按要求进行旋转与翻转(self, path: Path):
-        v1, = self.f19_旋转与翻转方向.read(path)
-        return self.f18_合并全部的图.read(path).rotate(-90 * v1)
+    def f1103_按要求进行旋转与翻转(self, path: Path):
+        v1, = self.f1102_旋转与翻转方向.read(path)
+        return self.f1101_合并全部的图.read(path).rotate(-90 * v1)
 
     @mark_as_npy
-    def f21_表面二维重建_旋转(self, path: Path):
-        matrix = self.f14_表面二维重建.read(path)
-        v1, = self.f19_旋转与翻转方向.read(path)
+    def f1104_表面二维重建_旋转(self, path: Path):
+        matrix = self.f1001_表面二维重建.read(path)
+        v1, = self.f1102_旋转与翻转方向.read(path)
         return np.rot90(matrix, k=-v1, axes=(0, 1))
 
     @mark_as_png
-    def f22_绘制高程_旋转(self, path: Path):
-        img = self.f15_绘制高程.read(path)
-        v1, = self.f19_旋转与翻转方向.read(path)
+    def f1105_绘制高程_旋转(self, path: Path):
+        img = self.f1002_绘制高程.read(path)
+        v1, = self.f1102_旋转与翻转方向.read(path)
         return img.rotate(-90 * v1)
 
     @mark_as_png
-    def f23_绘制图像_旋转(self, path: Path):
-        img = self.f16_绘制图像.read(path)
-        v1, = self.f19_旋转与翻转方向.read(path)
+    def f1106_绘制图像_旋转(self, path: Path):
+        img = self.f1003_绘制图像.read(path)
+        v1, = self.f1102_旋转与翻转方向.read(path)
         return img.rotate(-90 * v1)
 
 
