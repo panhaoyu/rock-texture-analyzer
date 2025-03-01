@@ -29,6 +29,8 @@ logging.basicConfig(
     format="{levelname:>8} {asctime} {name:<20} {message}"
 )
 
+logger = logging.getLogger(Path(__name__).stem)
+
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     is_debug = False
@@ -252,7 +254,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     def f19_旋转与翻转方向(self, path: Path):
         return -1,
 
-    @mark_as_recreate
     @mark_as_png
     def f20_按要求进行旋转与翻转(self, path: Path):
         v1, = self.f19_旋转与翻转方向.read(path)
