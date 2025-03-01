@@ -2,6 +2,7 @@ import numpy as np
 from open3d.cpu.pybind.geometry import PointCloud
 from open3d.cpu.pybind.utility import Vector3dVector
 
+from rock_texture_analyzer.base import BaseProcessor
 from rock_texture_analyzer.clustering import process_clusters
 
 
