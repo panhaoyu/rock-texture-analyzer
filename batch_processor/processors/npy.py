@@ -4,10 +4,10 @@ from typing import Callable
 
 import numpy as np
 
-from batch_processor.processors.base import BaseProcessMethod
+from batch_processor.processors.base import BaseProcessor
 
 
-class __NpyProcessor(BaseProcessMethod[np.ndarray]):
+class __NpyProcessor(BaseProcessor[np.ndarray]):
     def _read(self, path: Path):
         return np.load(path)
 

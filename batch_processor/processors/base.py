@@ -10,7 +10,7 @@ from batch_processor.batch_processor import BatchProcessor
 T = typing.TypeVar('T')
 
 
-class BaseProcessMethod(typing.Generic[T]):
+class BaseProcessor(typing.Generic[T]):
     # 用于给各个装饰器使用的变量
     is_recreate_required: bool = False
     is_source: bool = False
@@ -47,11 +47,11 @@ class BaseProcessMethod(typing.Generic[T]):
         return int(re.fullmatch(f'f(\d+)_(.*)', self.func_name).group(1))
 
     @classmethod
-    def of(cls, value: Callable | 'BaseProcessMethod'):
-        if isinstance(value, BaseProcessMethod):
+    def of(cls, value: Callable | 'BaseProcessor'):
+        if isinstance(value, BaseProcessor):
             return value
         else:
-            return BaseProcessMethod(value)
+            return BaseProcessor(value)
 
     @cached_property
     def directory(self):
@@ -100,24 +100,24 @@ class ManuallyProcessRequiredException(Exception):
 
 
 def mark_as_recreate(func: Callable):
-    func = BaseProcessMethod.of(func)
+    func = BaseProcessor.of(func)
     func.is_recreate_required = True
     return func
 
 
 def mark_as_source(func: Callable):
-    func = BaseProcessMethod.of(func)
+    func = BaseProcessor.of(func)
     func.is_source = True
     return func
 
 
 def mark_as_final(func: Callable):
-    func = BaseProcessMethod.of(func)
+    func = BaseProcessor.of(func)
     func.is_final = True
     return func
 
 
 def mark_as_single_thread(func: Callable):
-    func = BaseProcessMethod.of(func)
+    func = BaseProcessor.of(func)
     func.is_single_thread = True
     return func

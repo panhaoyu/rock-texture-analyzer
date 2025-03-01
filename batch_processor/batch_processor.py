@@ -9,7 +9,7 @@ from pathlib import Path
 from more_itertools import only
 
 from p3_表面显微镜扫描数据处理.config import base_dir
-from .processors.base import BaseProcessMethod, ManuallyProcessRequiredException
+from .processors.base import BaseProcessor, ManuallyProcessRequiredException
 
 
 class BatchProcessor:
@@ -22,10 +22,10 @@ class BatchProcessor:
 
     @cached_property
     def step_functions(self):
-        class_methods: dict[int, list[BaseProcessMethod]] = {}
+        class_methods: dict[int, list[BaseProcessor]] = {}
         for klass in self.__class__.mro():
             for value in vars(klass).values():
-                if isinstance(value, BaseProcessMethod):
+                if isinstance(value, BaseProcessor):
                     class_methods.setdefault(value.step_index, []).append(value)
         sorted_methods = sorted(class_methods.items(), key=lambda x: x[0])
         methods = [method for _, methods in sorted_methods for method in methods]

@@ -7,11 +7,11 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from open3d.cpu.pybind.geometry import PointCloud
 
-from batch_processor.processors.base import BaseProcessMethod
+from batch_processor.processors.base import BaseProcessor
 from rock_texture_analyzer.point_cloud import draw_point_cloud
 
 
-class __PngProcessor(BaseProcessMethod[Image.Image]):
+class __PngProcessor(BaseProcessor[Image.Image]):
     def _read(self, path: Path):
         with Image.open(path) as img:
             return img.copy()

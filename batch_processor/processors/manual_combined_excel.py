@@ -1,7 +1,7 @@
 import typing
 from typing import Callable
 
-from batch_processor.processors.base import BaseProcessMethod
+from batch_processor.processors.base import BaseProcessor
 
 
 def mark_as_manual_combined_excel(columns: tuple[str, ...]):
@@ -15,6 +15,6 @@ def mark_as_manual_combined_excel(columns: tuple[str, ...]):
     return wrapper
 
 
-class __ManualCombinedExcelProcessor(BaseProcessMethod[tuple[typing.Union[str, float, int], ...]]):
+class __ManualCombinedExcelProcessor(BaseProcessor[tuple[typing.Union[str, float, int], ...]]):
     """全部的数据都被存储在一个excel里面，其中每一行代表一个试样"""
     columns: tuple[str, ...]

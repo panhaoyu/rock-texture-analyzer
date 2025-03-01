@@ -2,10 +2,10 @@ from typing import Callable
 
 from PIL import Image
 
-from batch_processor.processors.base import BaseProcessMethod
+from batch_processor.processors.base import BaseProcessor
 
 
-class __JpgProcessor(BaseProcessMethod[Image.Image]):
+class __JpgProcessor(BaseProcessor[Image.Image]):
     pass
 
 
