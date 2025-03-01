@@ -25,7 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     style='{',
     datefmt='%H%M%S',
-    format="{asctime} {levelname:^8} {name:^20} {message}"
+    format="{levelname:>8} {asctime} {name:<20} {message}"
 )
 
 
