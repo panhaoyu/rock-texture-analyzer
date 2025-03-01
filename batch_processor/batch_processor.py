@@ -58,14 +58,16 @@ class BatchProcessor:
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
-                logger.info(f'{func_index:02d} {stem:10} {func_name} 需要人工处理：{message}')
+                logger.info(f'{func_index:04d} {stem:10} {func_name} 需要人工处理：{message}')
                 break
             except Exception as e:
-                logger.exception(f'{func_index:02d} {stem:10} {func_name} 异常：{e}')
+                logger.exception(f'{func_index:04d} {stem:10} {func_name}：{e}')
                 break
             finally:
                 func.is_single_thread and func.single_thread_process_lock.release_lock()
-            logger.info(f'{func_index:02d} {stem:10} {func_name} 完成')
+            finished_stems = len(func.processed_stems) + 1
+            all_stems = len(func.all_stems)
+            logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
             func.processing_stems.remove(stem)
             func.processed_stems.add(stem)
             func.check_batch_finished()
