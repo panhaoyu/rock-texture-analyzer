@@ -10,16 +10,6 @@ from batch_processor.processors.base import BaseProcessor
 
 logger = logging.getLogger(Path(__file__).stem)
 
-
-def mark_as_combined_excel(columns: tuple[str, ...]):
-    def wrapper(func: Callable):
-        func = __CombinedExcelProcessor.of(func)
-        func.columns = columns
-        return func
-
-    return wrapper
-
-
 _SupportedTypes = typing.Union[str, float, int]
 _RowType = tuple[_SupportedTypes, ...]
 
@@ -70,3 +60,15 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         )
         df.index.name = 'stem'
         df.to_excel(self.combined_file_path, index=True)
+
+
+_CT = typing.TypeVar('_CT')
+
+
+def mark_as_combined_excel(columns: tuple[str, ...]) -> Callable[[_CT], __CombinedExcelProcessor]:
+    def wrapper(func: _CT) -> __CombinedExcelProcessor:
+        func = __CombinedExcelProcessor.of(func)
+        func.columns = columns
+        return func
+
+    return wrapper

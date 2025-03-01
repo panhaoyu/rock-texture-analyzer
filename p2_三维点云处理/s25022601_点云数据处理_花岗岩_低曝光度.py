@@ -249,7 +249,13 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_combined_excel(columns=('顺时针旋转次数', '翻转'))
     def f19_旋转与翻转方向(self, path: Path):
-        return 0, 0
+        return -1, -1
+
+    @mark_as_png
+    def f20_按要求进行旋转与翻转(self, path: Path):
+        v1, v2 = self.f19_旋转与翻转方向.read(path)
+        if v1 == -1 or v2 == -1:
+            raise ManuallyProcessRequiredException('Open the previous excel to specify the rotation and flip params')
 
 
 if __name__ == '__main__':
