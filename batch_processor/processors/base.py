@@ -62,14 +62,14 @@ class BaseProcessor(typing.Generic[T]):
         return self.directory.joinpath(f'{output_path.stem}{self.suffix}')
 
     def _read(self, path: Path):
-        raise NotImplementedError
+        raise NotImplementedError(self.__class__.__name__)
 
     def read(self, path: Path):
         path = self.get_input_path(path)
         self._read(path)
 
     def _write(self, obj: typing.Any, path: Path):
-        raise NotImplementedError
+        raise NotImplementedError(self.__class__.__name__)
 
     def write(self, obj: typing.Any, path: Path):
         path = self.get_input_path(path)
