@@ -1,8 +1,8 @@
 import numpy as np
+from PIL import Image
 from open3d.cpu.pybind.geometry import PointCloud
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from rock_texture_analyzer.base import BaseProcessor
 from rock_texture_analyzer.clustering import process_clusters
 
 
@@ -84,3 +84,27 @@ def point_cloud_top_projection(matrix: np.ndarray) -> np.ndarray:
         for i in range(3)
     ]
     return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
+
+
+def merge_5_images(
+        center: Image.Image,
+        left: Image.Image,
+        right: Image.Image,
+        front: Image.Image,
+        back: Image.Image,
+) -> Image.Image:
+    s1 = left.height // 2
+    s2, s3, s4 = s1 * 2, s1 * 3, s1 * 4
+    center = center.resize((s2, s2))
+    left = left.resize((s1, s2))
+    right = right.resize((s1, s2))
+    front = front.resize((s2, s1))
+    back = back.resize((s2, s1))
+
+    new_img = Image.new('RGB', (s4, s4), (255, 255, 255))
+    new_img.paste(left, (0, s1))
+    new_img.paste(front, (s1, s3))
+    new_img.paste(center, (s1, s1))
+    new_img.paste(right, (s3, s1))
+    new_img.paste(back, (s1, 0))
+    return new_img

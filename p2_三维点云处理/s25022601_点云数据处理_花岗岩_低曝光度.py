@@ -13,7 +13,7 @@ from rock_texture_analyzer.boundary_processing import get_boundaries
 from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
-    point_cloud_top_projection
+    point_cloud_top_projection, merge_5_images
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
@@ -226,28 +226,14 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BaseProcessor):
     @mark_as_png
     @mark_as_recreate
     def f18_合并全部的图(self, path: Path) -> Image.Image:
-        left = self.f14_2_绘制左侧点云.read(path)
-        right = self.f14_3_绘制右侧点云.read(path)
-        front = self.f14_4_绘制前面点云.read(path)
-        back = self.f14_5_绘制后面点云.read(path)
-        center = self.f16_绘制图像.read(path)
-
-        s1 = left.height // 2  # 假设所有子图尺寸相同
-        s2, s3, s4 = s1 * 2, s1 * 3, s1 * 4
-
-        center = center.resize((s2, s2))
-        left = left.resize((s1, s2))
-        right = right.resize((s1, s2))
-        front = front.resize((s2, s1))
-        back = back.resize((s2, s1))
-
-        new_img = Image.new('RGB', (s4, s4), (255, 255, 255))
-        new_img.paste(left, (0, s1))
-        new_img.paste(front, (s1, s3))
-        new_img.paste(center, (s1, s1))
-        new_img.paste(right, (s3, s1))
-        new_img.paste(back, (s1, 0))
-        return new_img
+        """合并所有方向图像为单个图像"""
+        return merge_5_images(
+            center=self.f16_绘制图像.read(path),
+            left=self.f14_2_绘制左侧点云.read(path),
+            right=self.f14_3_绘制右侧点云.read(path),
+            front=self.f14_4_绘制前面点云.read(path),
+            back=self.f14_5_绘制后面点云.read(path),
+        )
 
 
 if __name__ == '__main__':
