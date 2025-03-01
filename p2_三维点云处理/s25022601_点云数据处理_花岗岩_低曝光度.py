@@ -266,18 +266,23 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         v1, = self.f1102_旋转与翻转方向.read(path)
         return img.rotate(-90 * v1)
 
-    @mark_as_png
+    @mark_as_npy
     def f1201_根据上下面进行水平翻转(self, path: Path):
         need_invert = path.stem[-1] in {'U', 'u'}
-        raise NotImplementedError
+        matrix = self.f1104_表面二维重建_旋转.read(path)
+        return matrix[:, ::-1] if need_invert else matrix
 
     @mark_as_png
     def f1202_高程图(self, path: Path):
-        raise NotImplementedError
+        need_invert = path.stem[-1] in {'U', 'u'}
+        img = self.f1105_绘制高程_旋转.read(path)
+        return img.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if need_invert else img
 
     @mark_as_png
     def f1203_图像(self, path: Path):
-        raise NotImplementedError
+        need_invert = path.stem[-1] in {'U', 'u'}
+        img = self.f1106_绘制图像_旋转.read(path)
+        return img.transpose(Image.Transpose.FLIP_LEFT_RIGHT) if need_invert else img
 
 
 if __name__ == '__main__':
