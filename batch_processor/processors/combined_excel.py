@@ -45,7 +45,6 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         return self.directory / f'combined{self.suffix}'
 
     def on_batch_started(self):
-        logger.info('Batch star')
         if not self.combined_file_path.exists():
             return
 
@@ -57,8 +56,7 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
             stem = row['stem']
             self.data[stem] = tuple(row[col] for col in self.columns)
 
-    def on_batch_ended(self):
-        logger.info('Batch ended')
+    def on_batch_finished(self):
         if not self.data:
             return
 
