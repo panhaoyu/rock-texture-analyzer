@@ -100,25 +100,21 @@ class ManuallyProcessRequiredException(Exception):
     pass
 
 
-def mark_as_recreate(func: Callable):
-    func = BaseProcessor.of(func)
+def mark_as_recreate(func: BaseProcessor):
     func.is_recreate_required = True
     return func
 
 
-def mark_as_source(func: Callable):
-    func = BaseProcessor.of(func)
+def mark_as_source(func: BaseProcessor):
     func.is_source = True
     return func
 
 
-def mark_as_final(func: Callable):
-    func = BaseProcessor.of(func)
+def mark_as_final(func: BaseProcessor):
     func.is_final = True
     return func
 
 
-def mark_as_single_thread(func: Callable):
-    func = BaseProcessor.of(func)
+def mark_as_single_thread(func: BaseProcessor):
     func.is_single_thread = True
     return func
