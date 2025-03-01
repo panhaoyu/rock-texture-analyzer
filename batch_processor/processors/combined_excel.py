@@ -49,8 +49,9 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
             return
 
         df = pd.read_excel(self.combined_file_path, engine='openpyxl')
-        if list(df.columns) != list(self.columns):
-            raise ValueError(f"Column mismatch. Expected {self.columns}, got {df.columns.tolist()}")
+        df_columns = set(df.columns.tolist()) - {'stem'}
+        if set(df_columns) != set(self.columns):
+            raise ValueError(f"Column mismatch. Expected {self.columns}, got {df_columns}")
 
         for _, row in df.iterrows():
             stem = row['stem']

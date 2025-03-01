@@ -51,10 +51,10 @@ class BatchProcessor:
                     continue
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
-            func.check_batch_started()
             func.pending_stems.remove(stem)
             func.processing_stems.add(stem)
             try:
+                func.check_batch_started()
                 result = func(self, path)
                 func.write(result, path)
             except ManuallyProcessRequiredException as exception:

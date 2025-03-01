@@ -111,6 +111,8 @@ class BaseProcessor(typing.Generic[T]):
         with self.meta_process_lock:
             if self.is_batch_finished_called:
                 return
+            if self.processing_stems or self.pending_stems:
+                return
             self.is_batch_finished_called = True
             self.on_batch_finished()
 
