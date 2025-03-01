@@ -45,10 +45,8 @@ class BatchProcessor:
         stem = path.stem
         for func in self.step_functions:
             path: Path = func.get_input_path(path)
-            if path.exists():
-                recreate_require = func.is_recreate_required
-                if not recreate_require:
-                    continue
+            if func.is_processed(path) and not func.is_recreate_required:
+                continue
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
             func.pending_stems.remove(stem)

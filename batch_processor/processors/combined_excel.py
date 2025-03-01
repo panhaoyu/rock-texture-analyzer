@@ -35,10 +35,13 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
         self.data: dict[str, _RowType] = {}
 
     def _read(self, path: Path):
-        return self.data[path.stem]
+        return self.data.get(path.stem, None)
 
     def _write(self, obj: typing.Any, path: Path):
         self.data[path.stem] = obj
+
+    def is_processed(self, path: Path) -> bool:
+        return self.read(path) is not None
 
     @cached_property
     def combined_file_path(self):

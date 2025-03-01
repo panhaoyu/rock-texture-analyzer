@@ -65,6 +65,9 @@ class BaseProcessor(typing.Generic[T]):
     def get_input_path(self, output_path: Path):
         return self.directory.joinpath(f'{output_path.stem}{self.suffix}')
 
+    def is_processed(self, path: Path) -> bool:
+        return self.get_input_path(path).exists()
+
     def _read(self, path: Path):
         raise NotImplementedError(self.__class__.__name__)
 
