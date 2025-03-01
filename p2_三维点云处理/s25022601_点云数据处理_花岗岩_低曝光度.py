@@ -96,7 +96,6 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_ply
     def f0601_精细化对正(self, path: Path):
-        raise ManuallyProcessRequiredException
         cloud = self.f0501_调整地面在下.read(path)
         points = np.asarray(cloud.points)
         best_rotation = least_squares_adjustment_direction(points)
