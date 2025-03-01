@@ -73,6 +73,7 @@ class BaseProcessor(typing.Generic[T]):
 
     def write(self, obj: typing.Any, path: Path):
         path = self.get_input_path(path)
+        self.directory.mkdir(parents=True, exist_ok=True)
         self._write(obj, path)
 
     def on_batch_started(self):

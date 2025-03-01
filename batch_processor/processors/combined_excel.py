@@ -59,16 +59,10 @@ class __CombinedExcelProcessor(BaseProcessor[_RowType]):
     def on_batch_finished(self):
         if not self.data:
             return
-
         df = pd.DataFrame.from_dict(
             {k: list(v) for k, v in self.data.items()},
             orient='index',
             columns=self.columns
         )
         df.index.name = 'stem'
-
-        if self.combined_file_path.exists():
-            existing_df = pd.read_excel(self.combined_file_path, engine='openpyxl')
-            df = pd.concat([existing_df, df])
-
         df.to_excel(self.combined_file_path, index=True)
