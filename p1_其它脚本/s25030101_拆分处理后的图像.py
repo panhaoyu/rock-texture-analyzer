@@ -10,4 +10,4 @@ for f in source_dir.iterdir():
     if (suffix := f.stem[-2:]) in suffixes:
         target = source_dir / suffix
         target.mkdir(exist_ok=True)
-        shutil.copy(f, target / f.name)
+        shutil.copy(f, target / f'{f.stem[:-2]}{f.suffix}')

@@ -71,7 +71,7 @@ def point_cloud_keep_top(cloud: PointCloud, x0: float, x1: float, y0: float, y1:
     return cloud
 
 
-def depth_matrix_to_rgb_image(matrix: np.ndarray) -> np.ndarray:
+def depth_matrix_to_rgb_image(matrix: np.ndarray) -> Image.Image:
     assert matrix.shape[2] == 4, "输入矩阵应为4通道"
     matrix = matrix[:, :, 1:4]
 
@@ -81,7 +81,8 @@ def depth_matrix_to_rgb_image(matrix: np.ndarray) -> np.ndarray:
         return np.nan_to_num((channel - v_min) / max(v_max - v_min, 1e-9), copy=False)
 
     channels = [normalize(matrix[..., i]) * 255 for i in range(3)]
-    return np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
+    array = np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
+    return Image.fromarray(array)
 
 
 def merge_5_images(
@@ -108,8 +109,9 @@ def merge_5_images(
     return new_img
 
 
-def depth_matrix_to_elevation_image(matrix: np.ndarray):
+def depth_matrix_to_elevation_image(matrix: np.ndarray) -> Image.Image:
     assert matrix.shape[2] == 4
     matrix = matrix[..., 0]
     norm = plt.Normalize(*np.nanquantile(matrix, [0.01, 0.99]))
-    return (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(matrix)[..., :3] * 255).astype(np.uint8)
+    array = (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(matrix)[..., :3] * 255).astype(np.uint8)
+    return Image.fromarray(array)

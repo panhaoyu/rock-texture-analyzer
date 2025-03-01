@@ -205,7 +205,7 @@ class s25030101_劈裂面形貌扫描(BatchProcessor):
         return depth_matrix_to_elevation_image(self.f1001_表面二维重建.read(path))
 
     @mark_as_png
-    def f1003_绘制图像(self, path: Path) -> np.ndarray:
+    def f1003_绘制图像(self, path: Path):
         return depth_matrix_to_rgb_image(self.f1001_表面二维重建.read(path))
 
     @mark_as_png
