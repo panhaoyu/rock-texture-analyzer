@@ -1,5 +1,4 @@
 import logging
-import os
 import re
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -12,8 +11,6 @@ from p3_表面显微镜扫描数据处理.config import base_dir
 from .processors.base import BaseProcessor, ManuallyProcessRequiredException
 
 logger = logging.getLogger(Path(__file__).stem)
-
-os.environ['OPENBLAS_NUM_THREADS'] = '24'
 
 
 class BatchProcessor:
