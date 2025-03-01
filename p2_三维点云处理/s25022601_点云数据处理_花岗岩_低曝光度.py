@@ -54,12 +54,11 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         plane_normal = np.linalg.svd(np.cov(points.T))[2][-1]
         plane_normal /= np.linalg.norm(plane_normal)
         R = compute_rotation_matrix(plane_normal, [0, 0, 1])
-        cloud.points = Vector3dVector(points @ R.T)
+        cloud.points = Vector3dVector(np.dot(points, R.T))
         return cloud
 
     @mark_as_png
     def f0302_绘制点云(self, path: Path):
-        raise ManuallyProcessRequiredException
         return self.f0301_调整为主平面.read(path)
 
     @mark_as_ply
@@ -75,8 +74,8 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
             angle = cv2.minAreaRect(max(contours, key=cv2.contourArea))[-1]
             angle = angle if angle < -45 else angle + 90
             theta = np.radians(-angle)
-            R_z = np.array([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
-            cloud.points = Vector3dVector(points @ R_z.T)
+            R = np.array([[np.cos(theta), -np.sin(theta), 0], [np.sin(theta), np.cos(theta), 0], [0, 0, 1]])
+            cloud.points = Vector3dVector(np.dot(points, R.T))
         return cloud
 
     @mark_as_png
@@ -97,6 +96,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
 
     @mark_as_ply
     def f0601_精细化对正(self, path: Path):
+        raise ManuallyProcessRequiredException
         cloud = self.f0501_调整地面在下.read(path)
         points = np.asarray(cloud.points)
         best_rotation = least_squares_adjustment_direction(points)
@@ -136,7 +136,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]], dtype=np.float64)
-        cloud.points = Vector3dVector(np.asarray(cloud.points) @ R.T)
+        cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x1, x0)
 
     @mark_as_ply
@@ -144,7 +144,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]], dtype=np.float64)
-        cloud.points = Vector3dVector(np.asarray(cloud.points) @ R.T)
+        cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x0, x1)
 
     @mark_as_ply
@@ -152,7 +152,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=np.float64)
-        cloud.points = Vector3dVector(np.asarray(cloud.points) @ R.T)
+        cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y1, y0)
 
     @mark_as_ply
@@ -160,7 +160,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
         R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]], dtype=np.float64)
-        cloud.points = Vector3dVector(np.asarray(cloud.points) @ R.T)
+        cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y0, y1)
 
     @mark_as_png
