@@ -1,4 +1,3 @@
-import pickle
 import re
 import threading
 import typing
@@ -6,14 +5,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
-import numpy as np
-import pandas as pd
-from PIL import Image
-from matplotlib import pyplot as plt
-from open3d.cpu.pybind.geometry import PointCloud
-
 from batch_processor.batch_processor import BatchProcessor
-from rock_texture_analyzer.point_cloud import read_point_cloud, write_point_cloud, draw_point_cloud
 
 T = typing.TypeVar('T')
 
@@ -68,53 +60,19 @@ class BaseProcessMethod(typing.Generic[T]):
     def get_input_path(self, output_path: Path):
         return self.directory.joinpath(f'{output_path.stem}{self.suffix}')
 
+    def _read(self, path: Path):
+        raise NotImplementedError
+
     def read(self, path: Path):
         path = self.get_input_path(path)
-        match self.suffix:
-            case '.ply':
-                return read_point_cloud(path)
-            case '.pickle':
-                with path.open('rb') as f:
-                    return pickle.load(f)
-            case '.npy' | '.npz':
-                return np.load(path)
-            case '.png' | '.jpg':
-                with Image.open(path) as img:
-                    return img.copy()
-            case other:
-                raise NotImplementedError(f"Unsupported file type: {other}")
+        self._read(path)
+
+    def _write(self, obj: typing.Any, path: Path):
+        raise NotImplementedError
 
     def write(self, obj: typing.Any, path: Path):
-        self.directory.mkdir(parents=True, exist_ok=True)
         path = self.get_input_path(path)
-        match self.suffix:
-            case '.ply':
-                assert isinstance(obj, PointCloud)
-                write_point_cloud(path, obj)
-            case '.npy':
-                assert isinstance(obj, np.ndarray)
-                np.save(path, obj)
-            case '.png':
-                if isinstance(obj, np.ndarray):
-                    obj = Image.fromarray(obj)
-                if isinstance(obj, plt.Figure):
-                    obj.savefig(path)
-                    plt.close(obj)
-                elif isinstance(obj, Image.Image):
-                    obj.save(path)
-                elif isinstance(obj, PointCloud):
-                    draw_point_cloud(obj, path)
-                else:
-                    raise NotImplementedError(f'Unknown png type: {type(obj)}')
-            case '.xlsx':
-                assert isinstance(obj, pd.DataFrame)
-                obj.to_excel(path)
-            case '.pickle':
-                with path.open('wb') as f:
-                    # noinspection PyTypeChecker
-                    pickle.dump(obj, f)
-            case other:
-                raise NotImplementedError(f'Unknown suffix: "{other}"')
+        self._write(obj, path)
 
     def on_batch_started(self):
         """
