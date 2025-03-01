@@ -254,8 +254,10 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         return -1,
 
     @mark_as_png
-    def f1103_按要求进行旋转与翻转(self, path: Path):
+    def f1103_按要求进行旋转(self, path: Path):
         v1, = self.f1102_旋转与翻转方向.read(path)
+        if v1 == -1:
+            raise ManuallyProcessRequiredException('需要调整表格里面的数据来指定旋转方向')
         return self.f1101_合并全部的图.read(path).rotate(-90 * v1)
 
     @mark_as_npy
@@ -275,6 +277,19 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
         img = self.f1003_绘制图像.read(path)
         v1, = self.f1102_旋转与翻转方向.read(path)
         return img.rotate(-90 * v1)
+
+    @mark_as_png
+    def f1201_根据上下面进行水平翻转(self, path: Path):
+        need_invert = path.stem[-1] in {'U', 'u'}
+        raise NotImplementedError
+
+    @mark_as_png
+    def f1202_高程图(self, path: Path):
+        raise NotImplementedError
+
+    @mark_as_png
+    def f1203_图像(self, path: Path):
+        raise NotImplementedError
 
 
 if __name__ == '__main__':
