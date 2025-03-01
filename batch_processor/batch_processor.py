@@ -69,12 +69,12 @@ class BatchProcessor:
                 break
             finally:
                 func.is_single_thread and func.single_thread_process_lock.release_lock()
+            logger.info(f'{func_index:02d} {stem:10} {func_name} 完成')
             with func.meta_process_lock:
                 func.processing_stems.remove(stem)
                 func.processed_stems.add(stem)
                 if not func.pending_stems and not func.processing_stems:
                     func.on_batch_finished()
-            logger.info(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     enable_multithread: bool = True
     is_debug: bool = False
