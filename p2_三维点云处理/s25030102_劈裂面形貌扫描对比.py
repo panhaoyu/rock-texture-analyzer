@@ -32,9 +32,7 @@ class s25030102_劈裂面形貌扫描对比(BatchProcessor):
     def f0201_DA放缩(self, path: Path):
         array = self.f0101_原始数据_Da.read(path)
         zoom_factors = (1000 / array.shape[0], 1000 / array.shape[1], 1)
-        array = zoom(array, zoom_factors, order=3)
-        logger.info(f'{array.shape}')
-        raise ManuallyProcessRequiredException
+        return zoom(array, zoom_factors)
 
     @mark_as_png
     def f0301_合并显示(self, path: Path):
