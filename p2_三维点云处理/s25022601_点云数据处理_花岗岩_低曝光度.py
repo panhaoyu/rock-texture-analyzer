@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import cv2
@@ -19,6 +20,13 @@ from rock_texture_analyzer.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
     point_cloud_top_projection, merge_5_images
+
+logging.basicConfig(
+    level=logging.INFO,
+    style='{',
+    datefmt='%H%M%S',
+    format="{asctime} {levelname:^8} {name:^20} {message}"
+)
 
 
 class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
