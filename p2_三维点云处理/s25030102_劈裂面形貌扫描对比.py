@@ -31,8 +31,7 @@ class s25030102_劈裂面形貌扫描对比(BatchProcessor):
     @mark_as_npy
     def f0201_DA放缩(self, path: Path):
         array = self.f0101_原始数据_Da.read(path)
-        zoom_factors = (1000 / array.shape[0], 1000 / array.shape[1], 1)
-        return zoom(array, zoom_factors)
+        return zoom(array, (1000 / array.shape[0], 1000 / array.shape[1], 1))
 
     @mark_as_png
     def f0301_合并显示(self, path: Path):
