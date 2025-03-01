@@ -263,7 +263,10 @@ class s25030101_劈裂面形貌扫描(BatchProcessor):
     def f1201_翻转使得上下面可以比较(self, path: Path):
         need_invert = path.stem[-2] in {'U', 'u'}
         matrix = self.f1104_旋转使得方向一致.read(path)
-        return matrix[:, ::-1, :] if need_invert else matrix
+        if need_invert:
+            matrix = matrix[:, ::-1, :]
+            matrix[..., 0] *= -1
+        return matrix
 
     @mark_as_png
     def f1202_高程图(self, path: Path):
