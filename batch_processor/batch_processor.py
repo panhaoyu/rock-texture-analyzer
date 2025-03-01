@@ -50,16 +50,16 @@ class BatchProcessor:
     def process_path(self, path: Path) -> None:
         stem = path.stem
         for func in self.step_functions:
-            output_path: Path = func.get_input_path(path)
-            if output_path.exists():
+            path: Path = func.get_input_path(path)
+            if path.exists():
                 recreate_require = func.is_recreate_required
                 if not recreate_require:
                     continue
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
             try:
-                result = func(self, output_path)
-                func.write(result, output_path)
+                result = func(self, path)
+                func.write(result, path)
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
@@ -95,12 +95,11 @@ class BatchProcessor:
     @classmethod
     def main(cls) -> None:
         obj = cls()
-        files = obj.files
         if cls.enable_multithread:
             with ThreadPoolExecutor() as executor:
-                executor.map(obj.process_path, files)
+                executor.map(obj.process_path, obj.files)
         else:
-            for file in files:
+            for file in obj.files:
                 obj.process_path(file)
         zip_path = obj.base_dir / f"{obj.base_dir.name}.zip"
         final_dir = obj.final_function.directory
