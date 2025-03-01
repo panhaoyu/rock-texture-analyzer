@@ -116,11 +116,25 @@ class BaseProcessMethod(typing.Generic[T]):
             case other:
                 raise NotImplementedError(f'Unknown suffix: "{other}"')
 
-    def on_batch_start(self):
-        raise NotImplementedError
+    def on_batch_started(self):
+        """
+        在处理第一个文件之前，调用此回调。
+
+        该回调的主要作用为：
+        - 创建处理环境
+        - 创建处理过程中需要的一些临时变量
+        - 打开句柄
+        """
 
     def on_batch_finished(self):
-        raise NotImplementedError
+        """
+        在处理最后一个文件之后，调用此回调
+
+        该回调的主要作用为：
+        - 清理处理环境
+        - 清理处理过程中需要的一些临时变量
+        - 关闭句柄
+        """
 
 
 class ManuallyProcessRequiredException(Exception):

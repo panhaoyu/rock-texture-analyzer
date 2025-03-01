@@ -57,6 +57,8 @@ class BatchProcessor:
                     continue
             func_index, func_name = func.step_index, func.func_name
             func.is_single_thread and func.single_thread_process_lock.acquire_lock()
+            func.processed_stems or func.on_batch_started()
+            func.pending_stems.remove(stem)
             try:
                 result = func(self, path)
                 func.write(result, path)
@@ -72,6 +74,8 @@ class BatchProcessor:
                 break
             finally:
                 func.is_single_thread and func.single_thread_process_lock.release_lock()
+            func.processed_stems.add(stem)
+            func.pending_stems or func.on_batch_finished()
             self.print_safe(f'{func_index:02d} {stem:10} {func_name} 完成')
 
     enable_multithread: bool = True
@@ -86,7 +90,7 @@ class BatchProcessor:
         return only((f for f in self.step_functions if f.is_final), self.step_functions[-1])
 
     @cached_property
-    def files(self):
+    def files(self) -> list[Path]:
         files = [file for file in self.source_function.directory.glob(f'*{self.source_function.suffix}')]
         if self.is_debug:
             files = files[:2]
@@ -95,6 +99,10 @@ class BatchProcessor:
     @classmethod
     def main(cls) -> None:
         obj = cls()
+        all_stems = [file.stem for file in obj.files]
+        for func in obj.step_functions:
+            func.all_stems.update(all_stems)
+            func.pending_stems.update(all_stems)
         if cls.enable_multithread:
             with ThreadPoolExecutor() as executor:
                 executor.map(obj.process_path, obj.files)
