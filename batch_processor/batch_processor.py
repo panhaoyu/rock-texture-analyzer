@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -11,6 +12,8 @@ from p3_表面显微镜扫描数据处理.config import base_dir
 from .processors.base import BaseProcessor, ManuallyProcessRequiredException
 
 logger = logging.getLogger(Path(__file__).stem)
+
+os.environ['OPENBLAS_NUM_THREADS'] = '24'
 
 
 class BatchProcessor:
@@ -71,6 +74,7 @@ class BatchProcessor:
             func.check_batch_finished()
 
     enable_multithread: bool = True
+    multithread_workers: int = 10
     is_debug: bool = False
 
     @cached_property
@@ -96,7 +100,7 @@ class BatchProcessor:
             func.all_stems.update(all_stems)
             func.pending_stems.update(all_stems)
         if cls.enable_multithread:
-            with ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor(max_workers=cls.multithread_workers) as executor:
                 executor.map(obj.process_path, obj.files)
         else:
             for file in obj.files:
