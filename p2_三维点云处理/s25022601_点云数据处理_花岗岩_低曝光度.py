@@ -134,7 +134,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     def f0802_仅保留左侧面(self, path: Path):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
-        R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]], dtype=np.float64)
+        R = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x1, x0)
 
@@ -142,7 +142,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     def f0803_仅保留右侧面(self, path: Path):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
-        R = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]], dtype=np.float64)
+        R = np.array([[0, 0, -1], [0, 1, 0], [1, 0, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, z0, z1, y0, y1, x0, x1)
 
@@ -150,7 +150,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     def f0804_仅保留前面(self, path: Path):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
-        R = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=np.float64)
+        R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y1, y0)
 
@@ -158,7 +158,7 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     def f0805_仅保留后面(self, path: Path):
         cloud = self.f0601_精细化对正.read(path)
         x0, x1, y0, y1, z0, z1 = self.f0702_各个面的坐标.read(path)
-        R = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]], dtype=np.float64)
+        R = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=np.float64)
         cloud.points = Vector3dVector(np.dot(np.asarray(cloud.points), R.T))
         return point_cloud_keep_top(cloud, x0, x1, z0, z1, y0, y1)
 
@@ -193,12 +193,12 @@ class s25022602_劈裂面形貌扫描_花岗岩_低曝光度(BatchProcessor):
     @mark_as_npy
     def f1001_表面二维重建(self, path: Path):
         cloud = self.f0801_仅保留顶面.read(path)
-        interpolated_matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
-        for i, name in enumerate(['z', 'r', 'g', 'b'][:interpolated_matrix.shape[2]]):
-            layer = interpolated_matrix[..., i]
+        matrix = surface_interpolate_2d(cloud, 0.1, 'cubic')
+        for i, name in enumerate(['z', 'r', 'g', 'b'][:matrix.shape[2]]):
+            layer = matrix[..., i]
             total, nan = layer.size, np.isnan(layer).sum()
             logger.info(f"Layer '{name}': {total=} {nan=} {nan / total * 100:.2f}%")
-        return interpolated_matrix
+        return matrix
 
     @mark_as_png
     def f1002_绘制高程(self, path: Path):
