@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 from batch_processor import BatchProcessor, mark_as_npy, mark_as_png
-from batch_processor.processors.base import ManuallyProcessRequiredException
+from batch_processor.batch_processor import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.scaling import scale_array
 from rock_texture_analyzer.point_clode.other_utils import depth_matrix_to_elevation_image, depth_matrix_to_rgb_image

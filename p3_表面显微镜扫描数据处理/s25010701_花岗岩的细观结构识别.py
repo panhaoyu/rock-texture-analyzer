@@ -5,9 +5,9 @@ from typing import Type
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
-from batch_processor.batch_processor import BatchProcessor
+from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
 from batch_processor.processors.png import mark_as_png
-from batch_processor.processors.base import ManuallyProcessRequiredException, mark_as_single_thread
+from batch_processor.processors.base import mark_as_single_thread
 
 
 class GraniteIdentifier(RockGrainIdentifier):

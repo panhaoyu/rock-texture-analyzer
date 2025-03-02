@@ -8,8 +8,7 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from batch_processor.batch_processor import BatchProcessor
-from batch_processor.processors.base import ManuallyProcessRequiredException
+from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
 from batch_processor.processors.combined_excel import mark_as_combined_excel
 from batch_processor.processors.npy import mark_as_npy
 from batch_processor.processors.pickle import mark_as_pickle

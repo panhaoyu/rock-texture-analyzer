@@ -6,8 +6,7 @@ import numpy as np
 import requests
 from PIL import Image, ImageFilter
 
-from batch_processor.batch_processor import BatchProcessor
-from batch_processor.processors.base import ManuallyProcessRequiredException
+from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
 from batch_processor.processors.jpg import mark_as_jpg
 from batch_processor.processors.png import mark_as_png
 from p3_表面显微镜扫描数据处理.utils.s1_图像补全_阿里云 import erase_image_with_oss

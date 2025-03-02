@@ -8,7 +8,7 @@ from pathlib import Path
 from more_itertools import only
 
 from p3_表面显微镜扫描数据处理.config import base_dir
-from .processors.base import BaseProcessor, ManuallyProcessRequiredException
+from .processors.base import BaseProcessor
 
 logger = logging.getLogger(Path(__file__).stem)
 
@@ -116,3 +116,7 @@ class BatchProcessor:
         final_dir = obj.final_function.directory
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
             [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
+
+
+class ManuallyProcessRequiredException(Exception):
+    pass

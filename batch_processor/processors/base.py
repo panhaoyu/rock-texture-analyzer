@@ -120,10 +120,6 @@ class BaseProcessor(typing.Generic[T]):
             self.on_batch_finished()
 
 
-class ManuallyProcessRequiredException(Exception):
-    pass
-
-
 def mark_as_recreate(func: BaseProcessor):
     func.is_recreate_required = True
     return func

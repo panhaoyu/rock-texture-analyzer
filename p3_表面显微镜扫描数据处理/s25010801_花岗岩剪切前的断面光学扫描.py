@@ -7,9 +7,8 @@ from PIL import Image
 from more_itertools import only
 
 import batch_processor.processors.base
-from batch_processor.batch_processor import BatchProcessor
+from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
 from batch_processor.processors.png import mark_as_png
-from batch_processor.processors.base import ManuallyProcessRequiredException
 
 
 class s25010801_花岗岩剪切前的断面光学扫描(BatchProcessor):
