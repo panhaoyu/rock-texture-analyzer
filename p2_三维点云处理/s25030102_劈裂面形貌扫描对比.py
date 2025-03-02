@@ -32,8 +32,7 @@ def remove_black_borders(array: np.ndarray) -> np.ndarray:
 def fill_nan_values(array: np.ndarray) -> np.ndarray:
     layers: list[np.ndarray] = []
     for i in range(array.shape[-1]):
-        # noinspection PyUnresolvedReferences
-        if (layer := array[:, :, i].copy()).isnan().any():
+        if np.any(np.isnan((layer := array[:, :, i].copy()))):
             mask = np.isnan(layer)
             interp = NearestNDInterpolator(np.argwhere(~mask), layer[~mask])
             layer[mask] = interp(np.argwhere(mask))
