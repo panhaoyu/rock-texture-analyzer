@@ -50,8 +50,6 @@ def process(array: np.ndarray) -> np.ndarray:
 
 
 class s25030102_劈裂面形貌扫描对比(BatchProcessor):
-    is_debug = True
-
     @mark_as_npy
     def f0101_原始数据_Da(self, path: Path):
         raise ManuallyProcessRequiredException
