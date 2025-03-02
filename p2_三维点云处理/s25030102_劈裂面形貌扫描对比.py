@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from scipy.interpolate import NearestNDInterpolator
 from scipy.ndimage import zoom
 
 from batch_processor import BatchProcessor, mark_as_npy, mark_as_png, mark_as_recreate
@@ -25,9 +26,25 @@ def process(array: np.ndarray) -> np.ndarray:
             array = array[:-1, :, :]
         else:
             break
-    logger.info(f'{shape1} -> {array.shape}')
+    shape2 = array.shape
+    nan1 = np.isnan(array).sum()
 
-    array = zoom(array, (1000 / array.shape[0], 1000 / array.shape[1], 1))
+    layers: list[np.ndarray] = []
+    for i in range(array.shape[-1]):
+        layer = array[:, :, i].copy()
+        if np.isnan(layer).any():
+            mask = np.isnan(layer)
+            interp = NearestNDInterpolator(np.argwhere(~mask), layer[~mask])
+            layer[mask] = interp(np.argwhere(mask))
+        layers.append(layer)
+
+    scale = (1000 / array.shape[0], 1000 / array.shape[1])
+    layers = [zoom(layer, scale, order=2) for layer in layers]
+    array = np.dstack(layers)
+
+    nan2 = np.isnan(array).sum()
+
+    logger.info(f'{shape1=} -> {shape2=}, {nan1=}, {nan2=}')
 
     return array
 
