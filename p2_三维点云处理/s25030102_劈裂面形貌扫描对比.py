@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from batch_processor import BatchProcessor, mark_as_npy, mark_as_png, mark_as_recreate
+from batch_processor import BatchProcessor, mark_as_npy, mark_as_png
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.other_utils import depth_matrix_to_elevation_image, depth_matrix_to_rgb_image
 
@@ -70,31 +70,26 @@ class s25030102_劈裂面形貌扫描对比(BatchProcessor):
     def f0104_原始数据_Ub(self, path: Path):
         raise ManuallyProcessRequiredException
 
-    @mark_as_recreate
     @mark_as_npy
     def f0201_DA放缩(self, path: Path):
         array = self.f0101_原始数据_Da.read(path)
         return process(array)
 
-    @mark_as_recreate
     @mark_as_npy
     def f0202_DB放縮(self, path: Path):
         array = self.f0102_原始数据_Db.read(path)
         return process(array)
 
-    @mark_as_recreate
     @mark_as_npy
     def f0203_UA放縮(self, path: Path):
         array = self.f0103_原始数据_Ua.read(path)
         return process(array)
 
-    @mark_as_recreate
     @mark_as_npy
     def f0204_UB放縮(self, path: Path):
         array = self.f0104_原始数据_Ub.read(path)
         return process(array)
 
-    @mark_as_recreate
     @mark_as_png
     def f0301_合并显示(self, path: Path):
         elevation_ua = depth_matrix_to_elevation_image(self.f0203_UA放縮.read(path))
