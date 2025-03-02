@@ -26,7 +26,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
     def f2_上下扩展(self):
         array = np.asarray(self.f1_原始数据)
         extended_array = np.pad(array, ((1000, 1000), (0, 0), (0, 0)), mode='edge')
-        Image.fromarray(extended_array).save(output_path)
+        return Image.fromarray(extended_array)
 
     @mark_as_png
     def f3_删除非主体的像素(self):
@@ -36,7 +36,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
     def f4_非透明部分的mask(self):
         array = np.asarray(self.f3_删除非主体的像素)
         mask = (array[..., 3] > 0).astype(np.uint8) * 255
-        Image.fromarray(mask, 'L').save(output_path)
+        return Image.fromarray(mask, 'L')
 
     @mark_as_png
     def f5_提取最大的区域(self):
@@ -45,7 +45,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         largest = max(contours, key=cv2.contourArea)
         convex = np.zeros_like(array)
         cv2.drawContours(convex, [largest], -1, (255,), thickness=cv2.FILLED)
-        Image.fromarray(convex, 'L').save(output_path)
+        return Image.fromarray(convex, 'L')
 
     @mark_as_png
     def f6_转换为凸多边形(self):
@@ -61,14 +61,14 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
             window_with_center = np.concatenate([window, center])
             hull = cv2.convexHull(window_with_center.reshape(-1, 1, 2))
             cv2.drawContours(convex, [hull], -1, (255,), thickness=cv2.FILLED)
-        Image.fromarray(convex, 'L').save(output_path)
+        return Image.fromarray(convex, 'L')
 
     @mark_as_png
     def f7_显示识别效果(self):
         f2_array = np.asarray(self.f2_上下扩展)
         f6_array = np.asarray(self.f6_转换为凸多边形)
         f2_array[..., 0] = np.where(f6_array == 255, 255, f2_array[..., 0])
-        Image.fromarray(f2_array).save(output_path)
+        return Image.fromarray(f2_array)
 
     @mark_as_png
     def f8_仅保留遮罩里面的区域(self):
@@ -81,7 +81,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         y_min, x_min = coords.min(axis=0)
         y_max, x_max = coords.max(axis=0) + 1
         cropped = f2_array[y_min:y_max, x_min:x_max]
-        Image.fromarray(cropped).save(output_path)
+        return Image.fromarray(cropped)
 
     @mark_as_png
     def f9_水平拉伸图像的系数_计算(self):
@@ -141,7 +141,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         stretched_image = cv2.remap(image, x_map.astype(np.float32), y_map.astype(np.float32),
                                     interpolation=cv2.INTER_LINEAR)
 
-        Image.fromarray(stretched_image).save(output_path)
+        return Image.fromarray(stretched_image)
 
     @mark_as_png
     def f12_垂直拉伸图像的系数_计算(self):
@@ -206,7 +206,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         stretched_image = cv2.remap(image, x_map.astype(np.float32), y_map.astype(np.float32),
                                     interpolation=cv2.INTER_LINEAR)
 
-        Image.fromarray(stretched_image).save(output_path)
+        return Image.fromarray(stretched_image)
 
     @mark_as_png
     def f15_调整尺寸和裁剪(self):
@@ -215,7 +215,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         resized = cv2.resize(image, (self.v15_最终图像宽度_像素 + border * 2, self.v15_最终图像高度_像素 + border * 2),
                              interpolation=cv2.INTER_AREA)
         cropped = resized[border:-border, border:-border]
-        Image.fromarray(cropped).save(output_path)
+        return Image.fromarray(cropped)
 
     @mark_as_png
     def f16_补全边角(self):
@@ -234,7 +234,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
                 image = image.copy()
             case _:
                 raise ValueError("文件名stem必须以'U'或'D'结尾")
-        Image.fromarray(image).save(output_path)
+        return Image.fromarray(image)
 
     @mark_as_png
     def f99_处理结果(self):
