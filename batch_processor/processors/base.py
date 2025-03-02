@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Callable
 
 if typing.TYPE_CHECKING:
-    from ..batch_processor import BatchProcessor
+    from ..batch_processor import SerialProcess
 
 T = typing.TypeVar('T')
 
@@ -18,7 +18,7 @@ class BaseProcessor(typing.Generic[T]):
     is_final: bool = False
     is_single_thread: bool = False
     suffix: str = None
-    processor: 'BatchProcessor'
+    processor: 'SerialProcess'
 
     def __init__(self, func: Callable[[Path], typing.Any]):
         self.func = func
@@ -38,11 +38,13 @@ class BaseProcessor(typing.Generic[T]):
         self.is_batch_started_called: bool = False
         self.is_batch_finished_called: bool = False
 
-    def __call__(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
-
     def __str__(self):
         return self.func_name
+
+    def __get__(self, instance: 'SerialProcess', owner) -> T:
+        result = self.read(instance.path)
+        func.write(result, path)
+        return result
 
     def __repr__(self):
         return f'<{self.func_name}[{self.suffix}]>'
@@ -60,7 +62,7 @@ class BaseProcessor(typing.Generic[T]):
 
     @cached_property
     def directory(self):
-        return self.processor.base_dir / self.func_name.replace('_', '-').lstrip('f')
+        return self.processor.manager.base_dir / self.func_name.replace('_', '-').lstrip('f')
 
     def get_input_path(self, path: Path):
         return self.directory.joinpath(f'{path.stem}{self.suffix}')

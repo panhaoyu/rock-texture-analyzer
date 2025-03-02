@@ -5,9 +5,9 @@ from typing import Type
 from rock_grain_identifier import RockGrainIdentifier
 from rock_grain_identifier.group import RgiGroup
 
-from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
-from batch_processor.processors.png import mark_as_png
+from batch_processor.batch_processor import SerialProcess, ManuallyProcessRequiredException
 from batch_processor.processors.base import mark_as_single_thread
+from batch_processor.processors.png import mark_as_png
 
 
 class GraniteIdentifier(RockGrainIdentifier):
@@ -21,7 +21,7 @@ class GraniteIdentifier(RockGrainIdentifier):
     ]
 
 
-class s25010701_花岗岩的细观结构识别(BatchProcessor):
+class s25010701_花岗岩的细观结构识别(SerialProcess):
     @mark_as_png
     def f1_原始图像(self, output_path: Path):
         raise ManuallyProcessRequiredException
@@ -30,7 +30,7 @@ class s25010701_花岗岩的细观结构识别(BatchProcessor):
 
     @cached_property
     def identifier(self):
-        files = sorted(self.base_dir.glob('1-*/*.png'))
+        files = sorted(self.manager.base_dir.glob('1-*/*.png'))
         identifier = self.identifier_class(files)
         return identifier
 
@@ -59,7 +59,7 @@ class s25010701_花岗岩的细观结构识别(BatchProcessor):
     def f5_全部处理(self, output_path: Path):
         if not list(output_path.parent.glob(f'*{output_path.suffix}')):
             with self.identifier.skip_saving_numpy(), self.identifier.skip_saving_thumbnail():
-                self.identifier.predict_all(self.base_dir / '2-处理效果/output')
+                self.identifier.predict_all(self.manager.base_dir / '2-处理效果/output')
         input_path = output_path.parent.joinpath(f'output/{output_path.stem}-3-fixed.png')
         output_path.hardlink_to(input_path)
 

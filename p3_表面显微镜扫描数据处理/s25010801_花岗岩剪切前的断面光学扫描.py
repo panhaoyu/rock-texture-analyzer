@@ -7,11 +7,11 @@ from PIL import Image
 from more_itertools import only
 
 import batch_processor.processors.base
-from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
+from batch_processor.batch_processor import SerialProcess, ManuallyProcessRequiredException
 from batch_processor.processors.png import mark_as_png
 
 
-class s25010801_花岗岩剪切前的断面光学扫描(BatchProcessor):
+class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
     v6_转换为凸多边形的检测长度_像素 = 100
     v9_不参与拉伸系数计算的边界宽度_像素 = 100
     v12_不参与垂直拉伸系数计算的边界高度_像素 = 100

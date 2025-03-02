@@ -8,7 +8,7 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
+from batch_processor.batch_processor import SerialProcess, ManuallyProcessRequiredException
 from batch_processor.processors.combined_excel import mark_as_combined_excel
 from batch_processor.processors.npy import mark_as_npy
 from batch_processor.processors.pickle import mark_as_pickle
@@ -24,7 +24,7 @@ from rock_texture_analyzer.point_clode.other_utils import should_flip_based_on_z
 logger = logging.getLogger(Path(__name__).stem)
 
 
-class s25030101_劈裂面形貌扫描(BatchProcessor):
+class s25030101_劈裂面形貌扫描(SerialProcess):
     is_debug = False
 
     @mark_as_ply

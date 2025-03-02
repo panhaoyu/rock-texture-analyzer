@@ -4,6 +4,7 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from functools import cached_property
 from pathlib import Path
+from typing import Type
 
 from more_itertools import only
 
@@ -20,11 +21,14 @@ logging.basicConfig(
 )
 
 
-class BatchProcessor:
+class BatchManager:
+    def __init__(self, klass: Type['SerialProcess']):
+        self.klass = klass
+
     @cached_property
     def step_functions(self):
         class_methods: dict[int, list[BaseProcessor]] = {}
-        for klass in self.__class__.mro():
+        for klass in self.klass.mro():
             for value in vars(klass).values():
                 if isinstance(value, BaseProcessor):
                     class_methods.setdefault(value.step_index, []).append(value)
@@ -36,7 +40,7 @@ class BatchProcessor:
 
     @cached_property
     def base_dir(self) -> Path:
-        class_name = self.__class__.__name__
+        class_name = self.klass.__name__
         match = re.fullmatch(r's(\d{8})_(.+)', class_name)
         if not match:
             raise ValueError(f"无效的类名: {class_name}")
@@ -48,7 +52,8 @@ class BatchProcessor:
         assert result.exists(), result
         return result
 
-    def process_path(self, path: Path) -> None:
+    def process_path(self, instance: 'SerialProcess') -> None:
+        path = instance.path
         stem = path.stem
         for func in self.step_functions:
             path: Path = func.get_input_path(path)
@@ -61,8 +66,7 @@ class BatchProcessor:
                 func.check_batch_started()
                 if not func.is_processed(path) or func.is_recreate_required:
                     is_processed = True
-                    result = func(self, path)
-                    func.write(result, path)
+                    getattr(instance, func.func_name)
             except ManuallyProcessRequiredException as exception:
                 message = exception.args or ()
                 message = ''.join(message)
@@ -99,23 +103,46 @@ class BatchProcessor:
             files = files[:2]
         return files
 
-    @classmethod
-    def main(cls) -> None:
-        obj = cls()
-        all_stems = [file.stem for file in obj.files]
-        for func in obj.step_functions:
-            func.all_stems.update(all_stems)
-            func.pending_stems.update(all_stems)
-        if cls.enable_multithread:
-            with ThreadPoolExecutor(max_workers=cls.multithread_workers) as executor:
-                executor.map(obj.process_path, obj.files)
+    @cached_property
+    def stems(self):
+        return [file.stem for file in self.files]
+
+    @cached_property
+    def instances(self):
+        result = [self.klass(file) for file in self.files]
+        for instance in result:
+            instance.manager = self
+        return result
+
+    def main(self) -> None:
+        for func in self.step_functions:
+            func.all_stems.update(self.stems)
+            func.pending_stems.update(self.stems)
+        if self.klass.enable_multithread:
+            with ThreadPoolExecutor(max_workers=self.klass.multithread_workers) as executor:
+                executor.map(self.process_path, self.instances)
         else:
-            for file in obj.files:
-                obj.process_path(file)
-        zip_path = obj.base_dir / f"{obj.base_dir.name}.zip"
-        final_dir = obj.final_function.directory
+            for instance in self.instances:
+                self.process_path(instance)
+        zip_path = self.base_dir / f"{self.base_dir.name}.zip"
+        final_dir = self.final_function.directory
         with zipfile.ZipFile(zip_path, 'w') as zip_file:
             [zip_file.write(file, file.name) for file in final_dir.glob('*.png')]
+
+
+class SerialProcess:
+    manager: BatchManager
+
+    def __init__(self, path: Path):
+        self.path = path
+
+    enable_multithread: bool = True
+    multithread_workers: int = 10
+    is_debug: bool = False
+
+    @classmethod
+    def main(cls) -> None:
+        BatchManager(cls).main()
 
 
 class ManuallyProcessRequiredException(Exception):

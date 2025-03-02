@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 from pathlib import Path
 
@@ -6,13 +7,15 @@ import numpy as np
 import requests
 from PIL import Image, ImageFilter
 
-from batch_processor.batch_processor import BatchProcessor, ManuallyProcessRequiredException
+from batch_processor.batch_processor import SerialProcess, ManuallyProcessRequiredException
 from batch_processor.processors.jpg import mark_as_jpg
 from batch_processor.processors.png import mark_as_png
 from p3_表面显微镜扫描数据处理.utils.s1_图像补全_阿里云 import erase_image_with_oss
 
+logger = logging.getLogger(Path(__file__).stem)
 
-class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
+
+class s25010502_花岗岩的侧面光学扫描的预处理(SerialProcess):
     p3_左侧裁剪区域_像素: int = 1400
     p3_右侧裁剪区域_像素: int = 1000
     p4_左右边界裁剪宽度_像素: int = 100
@@ -362,7 +365,7 @@ class s25010502_花岗岩的侧面光学扫描的预处理(BatchProcessor):
 
     @mark_as_png
     def f22_补全黑线(self, output_path: Path):
-        base_dir = self.base_dir
+        base_dir = self.manager.base_dir
         local_image_path = self.f18_需要补全的区域.read(output_path)
         local_mask_path = self.f20_膨胀白色部分.read(output_path)
         local_foreground_path = self.f21_翻转黑白区域.read(output_path)
