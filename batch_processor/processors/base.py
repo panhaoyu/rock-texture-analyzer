@@ -6,6 +6,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
+from batch_processor.batch_processor import BatchManager
+
 if typing.TYPE_CHECKING:
     from ..batch_processor import SerialProcess, ManuallyProcessRequiredException
 
@@ -21,7 +23,7 @@ class BaseProcessor(typing.Generic[T]):
     is_final: bool = False
     is_single_thread: bool = False
     suffix: str = None
-    processor: 'SerialProcess'
+    processor: 'BatchManager'
 
     def __init__(self, func: Callable[[], typing.Any]):
         self.func = func
@@ -45,9 +47,10 @@ class BaseProcessor(typing.Generic[T]):
         return self.func_name
 
     def __get__(self, instance: 'SerialProcess', owner) -> T:
-        result = self.read(instance.path)
-        func.write(result, path)
-        return result
+        if not self.is_processed(instance.path):  # 总是先写入再读取，这样可以获取得到规范化后的数据类型
+            obj = self.func()
+            self.write(obj, instance.path)
+        return self.read(instance.path)
 
     def __repr__(self):
         return f'<{self.func_name}[{self.suffix}]>'
@@ -78,10 +81,6 @@ class BaseProcessor(typing.Generic[T]):
 
     def read(self, path: Path) -> T:
         path = self.get_input_path(path)
-        if not path.exists():
-            obj = self.func()
-            self.write(obj, path)
-        #  总是要重新调用一次读取，以获取正确的规范后的数据类型
         return self._read(path)
 
     def _write(self, obj: T, path: Path):
