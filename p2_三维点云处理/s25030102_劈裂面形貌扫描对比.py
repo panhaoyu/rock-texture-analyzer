@@ -1,53 +1,20 @@
 import logging
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 from batch_processor import BatchProcessor, mark_as_npy, mark_as_png
 from batch_processor.processors.base import ManuallyProcessRequiredException
+from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
+from rock_texture_analyzer.image_4d.scaling import scale_array
 from rock_texture_analyzer.point_clode.other_utils import depth_matrix_to_elevation_image, depth_matrix_to_rgb_image
 
 logger = logging.getLogger(Path(__file__).name)
 
-from scipy.interpolate import NearestNDInterpolator
-from scipy.ndimage import zoom
-import numpy as np
-
-
-def remove_black_borders(array: np.ndarray) -> np.ndarray:
-    while True:
-        if (nan := np.isnan(array[:, 0, 0])).sum() / nan.size > 0.01:
-            array = array[:, 1:, :]
-        elif (nan := np.isnan(array[:, -1, 0])).sum() / nan.size > 0.01:
-            array = array[:, :-1, :]
-        elif (nan := np.isnan(array[0, :, 0])).sum() / nan.size > 0.01:
-            array = array[1:, :, :]
-        elif (nan := np.isnan(array[-1, :, 0])).sum() / nan.size > 0.01:
-            array = array[:-1, :, :]
-        else:
-            break
-    return array
-
-
-def fill_nan_values(array: np.ndarray) -> np.ndarray:
-    layers: list[np.ndarray] = []
-    for i in range(array.shape[-1]):
-        if np.any(np.isnan((layer := array[:, :, i].copy()))):
-            mask = np.isnan(layer)
-            interp = NearestNDInterpolator(np.argwhere(~mask), layer[~mask])
-            layer[mask] = interp(np.argwhere(mask))
-        layers.append(layer)
-    return np.dstack(layers)
-
-
-def scale_array(array: np.ndarray, target_size: tuple[int, int] = (1000, 1000)) -> np.ndarray:
-    scale = (target_size[0] / array.shape[0], target_size[1] / array.shape[1])
-    # noinspection PyTypeChecker
-    return np.dstack([zoom(array[:, :, i], scale, order=2) for i in range(array.shape[-1])])
-
 
 def process(array: np.ndarray) -> np.ndarray:
-    array = remove_black_borders(array)
+    array = remove_nan_borders(array)
     array = fill_nan_values(array)
     array = scale_array(array)
     return array
