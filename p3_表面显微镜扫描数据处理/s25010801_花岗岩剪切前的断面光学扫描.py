@@ -5,6 +5,7 @@ from PIL import Image
 from more_itertools import only
 
 import batch_processor.processors.base
+from batch_processor import mark_as_npy
 from batch_processor.batch_processor import SerialProcess
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from batch_processor.processors.png import mark_as_png
@@ -83,7 +84,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         cropped = f2_array[y_min:y_max, x_min:x_max]
         return Image.fromarray(cropped)
 
-    @mark_as_png
+    @mark_as_npy
     def f9_水平拉伸图像的系数_计算(self):
         array = np.asarray(self.f8_仅保留遮罩里面的区域)
         alpha = array[..., 3]
@@ -100,7 +101,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         smoothed = np.convolve(coefficients, np.ones(border * 2) / border / 2, mode='same')
         coefficients[border:-border] = smoothed[border:-border]
 
-        np.save(output_path.with_suffix('.npy'), coefficients)
+        return coefficients
 
     @mark_as_png
     def f10_水平拉伸图像的系数_显示(self):
@@ -109,8 +110,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         ax.plot(coefficients)
         ax.set_xlabel('row')
         ax.set_ylabel('coefficient')
-        fig.savefig(output_path)
-        plt.close(fig)
+        return fig
 
     @mark_as_png
     def f11_水平拉伸(self):
@@ -143,7 +143,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
 
         return Image.fromarray(stretched_image)
 
-    @mark_as_png
+    @mark_as_npy
     def f12_垂直拉伸图像的系数_计算(self):
         """计算图像垂直拉伸的系数并保存"""
         array = np.asarray(self.f11_水平拉伸)
@@ -161,7 +161,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         smoothed = np.convolve(coefficients, np.ones(border * 2) / border / 2, mode='same')
         coefficients[border:-border] = smoothed[border:-border]
 
-        np.save(output_path.with_suffix('.npy'), coefficients)
+        return coefficients
 
     @mark_as_png
     def f13_垂直拉伸图像的系数_显示(self):
@@ -171,8 +171,7 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
         ax.plot(coefficients)
         ax.set_xlabel('column')
         ax.set_ylabel('coefficient')
-        fig.savefig(output_path)
-        plt.close(fig)
+        return fig
 
     @mark_as_png
     def f14_垂直拉伸(self):
@@ -219,15 +218,15 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
 
     @mark_as_png
     def f16_补全边角(self):
-        image = self.get_input_image(self.f15_调整尺寸和裁剪, output_path)
+        image = self.f15_调整尺寸和裁剪
         image = image.convert('RGB')
-        image.save(output_path)
+        image.save(self.path.parent / 'f16_补全边角' / f'{self.path.stem}.png')
         raise ManuallyProcessRequiredException('使用PS补全边角')
 
     @mark_as_png
     def f17_根据文件名处理(self):
         image = np.asarray(self.f16_补全边角)
-        match output_path.stem[-1]:
+        match self.path.stem[-1]:
             case 'U':
                 image = image[:, ::-1]
             case 'D':
@@ -235,10 +234,6 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
             case _:
                 raise ValueError("文件名stem必须以'U'或'D'结尾")
         return Image.fromarray(image)
-
-    @mark_as_png
-    def f99_处理结果(self):
-        self.get_input_image(self.f17_根据文件名处理, output_path).save(output_path)
 
 
 if __name__ == '__main__':
