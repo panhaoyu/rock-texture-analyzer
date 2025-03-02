@@ -7,7 +7,8 @@ from PIL import Image
 from more_itertools import only
 
 import batch_processor.processors.base
-from batch_processor.batch_processor import SerialProcess, ManuallyProcessRequiredException
+from batch_processor.batch_processor import SerialProcess
+from batch_processor.processors.base import ManuallyProcessRequiredException
 from batch_processor.processors.png import mark_as_png
 
 

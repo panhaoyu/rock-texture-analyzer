@@ -115,7 +115,3 @@ class SerialProcess:
     @classmethod
     def main(cls) -> None:
         BatchManager(cls).main()
-
-
-class ManuallyProcessRequiredException(Exception):
-    pass

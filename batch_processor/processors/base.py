@@ -6,10 +6,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
-from batch_processor.batch_processor import BatchManager
 
 if typing.TYPE_CHECKING:
-    from ..batch_processor import SerialProcess, ManuallyProcessRequiredException
+    from ..batch_processor import SerialProcess, BatchManager
 
 T = typing.TypeVar('T')
 
@@ -176,3 +175,7 @@ def mark_as_final(func: BaseProcessor):
 def mark_as_single_thread(func: BaseProcessor):
     func.is_single_thread = True
     return func
+
+
+class ManuallyProcessRequiredException(Exception):
+    pass
