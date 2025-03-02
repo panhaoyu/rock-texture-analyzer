@@ -47,7 +47,7 @@ class BaseProcessor(typing.Generic[T]):
 
     def __get__(self, instance: 'SerialProcess', owner) -> T:
         if not self.is_processed(instance.path):  # 总是先写入再读取，这样可以获取得到规范化后的数据类型
-            obj = self.func()
+            obj = self.func(instance)
             self.write(obj, instance.path)
         return self.read(instance.path)
 
