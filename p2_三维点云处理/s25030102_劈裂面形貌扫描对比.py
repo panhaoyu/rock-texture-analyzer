@@ -14,7 +14,6 @@ logger = logging.getLogger(Path(__file__).name)
 
 
 def process(array: np.ndarray) -> np.ndarray:
-    shape1 = array.shape
     while True:
         if (nan := np.isnan(array[:, 0, 0])).sum() / nan.size > 0.01:
             array = array[:, 1:, :]
@@ -26,9 +25,6 @@ def process(array: np.ndarray) -> np.ndarray:
             array = array[:-1, :, :]
         else:
             break
-    shape2 = array.shape
-    nan1 = np.isnan(array).sum()
-
     layers: list[np.ndarray] = []
     for i in range(array.shape[-1]):
         layer = array[:, :, i].copy()
@@ -37,15 +33,9 @@ def process(array: np.ndarray) -> np.ndarray:
             interp = NearestNDInterpolator(np.argwhere(~mask), layer[~mask])
             layer[mask] = interp(np.argwhere(mask))
         layers.append(layer)
-
     scale = (1000 / array.shape[0], 1000 / array.shape[1])
     layers = [zoom(layer, scale, order=2) for layer in layers]
     array = np.dstack(layers)
-
-    nan2 = np.isnan(array).sum()
-
-    logger.info(f'{shape1=} -> {shape2=}, {nan1=}, {nan2=}')
-
     return array
 
 
