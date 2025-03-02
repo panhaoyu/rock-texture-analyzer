@@ -62,8 +62,8 @@ class BaseProcessor(typing.Generic[T]):
     def directory(self):
         return self.processor.base_dir / self.func_name.replace('_', '-').lstrip('f')
 
-    def get_input_path(self, output_path: Path):
-        return self.directory.joinpath(f'{output_path.stem}{self.suffix}')
+    def get_input_path(self, path: Path):
+        return self.directory.joinpath(f'{path.stem}{self.suffix}')
 
     def is_processed(self, path: Path) -> bool:
         return self.get_input_path(path).exists()
