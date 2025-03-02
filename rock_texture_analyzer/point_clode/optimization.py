@@ -4,9 +4,9 @@ from pathlib import Path
 import numpy as np
 from scipy.optimize import minimize
 
-from rock_texture_analyzer.boundary_processing import generate_axis_boundary_mask, filter_vertical_outliers
-from rock_texture_analyzer.clustering import process_clusters
-from rock_texture_analyzer.other_utils import create_rotation_matrix
+from rock_texture_analyzer.point_clode.boundary_processing import generate_axis_boundary_mask, filter_vertical_outliers
+from rock_texture_analyzer.point_clode.clustering import process_clusters
+from rock_texture_analyzer.point_clode.other_utils import create_rotation_matrix
 
 logger = logging.getLogger(Path(__file__).stem)
 

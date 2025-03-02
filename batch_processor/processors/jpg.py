@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from open3d.cpu.pybind.geometry import PointCloud
 
 from batch_processor.processors.base import BaseProcessor
-from rock_texture_analyzer.point_cloud import draw_point_cloud
+from rock_texture_analyzer.point_clode.point_cloud import draw_point_cloud
 
 
 class __JpgProcessor(BaseProcessor[Image.Image]):

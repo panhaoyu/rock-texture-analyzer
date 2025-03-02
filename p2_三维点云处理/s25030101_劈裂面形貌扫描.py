@@ -15,10 +15,10 @@ from batch_processor.processors.npy import mark_as_npy
 from batch_processor.processors.pickle import mark_as_pickle
 from batch_processor.processors.ply import mark_as_ply
 from batch_processor.processors.png import mark_as_png
-from rock_texture_analyzer.boundary_processing import get_boundaries
-from rock_texture_analyzer.interpolation import surface_interpolate_2d
-from rock_texture_analyzer.optimization import least_squares_adjustment_direction
-from rock_texture_analyzer.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
+from rock_texture_analyzer.point_clode.boundary_processing import get_boundaries
+from rock_texture_analyzer.point_clode.interpolation import surface_interpolate_2d
+from rock_texture_analyzer.point_clode.optimization import least_squares_adjustment_direction
+from rock_texture_analyzer.point_clode.other_utils import should_flip_based_on_z, compute_rotation_matrix, point_cloud_keep_top, \
     depth_matrix_to_rgb_image, merge_5_images, depth_matrix_to_elevation_image
 
 

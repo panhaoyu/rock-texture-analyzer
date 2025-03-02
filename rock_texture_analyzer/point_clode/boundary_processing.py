@@ -1,8 +1,6 @@
-from typing import Tuple
-
 import numpy as np
 
-from rock_texture_analyzer.clustering import process_clusters, find_two_peaks, ValueDetectionError, find_single_peak
+from rock_texture_analyzer.point_clode.clustering import find_two_peaks, ValueDetectionError, find_single_peak
 
 
 def get_boundaries(points: np.ndarray) -> tuple[float, float, float, float, float, float]:

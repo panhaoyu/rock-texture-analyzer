@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt, cm
 from open3d.cpu.pybind.geometry import PointCloud
 from open3d.cpu.pybind.utility import Vector3dVector
 
-from rock_texture_analyzer.clustering import process_clusters
+from rock_texture_analyzer.point_clode.clustering import process_clusters
 
 logger = logging.getLogger(Path(__file__).stem)
 

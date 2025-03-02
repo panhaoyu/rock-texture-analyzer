@@ -5,7 +5,7 @@ from typing import Callable
 from open3d.cpu.pybind.geometry import PointCloud
 
 from batch_processor.processors.base import BaseProcessor
-from rock_texture_analyzer.point_cloud import read_point_cloud, write_point_cloud
+from rock_texture_analyzer.point_clode.point_cloud import read_point_cloud, write_point_cloud
 
 
 class __PlyProcessor(BaseProcessor[PointCloud]):

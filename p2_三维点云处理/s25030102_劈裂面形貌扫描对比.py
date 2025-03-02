@@ -5,7 +5,7 @@ from PIL import Image
 
 from batch_processor import BatchProcessor, mark_as_npy, mark_as_png
 from batch_processor.processors.base import ManuallyProcessRequiredException
-from rock_texture_analyzer.other_utils import depth_matrix_to_elevation_image, depth_matrix_to_rgb_image
+from rock_texture_analyzer.point_clode.other_utils import depth_matrix_to_elevation_image, depth_matrix_to_rgb_image
 
 logger = logging.getLogger(Path(__file__).name)
 
