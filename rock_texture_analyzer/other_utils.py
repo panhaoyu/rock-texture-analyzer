@@ -71,20 +71,6 @@ def point_cloud_keep_top(cloud: PointCloud, x0: float, x1: float, y0: float, y1:
     return cloud
 
 
-def depth_matrix_to_rgb_image(matrix: np.ndarray) -> Image.Image:
-    assert matrix.shape[2] == 4, "输入矩阵应为4通道"
-    matrix = matrix[:, :, 1:4]
-
-    def normalize(channel: np.ndarray) -> np.ndarray:
-        v_min = np.nanquantile(channel, 0.01)
-        v_max = np.nanquantile(channel, 0.99)
-        return np.nan_to_num((channel - v_min) / max(v_max - v_min, 1e-9), copy=False)
-
-    channels = [normalize(matrix[..., i]) * 255 for i in range(3)]
-    array = np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
-    return Image.fromarray(array)
-
-
 def merge_5_images(
         center: Image.Image,
         left: Image.Image,
@@ -107,6 +93,20 @@ def merge_5_images(
     new_img.paste(right, (s3, s1))
     new_img.paste(back, (s1, 0))
     return new_img
+
+
+def depth_matrix_to_rgb_image(matrix: np.ndarray) -> Image.Image:
+    assert matrix.shape[2] == 4, "输入矩阵应为4通道"
+    matrix = matrix[:, :, 1:4]
+
+    def normalize(channel: np.ndarray) -> np.ndarray:
+        v_min = np.nanquantile(channel, 0.01)
+        v_max = np.nanquantile(channel, 0.99)
+        return np.nan_to_num((channel - v_min) / max(v_max - v_min, 1e-9), copy=False)
+
+    channels = [normalize(matrix[..., i]) * 255 for i in range(3)]
+    array = np.clip(np.stack(channels, axis=-1), 0, 255).astype(np.uint8)
+    return Image.fromarray(array)
 
 
 def depth_matrix_to_elevation_image(matrix: np.ndarray) -> Image.Image:

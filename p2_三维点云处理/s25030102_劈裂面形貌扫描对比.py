@@ -12,31 +12,23 @@ from rock_texture_analyzer.other_utils import depth_matrix_to_elevation_image, d
 logger = logging.getLogger(Path(__file__).name)
 
 
-def process(array):
+def process(array: np.ndarray) -> np.ndarray:
+    shape1 = array.shape
     while True:
-        nan = np.isnan(array[:, 0, 0])
-        if np.sum(nan) / nan.size > 0.01:
+        if (nan := np.isnan(array[:, 0, 0])).sum() / nan.size > 0.01:
             array = array[:, 1:, :]
-            continue
-
-        nan = np.isnan(array[:, -1, 0])
-        if np.sum(nan) / nan.size > 0.01:
+        elif (nan := np.isnan(array[:, -1, 0])).sum() / nan.size > 0.01:
             array = array[:, :-1, :]
-            continue
-
-        nan = np.isnan(array[0, :, 0])
-        if np.sum(nan) / nan.size > 0.01:
+        elif (nan := np.isnan(array[0, :, 0])).sum() / nan.size > 0.01:
             array = array[1:, :, :]
-            continue
-
-        nan = np.isnan(array[:-1, :, 0])
-        if np.sum(nan) / nan.size > 0.01:
+        elif (nan := np.isnan(array[-1, :, 0])).sum() / nan.size > 0.01:
             array = array[:-1, :, :]
-            continue
+        else:
+            break
+    logger.info(f'{shape1} -> {array.shape}')
 
-        break
-    print(array[:, :, 0])
     array = zoom(array, (1000 / array.shape[0], 1000 / array.shape[1], 1))
+
     return array
 
 
