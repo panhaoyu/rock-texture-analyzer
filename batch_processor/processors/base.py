@@ -68,7 +68,7 @@ class BaseProcessor(typing.Generic[T]):
 
     @cached_property
     def directory(self):
-        return self.processor.manager.base_dir / self.func_name.replace('_', '-').lstrip('f')
+        return self.processor.base_dir / self.func_name.replace('_', '-').lstrip('f')
 
     def get_input_path(self, path: Path):
         return self.directory.joinpath(f'{path.stem}{self.suffix}')
