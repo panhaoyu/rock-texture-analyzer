@@ -11,14 +11,13 @@ from more_itertools import only
 from p3_表面显微镜扫描数据处理.config import base_dir
 from .processors.base import BaseProcessor
 
-logger = logging.getLogger(Path(__file__).stem)
-
 logging.basicConfig(
     level=logging.INFO,
     style='{',
     datefmt='%H%M%S',
     format="{levelname:>8} {asctime} {name:<20} {message}"
 )
+logger = logging.getLogger(Path(__file__).stem)
 
 
 class BatchManager:
@@ -53,36 +52,9 @@ class BatchManager:
         return result
 
     def process_path(self, instance: 'SerialProcess') -> None:
-        path = instance.path
-        stem = path.stem
         for func in self.step_functions:
-            path: Path = func.get_input_path(path)
-            func_index, func_name = func.step_index, func.func_name
-            func.is_single_thread and func.single_thread_process_lock.acquire_lock()
-            func.pending_stems.remove(stem)
-            func.processing_stems.add(stem)
-            is_processed = False
-            try:
-                func.check_batch_started()
-                if not func.is_processed(path) or func.is_recreate_required:
-                    is_processed = True
-                    getattr(instance, func.func_name)
-            except ManuallyProcessRequiredException as exception:
-                message = exception.args or ()
-                message = ''.join(message)
-                logger.info(f'{func_index:04d} {stem:10} {func_name} 需要人工处理：{message}')
+            if not func.process(instance):
                 break
-            except Exception as e:
-                logger.exception(f'{func_index:04d} {stem:10} {func_name}：{e}')
-                break
-            finally:
-                func.is_single_thread and func.single_thread_process_lock.release_lock()
-            finished_stems = len(func.processed_stems) + 1
-            all_stems = len(func.all_stems)
-            is_processed and logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
-            func.processing_stems.remove(stem)
-            func.processed_stems.add(stem)
-            func.check_batch_finished()
 
     enable_multithread: bool = True
     multithread_workers: int = 10

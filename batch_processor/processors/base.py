@@ -1,3 +1,4 @@
+import logging
 import re
 import threading
 import typing
@@ -6,9 +7,11 @@ from pathlib import Path
 from typing import Callable
 
 if typing.TYPE_CHECKING:
-    from ..batch_processor import SerialProcess
+    from ..batch_processor import SerialProcess, ManuallyProcessRequiredException
 
 T = typing.TypeVar('T')
+
+logger = logging.getLogger(Path(__file__).stem)
 
 
 class BaseProcessor(typing.Generic[T]):
@@ -20,7 +23,7 @@ class BaseProcessor(typing.Generic[T]):
     suffix: str = None
     processor: 'SerialProcess'
 
-    def __init__(self, func: Callable[[Path], typing.Any]):
+    def __init__(self, func: Callable[[], typing.Any]):
         self.func = func
         self.func_name = func.__name__
 
@@ -75,6 +78,10 @@ class BaseProcessor(typing.Generic[T]):
 
     def read(self, path: Path) -> T:
         path = self.get_input_path(path)
+        if not path.exists():
+            obj = self.func()
+            self.write(obj, path)
+        #  总是要重新调用一次读取，以获取正确的规范后的数据类型
         return self._read(path)
 
     def _write(self, obj: T, path: Path):
@@ -84,6 +91,36 @@ class BaseProcessor(typing.Generic[T]):
         path = self.get_input_path(path)
         self.directory.mkdir(parents=True, exist_ok=True)
         self._write(obj, path)
+
+    def process(self, instance: 'SerialProcess') -> bool:
+        # 返回值为函数的执行状态，如果正确执行，则返回True，如果报错，则返回False
+        path = self.get_input_path(instance.path)
+        stem = path.stem
+        func_index, func_name = self.step_index, self.func_name
+        self.is_single_thread and self.single_thread_process_lock.acquire_lock()
+        self.pending_stems.remove(stem)
+        self.processing_stems.add(stem)
+        try:
+            self.check_batch_started()
+            if not self.is_processed(path) or self.is_recreate_required:
+                getattr(instance, self.func_name)
+        except ManuallyProcessRequiredException as exception:
+            message = exception.args or ()
+            message = ''.join(message)
+            logger.info(f'{func_index:04d} {stem:10} {func_name} 需要人工处理：{message}')
+            return False
+        except Exception as e:
+            logger.exception(f'{func_index:04d} {stem:10} {func_name}：{e}')
+            return False
+        finally:
+            self.is_single_thread and self.single_thread_process_lock.release_lock()
+        finished_stems = len(self.processed_stems) + 1
+        all_stems = len(self.all_stems)
+        logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
+        self.processing_stems.remove(stem)
+        self.processed_stems.add(stem)
+        self.check_batch_finished()
+        return True
 
     def on_batch_started(self):
         """
