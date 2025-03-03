@@ -12,6 +12,7 @@ from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_
 from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, \
     depth_matrix_to_elevation_image
 from rock_texture_analyzer.image_4d.scaling import scale_array
+from rock_texture_analyzer.image_4d.tilt_correction import tilt_correction
 
 logger = logging.getLogger(Path(__file__).name)
 
@@ -81,13 +82,19 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         [merged.paste(img, (i * w, h)) for i, img in enumerate(lower_row)]
         return merged
 
+    @mark_as_recreate
     @mark_as_png
     def f0401_比较各个扫描结果的差异(self):
         # ua, ub, da, db
         arrays = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
-        arrays = [array[:, :, 0] for array in arrays]
-        compare = [[arr1 - arr2 for arr2 in arrays] for arr1 in arrays]
-        compare = [[np.abs(v - np.mean(v)) for v in vs] for vs in compare]
+
+        def get_compare(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
+            arr1, arr2 = tilt_correction(arr1, arr2)
+            arr1, arr2 = arr1[:, :, 0], arr2[:, :, 0]
+            delta = arr1 - arr2
+            return np.abs(delta - np.mean(delta))
+
+        compare = [[get_compare(arr1, arr2) for arr2 in arrays] for arr1 in arrays]
         array = np.hstack([np.vstack(v) for v in compare])
         figure, axes = plt.subplots(1, 1, figsize=(12, 10))
         im = axes.imshow(array, vmin=0, vmax=10, cmap='jet')
