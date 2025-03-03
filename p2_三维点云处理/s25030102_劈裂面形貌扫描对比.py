@@ -82,7 +82,6 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         [merged.paste(img, (i * w, h)) for i, img in enumerate(lower_row)]
         return merged
 
-    @mark_as_recreate
     @mark_as_png
     def f0401_比较各个扫描结果的差异(self):
         # ua, ub, da, db
@@ -121,6 +120,7 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     def f0404_下表面数据(self):
         return self.f0402_有效扫描数据[:, :, 4:8]
 
+    @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
         w1, w2, w3, w4 = 1000, 2000, 3000, 4000
@@ -129,10 +129,12 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         elevation_range = 5
         im = Image.new('RGB', (w4, w4))
 
-        im.paste(depth_matrix_to_elevation_image(data_1, v_range=elevation_range, text='U z 10mm'), (0, 0))
-        im.paste(depth_matrix_to_rgb_image(data_1, text='U RGB'), (w1, 0))
-        im.paste(depth_matrix_to_elevation_image(data_2, v_range=elevation_range, text='D z 10mm'), (0, w1))
-        im.paste(depth_matrix_to_rgb_image(data_2, text='D RGB'), (w1, w1))
+        im.paste(depth_matrix_to_elevation_image(data_1, v_range=elevation_range,
+                                                 text=f'最终选择效果 上部高程 ±{elevation_range}mm'), (0, 0))
+        im.paste(depth_matrix_to_rgb_image(data_1, text='最终选择效果 上部纹理'), (w1, 0))
+        im.paste(depth_matrix_to_elevation_image(data_2, v_range=elevation_range,
+                                                 text=f'最终选择效果 下部高程 ±{elevation_range}mm'), (0, w1))
+        im.paste(depth_matrix_to_rgb_image(data_2, text='最终选择效果 下部纹理'), (w1, w1))
 
         im.paste(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range, text='UA z 10mm'), (w2, 0))
         im.paste(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range, text='UB z 10mm'), (w3, 0))
@@ -145,10 +147,10 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         im.paste(depth_matrix_to_rgb_image(data_db, text='DB RGB'), (w3, w3))
 
         delta = data_1 - data_2
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=1, text="dh 2mm"), (0, w2))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=2, text="dh 4mm"), (w1, w2))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=3, text="dh 6mm"), (0, w3))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=5, text="dh 10mm"), (w1, w3))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=1, text="差值 ±1mm"), (0, w2))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=2, text="差值 ±2mm"), (w1, w2))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=3, text="差值 ±3mm"), (0, w3))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=5, text="差值 ±5mm"), (w1, w3))
 
         return im
 
