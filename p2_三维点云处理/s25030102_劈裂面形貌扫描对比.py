@@ -4,8 +4,9 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from matplotlib import pyplot as plt
 
-from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
+from batch_processor import SerialProcess, mark_as_npy, mark_as_png
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, \
@@ -81,7 +82,6 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         [merged.paste(img, (i * w, h)) for i, img in enumerate(lower_row)]
         return merged
 
-    @mark_as_recreate
     @mark_as_png
     def f0401_比较各个扫描结果的差异(self):
         arrays = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
@@ -157,6 +157,18 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
             [selected, elevation_image],
             [error, rgb_image]
         ])
+
+    @mark_as_png
+    def f0406_各个像素的误差分布(self):
+        v1, v2 = self.f0403_上表面数据[:, :, 0], self.f0404_下表面数据[:, :, 0]
+        delta = v1 - v2
+        delta = delta - np.mean(delta)
+        delta = delta.ravel()
+        delta = delta[np.abs(delta) < 2]
+        axes: plt.Axes
+        figure, axes = plt.subplots(1, 1)
+        axes.hist(delta, bins=100)
+        return figure
 
 
 if __name__ == '__main__':
