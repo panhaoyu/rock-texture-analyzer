@@ -5,6 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
+from PIL import ImageDraw, ImageFont
 
 from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
 from batch_processor.processors.base import ManuallyProcessRequiredException
@@ -115,34 +116,44 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
-        w1, w2, w3, w4 = 1000, 2000, 3000, 4000
 
+        def 添加文本(图: Image.Image, 文本: str) -> Image.Image:
+            画 = ImageDraw.Draw(图)
+            try:
+                字体 = ImageFont.truetype("宋体.ttf", 50)
+            except:
+                字体 = ImageFont.load_default()
+            文本框 = 画.textbbox((0, 0), 文本, font=字体)
+            画.rectangle((5, 5, 文本框[2] - 文本框[0] + 15, 文本框[3] - 文本框[1] + 15), fill="white")
+            画.text((10, 10), 文本, fill="black", font=字体)
+            return 图
+
+        w1, w2, w3, w4 = 1000, 2000, 3000, 4000
         data_1, data_2 = self.f0403_上表面数据, self.f0404_下表面数据
         data_ua, data_ub, data_da, data_db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
         elevation_range = 5
-
         im = Image.new('RGB', (w4, w4))
 
-        im.paste(depth_matrix_to_elevation_image(data_1, v_range=elevation_range), (0, 0))
-        im.paste(depth_matrix_to_rgb_image(data_1), (w1, 0))
-        im.paste(depth_matrix_to_elevation_image(data_2, v_range=elevation_range), (0, w1))
-        im.paste(depth_matrix_to_rgb_image(data_2), (w1, w1))
+        im.paste(添加文本(depth_matrix_to_elevation_image(data_1, v_range=elevation_range), "上表面高程"), (0, 0))
+        im.paste(添加文本(depth_matrix_to_rgb_image(data_1), "上表面RGB"), (w1, 0))
+        im.paste(添加文本(depth_matrix_to_elevation_image(data_2, v_range=elevation_range), "下表面高程"), (0, w1))
+        im.paste(添加文本(depth_matrix_to_rgb_image(data_2), "下表面RGB"), (w1, w1))
 
-        im.paste(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range), (w2, 0))
-        im.paste(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range), (w3, 0))
-        im.paste(depth_matrix_to_elevation_image(data_da, v_range=elevation_range), (w2, w1))
-        im.paste(depth_matrix_to_elevation_image(data_db, v_range=elevation_range), (w3, w1))
+        im.paste(添加文本(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range), "UA高程"), (w2, 0))
+        im.paste(添加文本(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range), "UB高程"), (w3, 0))
+        im.paste(添加文本(depth_matrix_to_elevation_image(data_da, v_range=elevation_range), "DA高程"), (w2, w1))
+        im.paste(添加文本(depth_matrix_to_elevation_image(data_db, v_range=elevation_range), "DB高程"), (w3, w1))
 
-        im.paste(depth_matrix_to_rgb_image(data_ua), (w2, w2))
-        im.paste(depth_matrix_to_rgb_image(data_ub), (w3, w2))
-        im.paste(depth_matrix_to_rgb_image(data_da), (w2, w3))
-        im.paste(depth_matrix_to_rgb_image(data_db), (w3, w3))
+        im.paste(添加文本(depth_matrix_to_rgb_image(data_ua), "UA RGB"), (w2, w2))
+        im.paste(添加文本(depth_matrix_to_rgb_image(data_ub), "UB RGB"), (w3, w2))
+        im.paste(添加文本(depth_matrix_to_rgb_image(data_da), "DA RGB"), (w2, w3))
+        im.paste(添加文本(depth_matrix_to_rgb_image(data_db), "DB RGB"), (w3, w3))
 
         delta = data_1 - data_2
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=1), (0, w2))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=2), (w1, w2))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=5), (0, w3))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=10), (w1, w3))
+        im.paste(添加文本(depth_matrix_to_elevation_image(delta, v_range=1), "Δh 1mm"), (0, w2))
+        im.paste(添加文本(depth_matrix_to_elevation_image(delta, v_range=2), "Δh 2mm"), (w1, w2))
+        im.paste(添加文本(depth_matrix_to_elevation_image(delta, v_range=5), "Δh 5mm"), (0, w3))
+        im.paste(添加文本(depth_matrix_to_elevation_image(delta, v_range=10), "Δh 10mm"), (w1, w3))
 
         return im
 
