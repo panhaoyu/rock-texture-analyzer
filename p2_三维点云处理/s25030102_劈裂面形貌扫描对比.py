@@ -113,7 +113,6 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     def f0404_下表面数据(self):
         return self.f0402_有效扫描数据[:, :, 4:8]
 
-    @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
         w1, w2, w3, w4 = 1000, 2000, 3000, 4000
