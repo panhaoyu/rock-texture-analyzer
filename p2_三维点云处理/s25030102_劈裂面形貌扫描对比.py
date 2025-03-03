@@ -120,7 +120,7 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         def 添加文本(图: Image.Image, 文本: str) -> Image.Image:
             画 = ImageDraw.Draw(图)
             try:
-                字体 = ImageFont.truetype("宋体.ttf", 50)
+                字体 = ImageFont.truetype("Times New Roman.ttf", 50)
             except:
                 字体 = ImageFont.load_default()
             文本框 = 画.textbbox((0, 0), 文本, font=字体)
