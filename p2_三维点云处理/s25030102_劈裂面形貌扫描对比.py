@@ -10,8 +10,8 @@ from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_rec
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.scaling import scale_array
-from rock_texture_analyzer.point_clode.other_utils import depth_matrix_to_elevation_image, depth_matrix_to_rgb_image, \
-    add_label
+from rock_texture_analyzer.image_4d.plotting import add_label, depth_matrix_to_rgb_image, \
+    depth_matrix_to_elevation_image
 
 logger = logging.getLogger(Path(__file__).name)
 

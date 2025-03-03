@@ -19,7 +19,8 @@ from rock_texture_analyzer.point_clode.boundary_processing import get_boundaries
 from rock_texture_analyzer.point_clode.interpolation import surface_interpolate_2d
 from rock_texture_analyzer.point_clode.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.point_clode.other_utils import should_flip_based_on_z, compute_rotation_matrix, \
-    point_cloud_keep_top, depth_matrix_to_rgb_image, merge_5_images, depth_matrix_to_elevation_image
+    point_cloud_keep_top, merge_5_images
+from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, depth_matrix_to_elevation_image
 
 logger = logging.getLogger(Path(__name__).stem)
 
