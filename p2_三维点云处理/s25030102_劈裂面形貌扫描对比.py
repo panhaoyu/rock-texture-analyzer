@@ -129,12 +129,14 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         elevation_range = 5
         im = Image.new('RGB', (w4, w4))
 
-        im.paste(depth_matrix_to_elevation_image(data_1, v_range=elevation_range,
-                                                 text=f'最终选择效果 上部高程 ±{elevation_range}mm'), (0, 0))
-        im.paste(depth_matrix_to_rgb_image(data_1, text='最终选择效果 上部纹理'), (w1, 0))
-        im.paste(depth_matrix_to_elevation_image(data_2, v_range=elevation_range,
-                                                 text=f'最终选择效果 下部高程 ±{elevation_range}mm'), (0, w1))
-        im.paste(depth_matrix_to_rgb_image(data_2, text='最终选择效果 下部纹理'), (w1, w1))
+        im.paste(depth_matrix_to_elevation_image(
+            data_1, v_range=elevation_range, text=f'筛选 上部 高程 ±{elevation_range}mm'), (0, 0))
+        im.paste(depth_matrix_to_rgb_image(
+            data_1, text='筛选 上部 纹理'), (w1, 0))
+        im.paste(depth_matrix_to_elevation_image(
+            data_2, v_range=elevation_range, text=f'筛选 下部 高程 ±{elevation_range}mm'), (0, w1))
+        im.paste(depth_matrix_to_rgb_image(
+            data_2, text='筛选 下部 纹理'), (w1, w1))
 
         im.paste(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range, text='UA z 10mm'), (w2, 0))
         im.paste(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range, text='UB z 10mm'), (w3, 0))
