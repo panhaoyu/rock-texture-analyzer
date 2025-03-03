@@ -14,8 +14,9 @@ def add_label(image: Image.Image, text: str) -> Image.Image:
 
 
 def depth_matrix_to_rgb_image(matrix: np.ndarray, text: str = None) -> Image.Image:
-    assert matrix.shape[2] == 4, "输入矩阵应为4通道"
-    matrix = matrix[:, :, 1:4]
+    if len(matrix.shape) == 3 and matrix.shape[2] == 4:
+        matrix = matrix[..., 1:]
+    assert len(matrix.shape) == 3 and matrix.shape[2] == 3, matrix.shape
 
     def normalize(channel: np.ndarray) -> np.ndarray:
         v_min = np.nanquantile(channel, 0.01)
@@ -32,9 +33,15 @@ def depth_matrix_to_rgb_image(matrix: np.ndarray, text: str = None) -> Image.Ima
 def depth_matrix_to_elevation_image(matrix: np.ndarray, v_range=None, text: str = None) -> Image.Image:
     if len(matrix.shape) == 3 and matrix.shape[2] == 4:
         matrix = matrix[..., 0]
-    matrix = matrix - np.mean(matrix)
-    v_range = np.nanquantile(matrix, 0.99) if v_range is None else v_range
-    norm = plt.Normalize(-v_range, v_range)
+    assert len(matrix.shape) == 2 and matrix.shape[0] > 10 and matrix.shape[1] > 10, matrix.shape
+    mean = np.nanmean(matrix)
+    if v_range is None:
+        vmin = np.nanquantile(matrix, 0.01)
+        vmax = np.nanquantile(matrix, 0.99)
+    else:
+        vmin = mean - v_range / 2
+        vmax = mean + v_range / 2
+    norm = plt.Normalize(vmin, vmax)
     array = (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(matrix)[..., :3] * 255).astype(np.uint8)
     image = Image.fromarray(array)
     text and add_label(image, text)

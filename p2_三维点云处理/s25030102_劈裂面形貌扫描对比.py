@@ -123,41 +123,40 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
-        data_1, data_2 = self.f0403_上表面数据, self.f0404_下表面数据
-        data_ua, data_ub, data_da, data_db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
+        v1, v2 = self.f0403_上表面数据, self.f0404_下表面数据
+        ua, ub, da, db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
         v_range = 5
-        delta = data_1 - data_2
-        delta = delta - np.min(delta)
+        dv = v1 - v2
 
         selected = merge_image_grid([[
-            depth_matrix_to_elevation_image(data_1, v_range=v_range, text=f'上部 高程 ±{v_range}mm'),
-            depth_matrix_to_rgb_image(data_1, text='上部 纹理')
+            depth_matrix_to_elevation_image(v1, v_range=v_range, text=f'上部 高程 {v_range}mm'),
+            depth_matrix_to_rgb_image(v1, text='上部 纹理')
         ], [
-            depth_matrix_to_elevation_image(data_2, v_range=v_range, text=f'下部 高程 ±{v_range}mm'),
-            depth_matrix_to_rgb_image(data_2, text='下部 纹理')
+            depth_matrix_to_elevation_image(v2, v_range=v_range, text=f'下部 高程 {v_range}mm'),
+            depth_matrix_to_rgb_image(v2, text='下部 纹理')
 
         ]])
         elevation_image = merge_image_grid([[
-            depth_matrix_to_elevation_image(data_ua, v_range=v_range, text=f'上部A 高程 ±{v_range}mm'),
-            depth_matrix_to_elevation_image(data_ub, v_range=v_range, text=f'上部B 高程 ±{v_range}mm')
+            depth_matrix_to_elevation_image(ua, v_range=v_range, text=f'上部A 高程 {v_range}mm'),
+            depth_matrix_to_elevation_image(ub, v_range=v_range, text=f'上部B 高程 {v_range}mm')
         ], [
-            depth_matrix_to_elevation_image(data_da, v_range=v_range, text=f'下部A 高程 ±{v_range}mm'),
-            depth_matrix_to_elevation_image(data_db, v_range=v_range, text=f'下部B 高程 ±{v_range}mm')
+            depth_matrix_to_elevation_image(da, v_range=v_range, text=f'下部A 高程 {v_range}mm'),
+            depth_matrix_to_elevation_image(db, v_range=v_range, text=f'下部B 高程 {v_range}mm')
         ]])
 
         rgb_image = merge_image_grid([[
-            depth_matrix_to_rgb_image(data_ua, text='上部A 纹理'),
-            depth_matrix_to_rgb_image(data_ub, text='上部B 纹理')
+            depth_matrix_to_rgb_image(ua, text='上部A 纹理'),
+            depth_matrix_to_rgb_image(ub, text='上部B 纹理')
         ], [
-            depth_matrix_to_rgb_image(data_da, text='下部A 纹理'),
-            depth_matrix_to_rgb_image(data_db, text='下部B 纹理')
+            depth_matrix_to_rgb_image(da, text='下部A 纹理'),
+            depth_matrix_to_rgb_image(db, text='下部B 纹理')
         ]])
         error = merge_image_grid([[
-            depth_matrix_to_elevation_image(delta, v_range=1, text="差值 高程 ±0.2mm"),
-            depth_matrix_to_elevation_image(delta, v_range=2, text="差值 高程 ±0.5mm")
+            depth_matrix_to_elevation_image(dv, v_range=0.2, text="差值 高程 0.2mm"),
+            depth_matrix_to_elevation_image(dv, v_range=0.5, text="差值 高程 0.5mm")
         ], [
-            depth_matrix_to_elevation_image(delta, v_range=3, text="差值 高程 ±1mm"),
-            depth_matrix_to_elevation_image(delta, v_range=5, text="差值 高程 ±2mm")
+            depth_matrix_to_elevation_image(dv, v_range=1, text="差值 高程 1mm"),
+            depth_matrix_to_elevation_image(dv, v_range=2, text="差值 高程 2mm")
         ]])
 
         return merge_image_grid([
