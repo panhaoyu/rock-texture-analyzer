@@ -10,7 +10,7 @@ from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_rec
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, \
-    depth_matrix_to_elevation_image
+    depth_matrix_to_elevation_image, merge_image_grid
 from rock_texture_analyzer.image_4d.scaling import scale_array
 from rock_texture_analyzer.image_4d.tilt_correction import tilt_correction
 
@@ -123,38 +123,46 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
-        w1, w2, w3, w4 = 1000, 2000, 3000, 4000
         data_1, data_2 = self.f0403_上表面数据, self.f0404_下表面数据
         data_ua, data_ub, data_da, data_db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
-        elevation_range = 5
-        im = Image.new('RGB', (w4, w4))
-
-        im.paste(depth_matrix_to_elevation_image(
-            data_1, v_range=elevation_range, text=f'筛选 上部 高程 ±{elevation_range}mm'), (0, 0))
-        im.paste(depth_matrix_to_rgb_image(
-            data_1, text='筛选 上部 纹理'), (w1, 0))
-        im.paste(depth_matrix_to_elevation_image(
-            data_2, v_range=elevation_range, text=f'筛选 下部 高程 ±{elevation_range}mm'), (0, w1))
-        im.paste(depth_matrix_to_rgb_image(
-            data_2, text='筛选 下部 纹理'), (w1, w1))
-
-        im.paste(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range, text='UA z 10mm'), (w2, 0))
-        im.paste(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range, text='UB z 10mm'), (w3, 0))
-        im.paste(depth_matrix_to_elevation_image(data_da, v_range=elevation_range, text='DA z 10mm'), (w2, w1))
-        im.paste(depth_matrix_to_elevation_image(data_db, v_range=elevation_range, text='DB z 10mm'), (w3, w1))
-
-        im.paste(depth_matrix_to_rgb_image(data_ua, text='UA RGB'), (w2, w2))
-        im.paste(depth_matrix_to_rgb_image(data_ub, text='UB RGB'), (w3, w2))
-        im.paste(depth_matrix_to_rgb_image(data_da, text='DA RGB'), (w2, w3))
-        im.paste(depth_matrix_to_rgb_image(data_db, text='DB RGB'), (w3, w3))
-
+        v_range = 5
         delta = data_1 - data_2
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=1, text="差值 ±1mm"), (0, w2))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=2, text="差值 ±2mm"), (w1, w2))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=3, text="差值 ±3mm"), (0, w3))
-        im.paste(depth_matrix_to_elevation_image(delta, v_range=5, text="差值 ±5mm"), (w1, w3))
 
-        return im
+        selected = merge_image_grid([[
+            depth_matrix_to_elevation_image(data_1, v_range=v_range, text=f'上部 高程 ±{v_range}mm'),
+            depth_matrix_to_rgb_image(data_1, text='上部 纹理')
+        ], [
+            depth_matrix_to_elevation_image(data_2, v_range=v_range, text=f'下部 高程 ±{v_range}mm'),
+            depth_matrix_to_rgb_image(data_2, text='下部 纹理')
+
+        ]])
+        elevation_image = merge_image_grid([[
+            depth_matrix_to_elevation_image(data_ua, v_range=v_range, text=f'上部A 高程 ±{v_range}mm'),
+            depth_matrix_to_elevation_image(data_ub, v_range=v_range, text=f'上部B 高程 ±{v_range}mm')
+        ], [
+            depth_matrix_to_elevation_image(data_da, v_range=v_range, text=f'下部A 高程 ±{v_range}mm'),
+            depth_matrix_to_elevation_image(data_db, v_range=v_range, text=f'下部B 高程 ±{v_range}mm')
+        ]])
+
+        rgb_image = merge_image_grid([[
+            depth_matrix_to_rgb_image(data_ua, text='上部A 纹理'),
+            depth_matrix_to_rgb_image(data_ub, text='上部B 纹理')
+        ], [
+            depth_matrix_to_rgb_image(data_da, text='下部A 纹理'),
+            depth_matrix_to_rgb_image(data_db, text='下部B 纹理')
+        ]])
+        error = merge_image_grid([[
+            depth_matrix_to_elevation_image(delta, v_range=1, text="差值 高程 ±0.2mm"),
+            depth_matrix_to_elevation_image(delta, v_range=2, text="差值 高程 ±0.5mm")
+        ], [
+            depth_matrix_to_elevation_image(delta, v_range=3, text="差值 高程 ±1mm"),
+            depth_matrix_to_elevation_image(delta, v_range=5, text="差值 高程 ±2mm")
+        ]])
+
+        return merge_image_grid([
+            [selected, elevation_image],
+            [error, rgb_image]
+        ])
 
 
 if __name__ == '__main__':
