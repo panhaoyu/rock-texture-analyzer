@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from batch_processor import SerialProcess, mark_as_npy, mark_as_png
+from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.scaling import scale_array
@@ -79,16 +79,17 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         [merged.paste(img, (i * w, h)) for i, img in enumerate(lower_row)]
         return merged
 
+    @mark_as_recreate
     @mark_as_png
     def f0401_比较各个扫描结果的差异(self):
         # ua, ub, da, db
         arrays = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
         arrays = [array[:, :, 0] for array in arrays]
         compare = [[arr1 - arr2 for arr2 in arrays] for arr1 in arrays]
-        compare = [[v - np.mean(v) for v in vs] for vs in compare]
+        compare = [[np.abs(v - np.mean(v)) for v in vs] for vs in compare]
         array = np.hstack([np.vstack(v) for v in compare])
-        figure, axes = plt.subplots(1, 1, figsize=(12, 12))
-        im = axes.imshow(array)
+        figure, axes = plt.subplots(1, 1, figsize=(12, 10))
+        im = axes.imshow(array, vmin=0, vmax=20)
         figure.colorbar(im)
         return figure
 

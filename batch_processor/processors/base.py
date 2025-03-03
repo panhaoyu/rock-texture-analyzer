@@ -100,7 +100,9 @@ class BaseProcessor(typing.Generic[T]):
         is_processed = False
         try:
             self.check_batch_started()
-            if not self.is_processed(path) or self.is_recreate_required:
+            if self.is_recreate_required:
+                self.get_input_path(path).unlink(missing_ok=True)
+            if not self.is_processed(path):
                 getattr(instance, self.func_name)
                 is_processed = True
         except ManuallyProcessRequiredException as exception:
