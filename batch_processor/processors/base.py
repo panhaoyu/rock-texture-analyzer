@@ -11,7 +11,7 @@ if typing.TYPE_CHECKING:
 
 T = typing.TypeVar('T')
 
-logger = logging.getLogger(Path(__file__).stem)
+logger = logging.getLogger(__name__.split('.')[0])
 
 
 class BaseProcessor(typing.Generic[T]):
