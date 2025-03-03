@@ -115,13 +115,35 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
-        im = Image.new('RGB', (2000, 2000))
-        data1, data2 = self.f0403_上表面数据, self.f0404_下表面数据
-        v_range = 5
-        im.paste(depth_matrix_to_elevation_image(data1, v_range=v_range), (0, 0))
-        im.paste(depth_matrix_to_rgb_image(data1), (1000, 0))
-        im.paste(depth_matrix_to_elevation_image(data2, v_range=v_range), (0, 1000))
-        im.paste(depth_matrix_to_rgb_image(data2), (1000, 1000))
+        w1, w2, w3, w4 = 1000, 2000, 3000, 4000
+
+        data_1, data_2 = self.f0403_上表面数据, self.f0404_下表面数据
+        data_ua, data_ub, data_da, data_db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
+        elevation_range = 5
+
+        im = Image.new('RGB', (w4, w4))
+
+        im.paste(depth_matrix_to_elevation_image(data_1, v_range=elevation_range), (0, 0))
+        im.paste(depth_matrix_to_rgb_image(data_1), (w1, 0))
+        im.paste(depth_matrix_to_elevation_image(data_2, v_range=elevation_range), (0, w1))
+        im.paste(depth_matrix_to_rgb_image(data_2), (w1, w1))
+
+        im.paste(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range), (w2, 0))
+        im.paste(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range), (w3, 0))
+        im.paste(depth_matrix_to_elevation_image(data_da, v_range=elevation_range), (w2, w1))
+        im.paste(depth_matrix_to_elevation_image(data_db, v_range=elevation_range), (w3, w1))
+
+        im.paste(depth_matrix_to_rgb_image(data_ua), (w2, w2))
+        im.paste(depth_matrix_to_rgb_image(data_ub), (w3, w2))
+        im.paste(depth_matrix_to_rgb_image(data_da), (w2, w3))
+        im.paste(depth_matrix_to_rgb_image(data_db), (w3, w3))
+
+        delta = data_1 - data_2
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=1), (0, w2))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=2), (w1, w2))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=5), (0, w3))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=10), (w1, w3))
+
         return im
 
 
