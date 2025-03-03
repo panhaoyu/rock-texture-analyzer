@@ -1,3 +1,4 @@
+import itertools
 import logging
 from pathlib import Path
 
@@ -79,7 +80,6 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         [merged.paste(img, (i * w, h)) for i, img in enumerate(lower_row)]
         return merged
 
-    @mark_as_recreate
     @mark_as_png
     def f0401_比较各个扫描结果的差异(self):
         # ua, ub, da, db
@@ -92,6 +92,36 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         im = axes.imshow(array, vmin=0, vmax=10, cmap='jet')
         figure.colorbar(im)
         return figure
+
+    @mark_as_npy
+    def f0402_有效扫描数据(self):
+        # 取最匹配的两个扫描结果
+        upper_arrays = self.f0203_UA放缩, self.f0204_UB放缩
+        lower_arrays = self.f0201_DA放缩, self.f0202_DB放缩
+        pairs = list(itertools.product(upper_arrays, lower_arrays))
+        errors = [upper - lower for upper, lower in pairs]
+        errors = [np.mean(np.abs(error - np.mean(error))) for error in errors]
+        upper, lower = pairs[np.argmin(errors)]
+        return np.dstack([upper, lower])
+
+    @mark_as_npy
+    def f0403_上表面数据(self):
+        return self.f0402_有效扫描数据[:, :, 0:4]
+
+    @mark_as_npy
+    def f0404_下表面数据(self):
+        return self.f0402_有效扫描数据[:, :, 4:8]
+
+    @mark_as_recreate
+    @mark_as_png
+    def f0405_绘图(self):
+        im = Image.new('RGB', (2000, 2000))
+        data1, data2 = self.f0403_上表面数据, self.f0404_下表面数据
+        im.paste(depth_matrix_to_elevation_image(self.f0403_上表面数据), (0, 0))
+        im.paste(depth_matrix_to_rgb_image(self.f0403_上表面数据), (1000, 0))
+        im.paste(depth_matrix_to_elevation_image(self.f0404_下表面数据), (0, 1000))
+        im.paste(depth_matrix_to_rgb_image(self.f0404_下表面数据), (1000, 1000))
+        return im
 
 
 if __name__ == '__main__':
