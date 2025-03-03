@@ -107,6 +107,7 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         upper_arrays = self.f0203_UA放缩, self.f0204_UB放缩
         lower_arrays = self.f0201_DA放缩, self.f0202_DB放缩
         pairs = list(itertools.product(upper_arrays, lower_arrays))
+        pairs = [tilt_correction(img1, img2) for img1, img2 in pairs]
         errors = [upper - lower for upper, lower in pairs]
         errors = [np.mean(np.abs(error - np.mean(error))) for error in errors]
         upper, lower = pairs[np.argmin(errors)]
