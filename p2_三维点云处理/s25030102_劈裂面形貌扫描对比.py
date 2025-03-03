@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from batch_processor import SerialProcess, mark_as_npy, mark_as_png
+from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.scaling import scale_array
@@ -112,14 +112,15 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     def f0404_下表面数据(self):
         return self.f0402_有效扫描数据[:, :, 4:8]
 
+    @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
         im = Image.new('RGB', (2000, 2000))
         data1, data2 = self.f0403_上表面数据, self.f0404_下表面数据
-        im.paste(depth_matrix_to_elevation_image(self.f0403_上表面数据), (0, 0))
-        im.paste(depth_matrix_to_rgb_image(self.f0403_上表面数据), (1000, 0))
-        im.paste(depth_matrix_to_elevation_image(self.f0404_下表面数据), (0, 1000))
-        im.paste(depth_matrix_to_rgb_image(self.f0404_下表面数据), (1000, 1000))
+        im.paste(depth_matrix_to_elevation_image(data1, v_range=5), (0, 0))
+        im.paste(depth_matrix_to_rgb_image(data1), (1000, 0))
+        im.paste(depth_matrix_to_elevation_image(data2, v_range=5), (0, 1000))
+        im.paste(depth_matrix_to_rgb_image(data2), (1000, 1000))
         return im
 
 

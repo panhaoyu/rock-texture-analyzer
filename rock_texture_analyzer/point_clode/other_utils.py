@@ -114,9 +114,11 @@ def depth_matrix_to_rgb_image(matrix: np.ndarray) -> Image.Image:
     return Image.fromarray(array)
 
 
-def depth_matrix_to_elevation_image(matrix: np.ndarray) -> Image.Image:
+def depth_matrix_to_elevation_image(matrix: np.ndarray, v_range=None) -> Image.Image:
     assert matrix.shape[2] == 4
     matrix = matrix[..., 0]
-    norm = plt.Normalize(*np.nanquantile(matrix, [0.01, 0.99]))
+    matrix = matrix - np.mean(matrix)
+    v_range = np.nanquantile(matrix, 0.99) if v_range is None else v_range
+    norm = plt.Normalize(-v_range, v_range)
     array = (cm.ScalarMappable(norm=norm, cmap='jet').to_rgba(matrix)[..., :3] * 255).astype(np.uint8)
     return Image.fromarray(array)
