@@ -89,7 +89,7 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         compare = [[np.abs(v - np.mean(v)) for v in vs] for vs in compare]
         array = np.hstack([np.vstack(v) for v in compare])
         figure, axes = plt.subplots(1, 1, figsize=(12, 10))
-        im = axes.imshow(array, vmin=0, vmax=20)
+        im = axes.imshow(array, vmin=0, vmax=10, cmap='jet')
         figure.colorbar(im)
         return figure
 
