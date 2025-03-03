@@ -50,6 +50,10 @@ class s25030102_多源数据整合处理(SerialProcess):
     def f0106_劈裂面光学扫描_下半部分(self):
         raise ManuallyProcessRequiredException
 
+    @mark_as_png
+    def f0107_侧面光学扫描(self):
+        raise ManuallyProcessRequiredException
+
     @mark_as_npy
     def f0201_DA放缩(self):
         array = self.f0101_原始数据_Da
@@ -181,4 +185,4 @@ class s25030102_多源数据整合处理(SerialProcess):
 
 
 if __name__ == '__main__':
-    s25030102_劈裂面形貌扫描对比.main()
+    s25030102_多源数据整合处理.main()
