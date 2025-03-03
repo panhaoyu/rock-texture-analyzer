@@ -127,6 +127,7 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         data_ua, data_ub, data_da, data_db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
         v_range = 5
         delta = data_1 - data_2
+        delta = delta - np.min(delta)
 
         selected = merge_image_grid([[
             depth_matrix_to_elevation_image(data_1, v_range=v_range, text=f'上部 高程 ±{v_range}mm'),

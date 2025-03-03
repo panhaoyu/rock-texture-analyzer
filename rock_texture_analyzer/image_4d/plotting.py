@@ -30,8 +30,8 @@ def depth_matrix_to_rgb_image(matrix: np.ndarray, text: str = None) -> Image.Ima
 
 
 def depth_matrix_to_elevation_image(matrix: np.ndarray, v_range=None, text: str = None) -> Image.Image:
-    assert matrix.shape[2] == 4
-    matrix = matrix[..., 0]
+    if len(matrix.shape) == 3 and matrix.shape[2] == 4:
+        matrix = matrix[..., 0]
     matrix = matrix - np.mean(matrix)
     v_range = np.nanquantile(matrix, 0.99) if v_range is None else v_range
     norm = plt.Normalize(-v_range, v_range)
