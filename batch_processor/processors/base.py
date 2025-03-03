@@ -107,6 +107,7 @@ class BaseProcessor(typing.Generic[T]):
         except ManuallyProcessRequiredException as exception:
             message = exception.args or ()
             message = ''.join(message)
+            path.parent.mkdir(parents=True, exist_ok=True)
             logger.info(f'{func_index:04d} {stem:10} {func_name} 需要人工处理：{message}')
             return False
         except Exception as e:
