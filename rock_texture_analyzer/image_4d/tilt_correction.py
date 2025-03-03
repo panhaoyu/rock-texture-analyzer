@@ -11,9 +11,9 @@ def _tilt_correction_inner(arr1: NDArray, arr2: NDArray) -> tuple[NDArray, NDArr
     A = np.column_stack((X.ravel(), Y.ravel(), np.ones(X.size)))
     b = diff.ravel()
     # 初始拟合计算残差并筛选最佳50%数据点
-    (coeffs_initial,), residuals = np.linalg.lstsq(A, b, rcond=None)[0], A @ np.linalg.lstsq(A, b, rcond=None)[0]
-    mask = (np.abs(b - residuals) <= np.percentile(np.abs(b - residuals), 50))
-    # 使用筛选后的点重新计算最小二乘
+    coeffs_initial = np.linalg.lstsq(A, b, rcond=None)[0]
+    residuals = np.abs(b - A @ coeffs_initial)
+    mask = residuals <= np.percentile(residuals, 50)
     coeffs = np.linalg.lstsq(A[mask], b[mask], rcond=None)[0]
     plane = (coeffs[0] * X + coeffs[1] * Y + coeffs[2]).reshape(layer1.shape)
     reverse = plane / 2
