@@ -105,7 +105,7 @@ def add_label(image: Image.Image, text: str) -> Image.Image:
     drawer = ImageDraw.Draw(image)
     font = ImageFont.load_default(size)
     textbox = drawer.textbbox((0, 0), text, font=font)
-    drawer.rectangle((5, 5, textbox[2] - textbox[0] + 15, textbox[3] - textbox[1] + 25), fill="white")
+    drawer.rectangle((5, 5, textbox[2] - textbox[0] + 15, textbox[3] - textbox[1] + 30), fill="white")
     drawer.text((10, 10), text, fill="black", font=font)
     return image
 
