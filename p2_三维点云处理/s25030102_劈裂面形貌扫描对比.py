@@ -122,26 +122,26 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         elevation_range = 5
         im = Image.new('RGB', (w4, w4))
 
-        im.paste(add_label(depth_matrix_to_elevation_image(data_1, v_range=elevation_range), "上表面高程"), (0, 0))
-        im.paste(add_label(depth_matrix_to_rgb_image(data_1), "上表面RGB"), (w1, 0))
-        im.paste(add_label(depth_matrix_to_elevation_image(data_2, v_range=elevation_range), "下表面高程"), (0, w1))
-        im.paste(add_label(depth_matrix_to_rgb_image(data_2), "下表面RGB"), (w1, w1))
+        im.paste(depth_matrix_to_elevation_image(data_1, v_range=elevation_range, text='U z 10mm'), (0, 0))
+        im.paste(depth_matrix_to_rgb_image(data_1, text='U RGB'), (w1, 0))
+        im.paste(depth_matrix_to_elevation_image(data_2, v_range=elevation_range, text='D z 10mm'), (0, w1))
+        im.paste(depth_matrix_to_rgb_image(data_2, text='D RGB'), (w1, w1))
 
-        im.paste(add_label(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range), "UA高程"), (w2, 0))
-        im.paste(add_label(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range), "UB高程"), (w3, 0))
-        im.paste(add_label(depth_matrix_to_elevation_image(data_da, v_range=elevation_range), "DA高程"), (w2, w1))
-        im.paste(add_label(depth_matrix_to_elevation_image(data_db, v_range=elevation_range), "DB高程"), (w3, w1))
+        im.paste(depth_matrix_to_elevation_image(data_ua, v_range=elevation_range, text='UA z 10mm'), (w2, 0))
+        im.paste(depth_matrix_to_elevation_image(data_ub, v_range=elevation_range, text='UB z 10mm'), (w3, 0))
+        im.paste(depth_matrix_to_elevation_image(data_da, v_range=elevation_range, text='DA z 10mm'), (w2, w1))
+        im.paste(depth_matrix_to_elevation_image(data_db, v_range=elevation_range, text='DB z 10mm'), (w3, w1))
 
-        im.paste(add_label(depth_matrix_to_rgb_image(data_ua), "UA RGB"), (w2, w2))
-        im.paste(add_label(depth_matrix_to_rgb_image(data_ub), "UB RGB"), (w3, w2))
-        im.paste(add_label(depth_matrix_to_rgb_image(data_da), "DA RGB"), (w2, w3))
-        im.paste(add_label(depth_matrix_to_rgb_image(data_db), "DB RGB"), (w3, w3))
+        im.paste(depth_matrix_to_rgb_image(data_ua, text='UA RGB'), (w2, w2))
+        im.paste(depth_matrix_to_rgb_image(data_ub, text='UB RGB'), (w3, w2))
+        im.paste(depth_matrix_to_rgb_image(data_da, text='DA RGB'), (w2, w3))
+        im.paste(depth_matrix_to_rgb_image(data_db, text='DB RGB'), (w3, w3))
 
         delta = data_1 - data_2
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=1), "Δh 1mm"), (0, w2))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=2), "Δh 2mm"), (w1, w2))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=5), "Δh 5mm"), (0, w3))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=10), "Δh 10mm"), (w1, w3))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=1), text="Δh 2mm"), (0, w2))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=2), text="Δh 4mm"), (w1, w2))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=3), text="Δh 6mm"), (0, w3))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=5), text="Δh 10mm"), (w1, w3))
 
         return im
 
