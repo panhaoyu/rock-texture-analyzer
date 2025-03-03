@@ -9,9 +9,9 @@ from PIL import Image
 from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
-from rock_texture_analyzer.image_4d.scaling import scale_array
-from rock_texture_analyzer.image_4d.plotting import add_label, depth_matrix_to_rgb_image, \
+from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, \
     depth_matrix_to_elevation_image
+from rock_texture_analyzer.image_4d.scaling import scale_array
 
 logger = logging.getLogger(Path(__file__).name)
 
@@ -138,10 +138,10 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         im.paste(depth_matrix_to_rgb_image(data_db, text='DB RGB'), (w3, w3))
 
         delta = data_1 - data_2
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=1), text="dh 2mm"), (0, w2))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=2), text="dh 4mm"), (w1, w2))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=3), text="dh 6mm"), (0, w3))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=5), text="dh 10mm"), (w1, w3))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=1, text="dh 2mm"), (0, w2))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=2, text="dh 4mm"), (w1, w2))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=3, text="dh 6mm"), (0, w3))
+        im.paste(depth_matrix_to_elevation_image(delta, v_range=5, text="dh 10mm"), (w1, w3))
 
         return im
 
