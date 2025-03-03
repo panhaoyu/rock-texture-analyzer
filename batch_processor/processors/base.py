@@ -1,4 +1,3 @@
-import logging
 import re
 import threading
 import typing
@@ -6,12 +5,13 @@ from functools import cached_property
 from pathlib import Path
 from typing import Callable
 
+from ..logger import logger
+
 if typing.TYPE_CHECKING:
-    from ..batch_processor import SerialProcess, BatchManager
+    from ..batch_processor import SerialProcess
+    from ..manager import BatchManager
 
 T = typing.TypeVar('T')
-
-logger = logging.getLogger(__name__.split('.')[0])
 
 
 class BaseProcessor(typing.Generic[T]):
