@@ -116,17 +116,13 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
-
-        def 添加文本(图: Image.Image, 文本: str) -> Image.Image:
-            画 = ImageDraw.Draw(图)
-            try:
-                字体 = ImageFont.truetype("Times New Roman.ttf", 50)
-            except:
-                字体 = ImageFont.load_default()
-            文本框 = 画.textbbox((0, 0), 文本, font=字体)
-            画.rectangle((5, 5, 文本框[2] - 文本框[0] + 15, 文本框[3] - 文本框[1] + 15), fill="white")
-            画.text((10, 10), 文本, fill="black", font=字体)
-            return 图
+        def 添加文本(image: Image.Image, text: str) -> Image.Image:
+            drawer = ImageDraw.Draw(image)
+            font = ImageFont.truetype("Times New Roman.ttf", 50)
+            textbox = drawer.textbbox((0, 0), text, font=font)
+            drawer.rectangle((5, 5, textbox[2] - textbox[0] + 15, textbox[3] - textbox[1] + 15), fill="white")
+            drawer.text((10, 10), text, fill="black", font=font)
+            return image
 
         w1, w2, w3, w4 = 1000, 2000, 3000, 4000
         data_1, data_2 = self.f0403_上表面数据, self.f0404_下表面数据
