@@ -117,9 +117,10 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     def f0405_绘图(self):
         im = Image.new('RGB', (2000, 2000))
         data1, data2 = self.f0403_上表面数据, self.f0404_下表面数据
-        im.paste(depth_matrix_to_elevation_image(data1, v_range=5), (0, 0))
+        v_range = 10
+        im.paste(depth_matrix_to_elevation_image(data1, v_range=v_range), (0, 0))
         im.paste(depth_matrix_to_rgb_image(data1), (1000, 0))
-        im.paste(depth_matrix_to_elevation_image(data2, v_range=5), (0, 1000))
+        im.paste(depth_matrix_to_elevation_image(data2, v_range=v_range), (0, 1000))
         im.paste(depth_matrix_to_rgb_image(data2), (1000, 1000))
         return im
 
