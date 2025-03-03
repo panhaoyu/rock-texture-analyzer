@@ -138,10 +138,10 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         im.paste(depth_matrix_to_rgb_image(data_db, text='DB RGB'), (w3, w3))
 
         delta = data_1 - data_2
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=1), text="Δh 2mm"), (0, w2))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=2), text="Δh 4mm"), (w1, w2))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=3), text="Δh 6mm"), (0, w3))
-        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=5), text="Δh 10mm"), (w1, w3))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=1), text="dh 2mm"), (0, w2))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=2), text="dh 4mm"), (w1, w2))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=3), text="dh 6mm"), (0, w3))
+        im.paste(add_label(depth_matrix_to_elevation_image(delta, v_range=5), text="dh 10mm"), (w1, w3))
 
         return im
 
