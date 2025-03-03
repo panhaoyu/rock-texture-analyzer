@@ -12,13 +12,13 @@ def _tilt_correction_inner(arr1: NDArray, arr2: NDArray) -> tuple[NDArray, NDArr
     b = diff.ravel()
 
     # 初始拟合计算残差并筛选最佳50%数据点
-    coeffs_initial = np.linalg.lstsq(A, b, rcond=None)[0]
-    residuals = np.abs(b - A @ coeffs_initial)
+    coefficients = np.linalg.lstsq(A, b, rcond=None)[0]
+    residuals = np.abs(b - A @ coefficients)
     mask = residuals <= np.percentile(residuals, 50)
 
     # 选取有效点再进行真正的最小二乘拟合
-    coeffs = np.linalg.lstsq(A[mask], b[mask], rcond=None)[0]
-    plane = (coeffs[0] * X + coeffs[1] * Y + coeffs[2]).reshape(layer1.shape)
+    coefficients = np.linalg.lstsq(A[mask], b[mask], rcond=None)[0]
+    plane = (A @ coefficients).reshape(layer1.shape)
     reverse = plane / 2
     layer1 -= reverse
     layer2 += reverse
