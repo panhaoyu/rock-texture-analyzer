@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
+from batch_processor import SerialProcess, mark_as_npy, mark_as_png
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, \
@@ -120,12 +120,11 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
     def f0404_下表面数据(self):
         return self.f0402_有效扫描数据[:, :, 4:8]
 
-    @mark_as_recreate
     @mark_as_png
     def f0405_绘图(self):
         v1, v2 = self.f0403_上表面数据, self.f0404_下表面数据
         ua, ub, da, db = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
-        v_range = 5
+        v_range = 10
         dv = v1 - v2
 
         selected = merge_image_grid([[
