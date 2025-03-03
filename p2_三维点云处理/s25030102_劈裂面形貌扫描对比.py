@@ -2,11 +2,10 @@ import itertools
 import logging
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from batch_processor import SerialProcess, mark_as_npy, mark_as_png
+from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_recreate
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
 from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, \
@@ -82,9 +81,9 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
         [merged.paste(img, (i * w, h)) for i, img in enumerate(lower_row)]
         return merged
 
+    @mark_as_recreate
     @mark_as_png
     def f0401_比较各个扫描结果的差异(self):
-        # ua, ub, da, db
         arrays = self.f0203_UA放缩, self.f0204_UB放缩, self.f0201_DA放缩, self.f0202_DB放缩
 
         def get_compare(arr1: np.ndarray, arr2: np.ndarray) -> np.ndarray:
@@ -94,11 +93,7 @@ class s25030102_劈裂面形貌扫描对比(SerialProcess):
             return np.abs(delta - np.mean(delta))
 
         compare = [[get_compare(arr1, arr2) for arr2 in arrays] for arr1 in arrays]
-        array = np.hstack([np.vstack(v) for v in compare])
-        figure, axes = plt.subplots(1, 1, figsize=(12, 10))
-        im = axes.imshow(array, vmin=0, vmax=2, cmap='jet')
-        figure.colorbar(im)
-        return figure
+        return merge_image_grid([[depth_matrix_to_elevation_image(col, v_range=2) for col in row] for row in compare])
 
     @mark_as_npy
     def f0402_有效扫描数据(self):
