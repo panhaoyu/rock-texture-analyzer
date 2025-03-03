@@ -47,12 +47,12 @@ class s25030102_多源数据整合处理(SerialProcess):
 
     @mark_as_source
     @mark_as_png
-    def f0105_劈裂面光学扫描_上半部分(self):
+    def f0105_剪切前_劈裂面_光学扫描_上半部分(self):
         pass
 
     @mark_as_source
     @mark_as_png
-    def f0106_劈裂面光学扫描_下半部分(self):
+    def f0106_剪切前_劈裂面_光学扫描_下半部分(self):
         pass
 
     @mark_as_source
