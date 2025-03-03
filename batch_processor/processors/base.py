@@ -23,7 +23,7 @@ class BaseProcessor(typing.Generic[T]):
     suffix: str = None
     processor: 'BatchManager'
 
-    def __init__(self, func: Callable[[], typing.Any]):
+    def __init__(self, func: Callable[['SerialProcess'], typing.Any]):
         self.func = func
         self.func_name = func.__name__
 
@@ -45,9 +45,9 @@ class BaseProcessor(typing.Generic[T]):
         return self.func_name
 
     def __get__(self, instance: 'SerialProcess', owner) -> T:
-        if not self.is_processed(instance.path):  # 总是先写入再读取，这样可以获取得到规范化后的数据类型
-            obj = self.func(instance)
-            self.write(obj, instance.path)
+        # if not self.is_processed(instance.path):  # 总是先写入再读取，这样可以获取得到规范化后的数据类型
+        #     obj = self.func(instance)
+        #     self.write(obj, instance.path)
         return self.read(instance.path)
 
     def __repr__(self):
@@ -100,10 +100,9 @@ class BaseProcessor(typing.Generic[T]):
         is_processed = False
         try:
             self.check_batch_started()
-            if self.is_recreate_required:
-                self.get_input_path(path).unlink(missing_ok=True)
-            if not self.is_processed(path):
-                getattr(instance, self.func_name)
+            if not self.is_processed(path) or self.is_recreate_required:
+                obj = self.func(instance)
+                self.write(obj, instance.path)
                 is_processed = True
         except ManuallyProcessRequiredException as exception:
             message = exception.args or ()
