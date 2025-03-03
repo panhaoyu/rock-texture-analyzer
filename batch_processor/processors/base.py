@@ -103,6 +103,7 @@ class BaseProcessor(typing.Generic[T]):
             if self.is_processed(path) and not self.is_recreate_required:
                 return True
             if self.is_source:
+                path.parent.mkdir(parents=True, exist_ok=True)
                 return True
             obj = self.func(instance)
             self.write(obj, instance.path)
