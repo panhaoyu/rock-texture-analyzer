@@ -100,10 +100,13 @@ class BaseProcessor(typing.Generic[T]):
         is_processed = False
         try:
             self.check_batch_started()
-            if not self.is_processed(path) or self.is_recreate_required:
-                obj = self.func(instance)
-                self.write(obj, instance.path)
-                is_processed = True
+            if self.is_processed(path) and not self.is_recreate_required:
+                return True
+            if self.is_source:
+                return True
+            obj = self.func(instance)
+            self.write(obj, instance.path)
+            is_processed = True
         except ManuallyProcessRequiredException as exception:
             message = exception.args or ()
             message = ''.join(message)
@@ -115,13 +118,13 @@ class BaseProcessor(typing.Generic[T]):
             return False
         finally:
             self.is_single_thread and self.single_thread_process_lock.release_lock()
-        finished_stems = len(self.processed_stems) + 1
-        all_stems = len(self.all_stems)
-        is_processed and logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
-        self.processing_stems.remove(stem)
-        self.processed_stems.add(stem)
-        self.check_batch_finished()
-        return True
+            finished_stems = len(self.processed_stems) + 1
+            all_stems = len(self.all_stems)
+            is_processed and logger.info(f'{func_index:04d} {stem:10} {finished_stems}/{all_stems} {func_name}')
+            self.processing_stems.remove(stem)
+            self.processed_stems.add(stem)
+            self.check_batch_finished()
+            return True
 
     def on_batch_started(self):
         """

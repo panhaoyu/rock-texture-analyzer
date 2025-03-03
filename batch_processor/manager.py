@@ -7,6 +7,7 @@ from typing import Type, TYPE_CHECKING
 
 from more_itertools import only
 
+from batch_processor.logger import logger
 from batch_processor.processors.base import BaseProcessor
 from p3_表面显微镜扫描数据处理.config import base_dir
 
@@ -55,8 +56,10 @@ class BatchManager:
     is_debug: bool = False
 
     @cached_property
-    def source_function(self):
-        return only((f for f in self.step_functions if f.is_source), self.step_functions[0])
+    def source_functions(self):
+        result = [f for f in self.step_functions if f.is_source]
+        result = result if result else self.step_functions[:1]
+        return result
 
     @cached_property
     def final_function(self):
@@ -64,9 +67,13 @@ class BatchManager:
 
     @cached_property
     def files(self) -> list[Path]:
-        files = [file for file in self.source_function.directory.glob(f'*{self.source_function.suffix}')]
-        if self.is_debug:
-            files = files[:2]
+        all_stems = {file.stem for func in self.source_functions for file in func.directory.glob(f'*{func.suffix}')}
+        for func in self.source_functions:
+            current_stems = {f.stem for f in func.directory.glob(f'*{func.suffix}')}
+            if current_stems != all_stems:
+                logger.warning(f'Source files of {func.func_name} not exists: {all_stems - current_stems}')
+        files = [self.source_functions[0].directory / stem for stem in sorted(all_stems)]
+        files = files[:2] if self.is_debug else files
         return files
 
     @cached_property
