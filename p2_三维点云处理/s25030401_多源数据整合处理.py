@@ -79,6 +79,7 @@ class s25030401_多源数据整合处理(SerialProcess):
     def f0202_剪切前_劈裂面_光学差值_绘图(self):
         return Image.fromarray(self.f0202_剪切前_劈裂面_光学差值, '1')
 
+    is_debug = True
     # @mark_as_recreate
     @mark_as_png
     def f0501_展示目前已有数据(self):
