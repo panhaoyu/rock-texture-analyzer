@@ -61,7 +61,7 @@ class s25030401_多源数据整合处理(SerialProcess):
             add_label(self.f0105_剪切前_劈裂面_光学扫描_下半部分.resize((1000, 1000)), '剪切前 下'),
             None,
         ], [
-            add_label(depth_matrix_to_elevation_image(self.f0201_剪切前_劈裂面_高程差值, 1), '剪切前 差值'),
+            add_label(depth_matrix_to_elevation_image(self.f0201_剪切前_劈裂面_高程差值, 2), '剪切前 差值'),
             None,
             None,
         ]])
