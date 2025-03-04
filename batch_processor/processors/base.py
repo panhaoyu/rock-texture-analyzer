@@ -45,9 +45,6 @@ class BaseProcessor(typing.Generic[T]):
         return self.func_name
 
     def __get__(self, instance: 'SerialProcess', owner) -> T:
-        # if not self.is_processed(instance.path):  # 总是先写入再读取，这样可以获取得到规范化后的数据类型
-        #     obj = self.func(instance)
-        #     self.write(obj, instance.path)
         return self.read(instance.path)
 
     def __repr__(self):
@@ -79,6 +76,8 @@ class BaseProcessor(typing.Generic[T]):
 
     def read(self, path: Path) -> T:
         path = self.get_input_path(path)
+        if not self.is_processed(path):
+            raise ProcessResultNotFoundException(f'{self.func_name} {path.stem}')
         return self._read(path)
 
     def _write(self, obj: T, path: Path):
@@ -108,9 +107,12 @@ class BaseProcessor(typing.Generic[T]):
             obj = self.func(instance)
             self.write(obj, instance.path)
             is_processed = True
+        except ProcessResultNotFoundException as exception:
+            message = ''.join(exception.args or ())
+            logger.warning(f'{func_index:04d} {stem:10} {func_name} 前序步骤未完成：{message}')
+            return False
         except ManuallyProcessRequiredException as exception:
-            message = exception.args or ()
-            message = ''.join(message)
+            message = ''.join(exception.args or ())
             path.parent.mkdir(parents=True, exist_ok=True)
             logger.info(f'{func_index:04d} {stem:10} {func_name} 需要人工处理：{message}')
             return False
@@ -182,6 +184,10 @@ def mark_as_final(func: BaseProcessor):
 def mark_as_single_thread(func: BaseProcessor):
     func.is_single_thread = True
     return func
+
+
+class ProcessResultNotFoundException(Exception):
+    pass
 
 
 class ManuallyProcessRequiredException(Exception):
