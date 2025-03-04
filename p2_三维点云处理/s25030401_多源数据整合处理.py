@@ -64,7 +64,6 @@ class s25030401_多源数据整合处理(SerialProcess):
     def f0202_剪切前_劈裂面_光学差值_绘图(self):
         return boolean_to_image(self.f0202_剪切前_劈裂面_光学差值)
 
-    @mark_as_recreate
     @mark_as_png
     def f0204_剪切前_劈裂面_光学差值_参数比较(self):
         img1, img2 = self.f0104_剪切前_劈裂面_光学扫描_上半部分, self.f0105_剪切前_劈裂面_光学扫描_下半部分
