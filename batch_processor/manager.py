@@ -53,7 +53,6 @@ class BatchManager:
 
     enable_multithread: bool = True
     multithread_workers: int = 10
-    is_debug: bool = False
 
     @cached_property
     def source_functions(self):
@@ -73,7 +72,7 @@ class BatchManager:
             if current_stems != all_stems:
                 logger.warning(f'Source files of {func.func_name} not exists: {all_stems - current_stems}')
         files = [self.source_functions[0].directory / stem for stem in sorted(all_stems)]
-        files = files[:2] if self.is_debug else files
+        files = files[:2] if self.klass.is_debug else files
         return files
 
     @cached_property
