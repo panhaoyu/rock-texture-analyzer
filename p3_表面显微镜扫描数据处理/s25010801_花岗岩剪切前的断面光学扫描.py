@@ -5,7 +5,7 @@ from PIL import Image
 from more_itertools import only
 
 import batch_processor.processors.base
-from batch_processor import mark_as_npy
+from batch_processor import mark_as_npy, mark_as_source, mark_as_jpg
 from batch_processor.batch_processor import SerialProcess
 from batch_processor.processors.base import ManuallyProcessRequiredException
 from batch_processor.processors.png import mark_as_png
@@ -19,9 +19,10 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
     v15_最终图像宽度_像素 = 4000
     v15_最终图像高度_像素 = 4000
 
-    @mark_as_png
+    @mark_as_source
+    @mark_as_jpg
     def f1_原始数据(self):
-        raise ManuallyProcessRequiredException
+        pass
 
     @mark_as_png
     def f2_上下扩展(self):
@@ -234,6 +235,10 @@ class s25010801_花岗岩剪切前的断面光学扫描(SerialProcess):
             case _:
                 raise ValueError("文件名stem必须以'U'或'D'结尾")
         return Image.fromarray(image)
+
+    @mark_as_png
+    def f18_调整方向(self):
+        return self.f17_根据文件名处理.rotate(180)
 
 
 if __name__ == '__main__':

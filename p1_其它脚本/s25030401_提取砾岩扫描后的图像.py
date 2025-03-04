@@ -1,13 +1,13 @@
 import shutil
 from pathlib import Path
 
-# source_dir = Path(r'F:\data\laser-scanner\25010802-砾岩剪切前的断面光学扫描\99-处理结果')
-# source_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描\99-处理结果')
+source_dir = Path(r'F:\data\laser-scanner\25010802-砾岩剪切前的断面光学扫描\18-调整方向')
+# source_dir = Path(r'F:\data\laser-scanner\25010801-花岗岩剪切前的断面光学扫描\18-调整方向')
 # source_dir = Path(r'F:\data\laser-scanner\25010601-砾岩的侧面光学扫描的预处理\24-人工补全黑边')
-source_dir = Path(r'F:\data\laser-scanner\25010502-花岗岩的侧面光学扫描的预处理\24-人工补全黑边')
+# source_dir = Path(r'F:\data\laser-scanner\25010502-花岗岩的侧面光学扫描的预处理\24-人工补全黑边')
 output_dir = source_dir / 'output'
 
-拆分方向 = False
+拆分方向 = True
 
 def main():
     src: Path
