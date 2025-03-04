@@ -68,8 +68,8 @@ class s25030401_多源数据整合处理(SerialProcess):
         delta = np.sqrt(np.sum((lab1 - lab2) ** 2, axis=2))
 
         # 应用容差阈值并执行形态学操作
-        delta = (delta > 20).astype(np.uint8)
-        kernel_size = 15
+        delta = (delta > 15).astype(np.uint8)
+        kernel_size = 3
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
         delta = cv2.dilate(delta, kernel)  # 先膨胀连接断裂区域
         delta = cv2.erode(delta, kernel)  # 再腐蚀消除孤立噪点
