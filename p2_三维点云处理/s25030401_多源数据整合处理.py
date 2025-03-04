@@ -72,7 +72,7 @@ class s25030401_多源数据整合处理(SerialProcess):
         # delta = cv2.dilate(delta, kernel)  # 先膨胀连接断裂区域
         # delta = cv2.erode(delta, kernel)  # 再腐蚀消除孤立噪点
 
-        return delta.astype(bool)
+        return delta
 
     @mark_as_recreate
     @mark_as_png
