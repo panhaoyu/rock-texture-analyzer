@@ -13,7 +13,7 @@ def add_label(image: Image.Image, text: str) -> Image.Image:
     return image
 
 
-def depth_matrix_to_rgb_image(matrix: np.ndarray, text: str = None) -> Image.Image:
+def matrix_to_rgb_image(matrix: np.ndarray, text: str = None) -> Image.Image:
     if len(matrix.shape) == 3 and matrix.shape[2] == 4:
         matrix = matrix[..., 1:]
     assert len(matrix.shape) == 3 and matrix.shape[2] == 3, matrix.shape
@@ -30,7 +30,7 @@ def depth_matrix_to_rgb_image(matrix: np.ndarray, text: str = None) -> Image.Ima
     return image
 
 
-def depth_matrix_to_elevation_image(matrix: np.ndarray, v_range=None, text: str = None) -> Image.Image:
+def matrix_to_elevation_image(matrix: np.ndarray, v_range=None, text: str = None) -> Image.Image:
     if len(matrix.shape) == 3 and matrix.shape[2] == 4:
         matrix = matrix[..., 0]
     assert len(matrix.shape) == 2 and matrix.shape[0] > 10 and matrix.shape[1] > 10, matrix.shape

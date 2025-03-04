@@ -20,7 +20,7 @@ from rock_texture_analyzer.point_clode.interpolation import surface_interpolate_
 from rock_texture_analyzer.point_clode.optimization import least_squares_adjustment_direction
 from rock_texture_analyzer.point_clode.other_utils import should_flip_based_on_z, compute_rotation_matrix, \
     point_cloud_keep_top, merge_5_images
-from rock_texture_analyzer.image_4d.plotting import depth_matrix_to_rgb_image, depth_matrix_to_elevation_image
+from rock_texture_analyzer.image_4d.plotting import matrix_to_rgb_image, matrix_to_elevation_image
 
 logger = logging.getLogger(Path(__name__).stem)
 
@@ -164,25 +164,25 @@ class s25030101_劈裂面形貌扫描(SerialProcess):
     def f0902_绘制左侧点云(self):
         cloud = self.f0802_仅保留左侧面
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return depth_matrix_to_rgb_image(matrix)
+        return matrix_to_rgb_image(matrix)
 
     @mark_as_png
     def f0903_绘制右侧点云(self):
         cloud = self.f0803_仅保留右侧面
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return depth_matrix_to_rgb_image(matrix)
+        return matrix_to_rgb_image(matrix)
 
     @mark_as_png
     def f0904_绘制前面点云(self):
         cloud = self.f0804_仅保留前面
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return depth_matrix_to_rgb_image(matrix)
+        return matrix_to_rgb_image(matrix)
 
     @mark_as_png
     def f0905_绘制后面点云(self):
         cloud = self.f0805_仅保留后面
         matrix = surface_interpolate_2d(cloud, 0.2, 'nearest')
-        return depth_matrix_to_rgb_image(matrix)
+        return matrix_to_rgb_image(matrix)
 
     @mark_as_npy
     def f1001_表面二维重建(self):
@@ -196,11 +196,11 @@ class s25030101_劈裂面形貌扫描(SerialProcess):
 
     @mark_as_png
     def f1002_绘制高程(self):
-        return depth_matrix_to_elevation_image(self.f1001_表面二维重建)
+        return matrix_to_elevation_image(self.f1001_表面二维重建)
 
     @mark_as_png
     def f1003_绘制图像(self):
-        return depth_matrix_to_rgb_image(self.f1001_表面二维重建)
+        return matrix_to_rgb_image(self.f1001_表面二维重建)
 
     @mark_as_png
     def f1004_合并两张图(self):
@@ -246,11 +246,11 @@ class s25030101_劈裂面形貌扫描(SerialProcess):
 
     @mark_as_png
     def f1105_高程图(self):
-        return depth_matrix_to_elevation_image(self.f1104_旋转使得方向一致)
+        return matrix_to_elevation_image(self.f1104_旋转使得方向一致)
 
     @mark_as_png
     def f1106_色彩图(self):
-        return depth_matrix_to_rgb_image(self.f1104_旋转使得方向一致)
+        return matrix_to_rgb_image(self.f1104_旋转使得方向一致)
 
     @mark_as_npy
     def f1201_翻转使得上下面可以比较(self):
@@ -263,11 +263,11 @@ class s25030101_劈裂面形貌扫描(SerialProcess):
 
     @mark_as_png
     def f1202_高程图(self):
-        return depth_matrix_to_elevation_image(self.f1201_翻转使得上下面可以比较)
+        return matrix_to_elevation_image(self.f1201_翻转使得上下面可以比较)
 
     @mark_as_png
     def f1203_色彩图(self):
-        return depth_matrix_to_rgb_image(self.f1201_翻转使得上下面可以比较)
+        return matrix_to_rgb_image(self.f1201_翻转使得上下面可以比较)
 
 
 if __name__ == '__main__':
