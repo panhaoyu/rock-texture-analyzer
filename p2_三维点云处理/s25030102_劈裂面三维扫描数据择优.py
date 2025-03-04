@@ -24,60 +24,45 @@ def process(array: np.ndarray) -> np.ndarray:
     return array
 
 
-class s25030102_多源数据整合处理(SerialProcess):
+class s25030102_劈裂面三维扫描数据择优(SerialProcess):
     @mark_as_source
     @mark_as_npy
-    def f0101_剪切前_劈裂面_三维扫描_上半部分_第1次扫描(self):
-        pass
-
-    @mark_as_source
-    @mark_as_npy
-    def f0102_剪切前_劈裂面_三维扫描_上半部分_第2次扫描(self):
+    def f0101_Ua(self):
         pass
 
     @mark_as_source
     @mark_as_npy
-    def f0103_剪切前_劈裂面_三维扫描_下半部分_第1次扫描(self):
+    def f0102_Ub(self):
         pass
 
     @mark_as_source
     @mark_as_npy
-    def f0104_剪切前_劈裂面_三维扫描_下半部分_第2次扫描(self):
+    def f0103_Da(self):
         pass
 
     @mark_as_source
-    @mark_as_png
-    def f0105_剪切前_劈裂面_光学扫描_上半部分(self):
-        pass
-
-    @mark_as_source
-    @mark_as_png
-    def f0106_剪切前_劈裂面_光学扫描_下半部分(self):
-        pass
-
-    @mark_as_source
-    @mark_as_png
-    def f0107_侧面光学扫描(self):
+    @mark_as_npy
+    def f0104_Db(self):
         pass
 
     @mark_as_npy
     def f0201_DA放缩(self):
-        array = self.f0103_剪切前_劈裂面_三维扫描_下半部分_第1次扫描
+        array = self.f0103_Da
         return process(array)
 
     @mark_as_npy
     def f0202_DB放缩(self):
-        array = self.f0104_剪切前_劈裂面_三维扫描_下半部分_第2次扫描
+        array = self.f0104_Db
         return process(array)
 
     @mark_as_npy
     def f0203_UA放缩(self):
-        array = self.f0101_剪切前_劈裂面_三维扫描_上半部分_第1次扫描
+        array = self.f0101_Ua
         return process(array)
 
     @mark_as_npy
     def f0204_UB放缩(self):
-        array = self.f0102_剪切前_劈裂面_三维扫描_上半部分_第2次扫描
+        array = self.f0102_Ub
         return process(array)
 
     @mark_as_png
@@ -191,4 +176,4 @@ class s25030102_多源数据整合处理(SerialProcess):
 
 
 if __name__ == '__main__':
-    s25030102_多源数据整合处理.main()
+    s25030102_劈裂面三维扫描数据择优.main()

@@ -43,7 +43,7 @@ class BatchManager:
         if not result.exists():
             name = name.replace('_', '-')
             result = base_dir.joinpath(f"{code}-{name}")
-        assert result.exists(), result
+        result.mkdir(parents=True, exist_ok=True)
         return result
 
     def process_path(self, instance: 'SerialProcess') -> None:
@@ -78,6 +78,9 @@ class BatchManager:
 
     @cached_property
     def stems(self):
+        if not self.files:
+            for func in self.source_functions:
+                func.directory.mkdir(parents=True, exist_ok=True)
         return [file.stem for file in self.files]
 
     @cached_property
