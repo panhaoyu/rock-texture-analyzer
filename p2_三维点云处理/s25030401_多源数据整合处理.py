@@ -5,6 +5,7 @@ import numpy as np
 
 from batch_processor import SerialProcess, mark_as_npy, mark_as_png, mark_as_source
 from rock_texture_analyzer.image_4d.fix_nan import remove_nan_borders, fill_nan_values
+from rock_texture_analyzer.image_4d.plotting import merge_image_grid, depth_matrix_to_elevation_image
 from rock_texture_analyzer.image_4d.scaling import scale_array
 
 logger = logging.getLogger(Path(__file__).name)
@@ -42,6 +43,18 @@ class s25030401_多源数据整合处理(SerialProcess):
     @mark_as_png
     def f0105_剪切前_劈裂面_光学扫描_下半部分(self):
         pass
+
+    @mark_as_png
+    def f0201_展示目前已有数据(self):
+        return merge_image_grid([[
+            depth_matrix_to_elevation_image(self.f0102_剪切前_劈裂面_三维扫描_上半部分),
+            self.f0104_剪切前_劈裂面_光学扫描_上半部分.resize((1000, 1000)),
+            self.f0101_剪切前_侧面_光学扫描.resize((1000, 1000)),
+        ], [
+            depth_matrix_to_elevation_image(self.f0103_剪切前_劈裂面_三维扫描_下半部分),
+            self.f0105_剪切前_劈裂面_光学扫描_下半部分.resize((1000, 1000)),
+            None,
+        ]])
 
 
 if __name__ == '__main__':

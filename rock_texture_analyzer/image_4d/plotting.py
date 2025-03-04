@@ -52,5 +52,5 @@ def merge_image_grid(grid: list[list[Image.Image]]) -> Image.Image:
     rows, cols = len(grid), len(grid[0]) if grid else 0
     cell_w, cell_h = grid[0][0].size if rows else (0, 0)
     merged = Image.new('RGB', (cols * cell_w, rows * cell_h))
-    [merged.paste(img, (j * cell_w, i * cell_h)) for i, row in enumerate(grid) for j, img in enumerate(row)]
+    [merged.paste(img, (j * cell_w, i * cell_h)) for i, row in enumerate(grid) for j, img in enumerate(row) if img]
     return merged
