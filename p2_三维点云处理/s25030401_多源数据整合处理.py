@@ -59,8 +59,7 @@ class s25030401_多源数据整合处理(SerialProcess):
             add_label(self.f0104_剪切前_劈裂面_光学扫描_上半部分.resize((1000, 1000)), '剪切前 上 光学'),
             add_label(self.f0101_剪切前_侧面_光学扫描.resize((1000, 1000)), '剪切前 侧 光学'),
         ], [
-            add_label(matrix_to_elevation_image(self.f0103_剪切前_劈裂面_三维扫描_下半部分, 10),
-                      '剪切前 下 高程'),
+            add_label(matrix_to_elevation_image(self.f0103_剪切前_劈裂面_三维扫描_下半部分, 10), '剪切前 下 高程'),
             add_label(matrix_to_rgb_image(self.f0103_剪切前_劈裂面_三维扫描_下半部分), '剪切前 下 纹理'),
             add_label(self.f0105_剪切前_劈裂面_光学扫描_下半部分.resize((1000, 1000)), '剪切前 下 光学'),
             None,
