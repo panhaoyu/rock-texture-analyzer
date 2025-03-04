@@ -35,7 +35,7 @@ def image_diff(
 
     # 计算LAB色差欧氏距离并应用阈值
     delta_e = np.sqrt(np.sum((lab1.astype(float) - lab2.astype(float)) ** 2, axis=2))
-    binary_diff = delta_e > threshold
+    binary_diff = (delta_e > threshold).astype(np.uint8)
 
     # 形态学优化：膨胀连接断裂区域 -> 腐蚀消除孤立噪点
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernel_size, kernel_size))
